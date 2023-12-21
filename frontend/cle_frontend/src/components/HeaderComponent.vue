@@ -27,5 +27,4 @@
     width: 40px; /* Ajusta el tamaño del logo según tus necesidades */
   }
   
-  </style>
-  
+  </style>  
