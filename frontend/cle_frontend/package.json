@@ -1,0 +1,58 @@
+{
+  "name": "cle_frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "core-js": "^3.8.3",
+    "nth-check": "^2.0.1",
+    "portal-vue": "^3.0.0",
+    "terser-webpack-plugin": "^4.2.3",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.16",
+    "@babel/eslint-parser": "^7.12.16",
+    "@intervolga/optimize-cssnano-plugin": "^1.0.1",
+    "@popperjs/core": "^2.11.8",
+    "@vue/cli-plugin-babel": "^5.0.8",
+    "@vue/cli-plugin-eslint": "^5.0.8",
+    "@vue/cli-service": "^5.0.8",
+    "css-loader": "^6.8.1",
+    "eslint": "^7.32.0",
+    "eslint-plugin-vue": "^8.0.3",
+    "html-webpack-plugin": "^5.6.0",
+    "jquery": "^3.7.1",
+    "mini-css-extract-plugin": "^2.7.6",
+    "postcss": "^8.4.32",
+    "serialize-javascript": "^6.0.1",
+    "url-loader": "^4.1.1",
+    "vue": "^3.3.13",
+    "vue-template-compiler": "^2.7.15",
+    "webpack": "^5.89.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "@babel/eslint-parser"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
