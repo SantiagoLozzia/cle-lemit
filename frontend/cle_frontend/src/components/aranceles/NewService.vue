@@ -25,13 +25,13 @@
 
               <div class="mb-3">
                 <label for="arancel" class="form-label text-left">Arancel:</label>
-                <input v-model="nuevoServicio.arancel" type="number" class="form-control" id="arancel" name="arancel" required />
+                <input v-model="nuevoServicio.arancel" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="arancel" name="arancel" required />
               </div>
 
               <div class="mb-3">
-                <label for="areaTematica" class="form-label text-left">Área Temática:</label>
-                <select v-model="nuevoServicio.areaTematica" class="form-select" id="areaTematica" name="areaTematica" required>
-                  <option v-for="(option, key) in areaTematicaOptions" :key="key" :value="option.value">
+                <label for="area_tematica" class="form-label text-left">Área Temática:</label>
+                <select v-model="nuevoServicio.area_tematica" class="form-select" id="area_tematica" name="area_tematica" required>
+                  <option v-for="(option, key) in area_tematicaOptions" :key="key" :value="option.value">
                     {{ option.label }}
                   </option>
                 </select>
@@ -64,9 +64,9 @@ export default {
         servicio: '',
         norma: '',
         arancel: null,
-        areaTematica: '',
+        area_tematica: '',
       },
-      areaTematicaOptions: [
+      area_tematicaOptions: [
         { value: 'durabilidad', label: 'Durabilidad' },
         { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
         { value: 'geologia', label: 'Geología' },
@@ -90,7 +90,7 @@ export default {
         servicio: '',
         norma: '',
         arancel: null,
-        areaTematica: '',
+        area_tematica: '',
       };
       this.mostrarModal = true;
     },
@@ -99,7 +99,7 @@ export default {
     },
     guardarArancel() {
       // Validar campos obligatorios
-      if (!this.nuevoServicio.servicio || !this.nuevoServicio.norma || this.nuevoServicio.arancel === null || !this.nuevoServicio.areaTematica) {
+      if (!this.nuevoServicio.servicio || !this.nuevoServicio.norma || this.nuevoServicio.arancel === null || !this.nuevoServicio.area_tematica) {
         // Mostrar mensaje de error y no continuar con la acción
         //alert('Por favor, complete todos los campos obligatorios.');
         return;
@@ -116,7 +116,7 @@ export default {
             servicio: '',
             norma: '',
             arancel: null,
-            areaTematica: '',
+            area_tematica: '',
           };
 
           this.showSuccessAlert = true;

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MaxValueValidator
 
 AREA_TEMATICA_CHOICES = [
     ('durabilidad', 'Durabilidad'),
@@ -91,7 +92,7 @@ class Servicio(models.Model):
     nro_servicio = models.AutoField(primary_key=True)
     servicio = models.CharField(max_length=255)
     norma = models.CharField(max_length=255)
-    arancel = models.DecimalField(max_digits=10, decimal_places=2)
+    arancel = models.IntegerField(validators=[MaxValueValidator(999999)])
     area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
 
     def __str__(self):
