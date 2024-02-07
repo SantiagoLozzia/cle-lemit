@@ -1,0 +1,192 @@
+<template>
+  <div>
+    <div class="button-container">
+      <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Nuevo +</button>
+    </div>
+
+    <div class="modal" :class="{ 'show': mostrarModal }" id="modalService">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5 fw-bold">Nuevo Arancel</h1>
+            <button type="button" class="btn-close" @click="cerrarModal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form class="was-validated">
+              <div class="mb-3">
+                <label for="servicio" class="form-label text-left">Servicio:</label>
+                <input v-model="nuevoServicio.servicio" type="text" class="form-control" id="servicio" name="servicio" required />
+              </div>
+
+              <div class="mb-3">
+                <label for="norma" class="form-label text-left">Norma:</label>
+                <input v-model="nuevoServicio.norma" type="text" class="form-control" id="norma" name="norma" required />
+              </div>
+
+              <div class="mb-3">
+                <label for="arancel" class="form-label text-left">Arancel:</label>
+                <input v-model="nuevoServicio.arancel" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="arancel" name="arancel" required />
+              </div>
+
+              <div class="mb-3">
+                <label for="area_tematica" class="form-label text-left">Área Temática:</label>
+                <select v-model="nuevoServicio.area_tematica" class="form-select" id="area_tematica" name="area_tematica" required>
+                  <option v-for="(option, key) in area_tematicaOptions" :key="key" :value="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+
+              <button @click="guardarArancel" type="button" class="btn btn-primary w-100">Guardar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-success" role="alert" v-if="showSuccessAlert">
+      ¡Éxito! El arancel se ha creado correctamente.
+    </div>
+    <div class="alert alert-danger" role="alert" v-if="showErrorAlert">
+      ¡Error! Ha ocurrido un problema al guardar el arancel. Por favor, inténtalo de nuevo.
+    </div>
+
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      nuevoServicio: {
+        servicio: '',
+        norma: '',
+        arancel: null,
+        area_tematica: '',
+      },
+      area_tematicaOptions: [
+        { value: 'durabilidad', label: 'Durabilidad' },
+        { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
+        { value: 'geologia', label: 'Geología' },
+        { value: 'hormigones', label: 'Hormigones' },
+        { value: 'metalurgia', label: 'Metalurgia' },
+        { value: 'patrimonio', label: 'Patrimonio' },
+        { value: 'quimica', label: 'Química' },
+        { value: 'tecnologia_vial', label: 'Tecnología Vial' },
+        { value: 'estudios_especiales', label: 'Estudios Especiales' },
+        { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
+        { value: 'direccion', label: 'Dirección' },
+      ],
+      mostrarModal: false,
+      showSuccessAlert: false,
+      showErrorAlert: false,
+    };
+  },
+  methods: {
+    mostrarFormulario() {
+      this.nuevoServicio = {
+        servicio: '',
+        norma: '',
+        arancel: null,
+        area_tematica: '',
+      };
+      this.mostrarModal = true;
+    },
+    cerrarModal() {
+      this.mostrarModal = false;
+    },
+    guardarArancel() {
+      // Validar campos obligatorios
+      if (!this.nuevoServicio.servicio || !this.nuevoServicio.norma || this.nuevoServicio.arancel === null || !this.nuevoServicio.area_tematica) {
+        // Mostrar mensaje de error y no continuar con la acción
+        //alert('Por favor, complete todos los campos obligatorios.');
+        return;
+      }
+
+      // Enviar datos al backend usando Axios
+      axios.post('http://localhost:8000/api/aranceles/', this.nuevoServicio)
+        .then(response => {
+          console.log(response.data);
+          this.cerrarModal();
+
+          // Limpiar el formulario y mostrar la alerta de éxito
+          this.nuevoServicio = {
+            servicio: '',
+            norma: '',
+            arancel: null,
+            area_tematica: '',
+          };
+
+          this.showSuccessAlert = true;
+
+          setTimeout(() => {
+            this.showSuccessAlert = false;
+          }, 3000);
+        })
+        .catch(error => {
+          console.error('Error al guardar el arancel:', error);
+          this.cerrarModal();
+          this.showErrorAlert = true;
+
+          setTimeout(() => {
+            this.showErrorAlert = false;
+          }, 5000);
+        });
+    },
+  }
+};
+</script>
+
+<style scoped>
+/* Estilos personalizados para el modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#modalService .modal-dialog {
+  max-width: 1500px !important; /* Puedes ajustar este valor según tus necesidades */
+}
+
+.form-select {
+  font-size: 16px;
+  padding: 6px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  width: 100%;
+  appearance: none;
+  padding-right: 2.25rem; /* Espaciado para el ícono */
+}
+
+/* Espaciado para el ícono de flecha en el desplegable */
+.form-select::after {
+  content: '\25BC'; /* Código de la flecha hacia abajo */
+  position: absolute;
+  right: 10px; /* Ajusta la posición según sea necesario */
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; /* Asegura que el ícono no interfiera con los eventos del ratón */
+}
+
+.form-select:focus {
+  border-color: #007bff; /* Color de resaltado cuando el desplegable está enfocado */
+  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); /* Efecto de resaltado cuando está enfocado */
+}
+
+form div.label-container label {
+  text-align: left !important;
+}
+</style>

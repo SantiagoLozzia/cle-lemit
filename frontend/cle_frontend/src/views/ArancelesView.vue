@@ -1,29 +1,31 @@
 <template>
     <div>
+      <NewService :data="servicioData" />
       <ArancelesTable :data="arancelesData" />
-      <!-- Otros componentes específicos de esta vista -->
     </div>
-  </template>
+</template>
   
-  <script>
+
+<script>
+  import NewService from '../components/aranceles/NewService.vue';
   import ArancelesTable from '../components/aranceles/ArancelesTable.vue';
   
+
   export default {
     data() {
       return {
-        arancelesData: [] // Puedes cargar datos específicos de esta vista aquí
+        servicioData: [], // Cargar datos específicos de esta vista aquí
+        arancelesData: [] 
       };
     },
     components: {
-      ArancelesTable
-      // Otros componentes específicos de esta vista
+      NewService,
+      ArancelesTable,
     }
   };
-  </script>
+</script>
   
-  <style>
-  .body {
-    background-color: red;
-  }
-  </style>
+<style>
+
+</style>
   
