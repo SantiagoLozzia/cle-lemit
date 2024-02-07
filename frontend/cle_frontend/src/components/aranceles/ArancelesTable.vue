@@ -10,6 +10,7 @@
           <tr>
             <th>Nro</th>
             <th>Servicio</th>
+            <th>Norma</th>
             <th>Arancel</th>
             <th>Area Tematica</th>
           </tr>
@@ -18,6 +19,7 @@
           <tr v-for="(arancel, index) in aranceles" :key="index">
             <td>{{ arancel.nro_servicio }}</td>
             <td>{{ arancel.servicio }}</td>
+            <td>{{ arancel.norma }}</td>
             <td>{{ arancel.arancel }}</td>
             <td>{{ arancel.area_tematica }}</td>
           </tr>
@@ -38,14 +40,21 @@ export default {
     };
   },
   created() {
-    // Realizar la solicitud para obtener los aranceles 
+    // Escuchar el evento emitido por NewService.vue
+    //const actualizarArancelesUnaVez = () => {
+      //console.log('Evento recibido en ArancelesTable.vue'); // Agregar este console.log
+      //this.actualizarAranceles();
+      //this.$root.$off('nuevo-servicio-agregado', actualizarArancelesUnaVez);
+    //};
+
+    //this.$root.$on('nuevo-servicio-agregado', actualizarArancelesUnaVez);
     this.fetchAranceles();
   },
   methods: {
     async fetchAranceles() {
       try {
         // Realizar una solicitud HTTP utilizando Axios
-        const response = await axios.get('http://localhost:8000/api/aranceles/todos/');
+        const response = await axios.get('api/aranceles/todos/');
         this.aranceles = response.data; // Asignar los aranceles obtenidos a la variable aranceles
       } catch (error) {
         console.error('Error al obtener aranceles:', error);

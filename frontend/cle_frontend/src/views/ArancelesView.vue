@@ -14,7 +14,7 @@
   export default {
     data() {
       return {
-        servicioData: [], // Cargar datos específicos de esta vista aquí
+        servicioData: [], 
         arancelesData: [] 
       };
     },

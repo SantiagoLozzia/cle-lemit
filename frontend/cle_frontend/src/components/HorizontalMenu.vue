@@ -1,17 +1,20 @@
 <template>
     <div id="app">
       <nav>
+        <router-link to="/encurso" class="router-link-item" :class="{ active: isRouteActive('/encurso') || isRouteActive('/') }">
+          <div @click="navigateTo('EnCurso')">En Curso</div>
+        </router-link>
         <router-link to="/aranceles" class="router-link-item" :class="{ active: isRouteActive('/aranceles') }">
           <div @click="navigateTo('Aranceles')">Aranceles</div>
         </router-link>
         <router-link to="/presupuestos" class="router-link-item" :class="{ active: isRouteActive('/presupuestos') }">
           <div @click="navigateTo('Presupuestos')">Presupuestos</div>
         </router-link>
-        <router-link to="/servicios" class="router-link-item" :class="{ active: isRouteActive('/servicios') || isRouteActive('/') }">
-          <div @click="navigateTo('Servicios')">Servicios</div>
-        </router-link>
         <router-link to="/archivo" class="router-link-item" :class="{ active: isRouteActive('/archivo') }">
           <div @click="navigateTo('Archivo')">Archivo</div>
+        </router-link>
+        <router-link to="/solicitantes" class="router-link-item" :class="{ active: isRouteActive('/solicitantes') }">
+          <div @click="navigateTo('Solicitantes')">solicitantes</div>
         </router-link>
       </nav>
     </div>

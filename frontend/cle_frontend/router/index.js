@@ -3,15 +3,17 @@ import { createRouter } from 'vue-router';
 import { createWebHistory } from 'vue-router';
 import ArancelesView from '@/views/ArancelesView.vue';
 import PresupuestosView from '@/views/PresupuestosView.vue';
-import ServiciosView from '@/views/ServiciosView.vue';
+import EnCursoView from '@/views/EnCursoView.vue';
 import ArchivoView from '@/views/ArchivoView.vue';
+import SolicitantesView from '@/views/SolicitantesView.vue';
 
 const routes = [
-  { path: '/', component: ServiciosView },
+  { path: '/', component: EnCursoView },
+  { path: '/encurso', component: EnCursoView },
   { path: '/aranceles', component: ArancelesView },
   { path: '/presupuestos', component: PresupuestosView },
-  { path: '/servicios', component: ServiciosView },
   { path: '/archivo', component: ArchivoView },
+  { path: '/solicitantes', component: SolicitantesView },
 ];
 
 const router = createRouter({
