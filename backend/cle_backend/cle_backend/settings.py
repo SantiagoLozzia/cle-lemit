@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'database',
     'aranceles',
-    'solicitantes'
+    'solicitantes',
+    'presupuestos'
 ]
 
 MIDDLEWARE = [

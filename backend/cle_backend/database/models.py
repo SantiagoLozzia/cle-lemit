@@ -70,7 +70,7 @@ class Solicitante(models.Model):
     codigoPostal = models.CharField(max_length=10)
 
     def __str__(self):
-        return self.nombre_solic
+        return self.nombre_solicitante
 
 class Presupuesto(models.Model):
     nro_presupuesto = models.AutoField(primary_key=True)
@@ -86,7 +86,7 @@ class Presupuesto(models.Model):
     nro_solicitante = models.ForeignKey('Solicitante', on_delete=models.PROTECT)
 
     def __str__(self):
-        return f"Presupuesto #{self.nro_presupuesto} - Solicitante: {self.nro_solicitante.nombre_solic}, Área Temática: {self.get_area_tematica_display()}"
+        return f"Presupuesto #{self.nro_presupuesto} - Solicitante: {self.nro_solicitante.nombre_solicitante}, Área Temática: {self.get_area_tematica_display()}"
 
 class Servicio(models.Model):
     nro_servicio = models.AutoField(primary_key=True)

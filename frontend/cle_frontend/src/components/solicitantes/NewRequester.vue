@@ -83,14 +83,14 @@ export default {
     return {
       nuevoSolicitante: {
         nombre_solicitante: '',
-        cuit: '',
-        pais: null,
+        cuit: null,
+        pais: '',
         provincia: '',
         localidad: '',
         direccion: '',
         telefono: '',
         email: '',
-        codigoPostal: '',
+        codigoPostal: null,
       },
       
       mostrarModal: false,
@@ -102,14 +102,14 @@ export default {
     mostrarFormulario() {
       this.nuevoSolicitante = {
         nombre_solicitante: '',
-        cuit: '',
-        pais: null,
+        cuit: null,
+        pais: '',
         provincia: '',
         localidad: '',
         direccion: '',
         telefono: '',
         email: '',
-        codigoPostal: '',
+        codigoPostal: null,
       };
       this.mostrarModal = true;
     },
@@ -118,7 +118,7 @@ export default {
     },
     guardarSolicitante() {
       // Validar campos obligatorios
-      if (!this.nuevoSolicitante.nombre_solicitante || !this.nuevoSolicitante.cuit || this.nuevoSolicitante.pais === null || !this.nuevoSolicitante.provincia) {
+      if (!this.nuevoSolicitante.nombre_solicitante || !this.nuevoSolicitante.cuit  === null || !this.nuevoSolicitante.pais || !this.nuevoSolicitante.provincia || !this.nuevoSolicitante.localidad || !this.nuevoSolicitante.direccion || !this.nuevoSolicitante.telefono || !this.nuevoSolicitante.email || !this.nuevoSolicitante.codigoPostal) {
         // Mostrar mensaje de error y no continuar con la acción
         //alert('Por favor, complete todos los campos obligatorios.');
         return;
@@ -133,14 +133,14 @@ export default {
           // Limpiar el formulario y mostrar la alerta de éxito
           this.nuevoSolicitante = {
             nombre_solicitante: '',
-            cuit: '',
-            pais: null,
+            cuit: null,
+            pais: '',
             provincia: '',
             localidad: '',
             direccion: '',
             telefono: '',
             email: '',
-            codigoPostal: '',
+            codigoPostal: null,
           };
 
           this.showSuccessAlert = true;

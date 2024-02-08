@@ -1,24 +1,26 @@
 <template>
   <div>
-    <NewBudget :data="budgetData" />
+    <HeaderComponent />
+    <SubMenu :user-permissions="userPermissions" />
+    <router-view></router-view>
   </div>
 </template>
 
 
 <script>
-import NewBudget from '../components/presupuestos/NewBudget.vue';
+  import SubMenu from '../components/presupuestos/SubMenu.vue';
 
 
-export default {
-  data() {
-    return {
-      budgetData: [], 
-    };
-  },
-  components: {
-    NewBudget,
-  }
-};
+  export default {
+    data() {
+      return {
+          //budgetData: []
+      };
+    },
+    components: {
+      SubMenu,
+    }
+  };
 </script>
 
 <style>

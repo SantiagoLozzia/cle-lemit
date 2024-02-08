@@ -14,7 +14,7 @@
           <div @click="navigateTo('Archivo')">Archivo</div>
         </router-link>
         <router-link to="/solicitantes" class="router-link-item" :class="{ active: isRouteActive('/solicitantes') }">
-          <div @click="navigateTo('Solicitantes')">solicitantes</div>
+          <div @click="navigateTo('Solicitantes')">Solicitantes</div>
         </router-link>
       </nav>
     </div>
