@@ -16,8 +16,7 @@ const routes = [
   { path: '/', component: EnCursoView },
   { path: '/encurso', component: EnCursoView },
   { path: '/aranceles', component: ArancelesView },
-  { 
-    path: '/presupuestos', 
+  { path: '/presupuestos', 
     component: PresupuestosView,
     children: [
       { path: '/presupuestos/enespera', component: EnEsperaView },

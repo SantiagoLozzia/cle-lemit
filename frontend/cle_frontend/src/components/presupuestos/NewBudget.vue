@@ -1,4 +1,5 @@
 <template>
+  <div>
     <div>
     <vue-autosuggest
       :suggestions="suggestions"
@@ -86,6 +87,7 @@
       </div>
   
     </div>
+    </div>
   </template>
   
   <script>
@@ -151,24 +153,26 @@
     },
     methods: {
 
-      onInputChange(value) {
-        console.log('Valor de entrada:', value);
-        // Verificar si el usuario está escribiendo en los campos nro_solicitante o solicitante
-        if (value && (this.$refs.nro_solicitante === document.activeElement || this.$refs.solicitante === document.activeElement)) {
-          console.log('Término de búsqueda:', value);  
+      onInputChange(event) {
+        // Obtiene el identificador del campo que activó el evento
+        const activeField = event.target.id;
+        console.log('activeField',activeField);
+        // Verifica si el evento se activó en los campos nro_solicitante o solicitante
+        if (activeField === 'nro_solicitante' || activeField === 'solicitante') {
+          const value = event.target.value;
+          console.log('Valor de entrada:', value);
+
           // Realizar la solicitud HTTP para buscar sugerencias de acuerdo al valor proporcionado
-            axios.get(`http://localhost:8000/api/presupuestos/buscar_solicitantes/?term=${value}`)
-                .then(response => {
-                    this.suggestions = response.data; // Actualizar la lista de sugerencias con los resultados de la búsqueda
-                })
-                .catch(error => {
-                    console.error('Error al buscar solicitantes:', error);
-                });
-        } else {
-              // Limpiar las sugerencias si el usuario no está escribiendo en los campos nro_solicitante o solicitante
-              this.suggestions = [];
+          axios.get(`http://localhost:8000/api/presupuestos/buscar_solicitantes/?term=${value}`)
+            .then(response => {
+              this.suggestions = response.data; // Actualizar la lista de sugerencias con los resultados de la búsqueda
+            })
+            .catch(error => {
+              console.error('Error al buscar solicitantes:', error);
+            });
         }
       },
+
       onSuggestionSelected(suggestion) {
         // La lógica cuando el usuario selecciona una sugerencia
         // Se puede actualizar otros campos del formulario con los detalles del solicitante seleccionado
