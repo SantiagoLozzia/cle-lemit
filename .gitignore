@@ -92,3 +92,7 @@ tmtags
 mono_crash.*
 
 # Windows In
+
+# Python-generated files
+*.pyc
+__pycache__/
