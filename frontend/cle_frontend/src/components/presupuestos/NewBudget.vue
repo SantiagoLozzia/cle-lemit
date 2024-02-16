@@ -1,10 +1,11 @@
 <template>
+  <div>
     <div>
       <div class="button-container">
         <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Nuevo +</button>
       </div>
   
-      <div class="modal" :class="{ 'show': mostrarModal }" id="modalService">
+      <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -13,31 +14,56 @@
             </div>
             <div class="modal-body">
               <form class="was-validated">
+
                 <div class="mb-3">
-                  <label for="servicio" class="form-label text-left">Servicio:</label>
-                  <input v-model="nuevoServicio.servicio" type="text" class="form-control" id="servicio" name="servicio" required />
+                  <label for="nro_solicitante" class="form-label text-left">Nro Solicitante:</label>
+                  <input v-model="nuevoPresupuesto.nro_solicitante" type="text" class="form-control" id="nro_solicitante" name="nro_solicitante" required ref="nro_solicitante" />
                 </div>
-  
+
                 <div class="mb-3">
-                  <label for="norma" class="form-label text-left">Norma:</label>
-                  <input v-model="nuevoServicio.norma" type="text" class="form-control" id="norma" name="norma" required />
+                  <label for="solicitante" class="form-label text-left">Solicitante:</label>
+                  <input v-model="nuevoPresupuesto.solicitante" type="text" class="form-control" id="solicitante" name="solicitante" required ref="solicitante" />
                 </div>
-  
+
                 <div class="mb-3">
-                  <label for="arancel" class="form-label text-left">Arancel:</label>
-                  <input v-model="nuevoServicio.arancel" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="arancel" name="arancel" required />
+                  <label for="contacto" class="form-label text-left">Contacto:</label>
+                  <input v-model="nuevoPresupuesto.contacto" type="text" class="form-control" id="contacto" name="contacto" required />
+                </div>
+                
+                <div class="mb-3">
+                  <label for="telefono" class="form-label text-left">Teléfono:</label>
+                  <input v-model="nuevoPresupuesto.telefono" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="telefono" name="telefono" required />
+                </div>
+
+                <div class="mb-3">
+                  <label for="email" class="form-label text-left">Email:</label>
+                  <input v-model="nuevoPresupuesto.email" type="text" class="form-control" id="email" name="email" required />
                 </div>
   
                 <div class="mb-3">
                   <label for="area_tematica" class="form-label text-left">Área Temática:</label>
-                  <select v-model="nuevoServicio.area_tematica" class="form-select" id="area_tematica" name="area_tematica" required>
+                  <select v-model="nuevoPresupuesto.area_tematica" class="form-select" id="area_tematica" name="area_tematica" required>
                     <option v-for="(option, key) in area_tematicaOptions" :key="key" :value="option.value">
                       {{ option.label }}
                     </option>
                   </select>
                 </div>
+
+                <div class="mb-3">
+                  <label for="subtotal" class="form-label text-left">SubTotal:</label>
+                  <input v-model="nuevoPresupuesto.subtotal" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="subtotal" name="subtotal" required />
+                </div>
+
+                <div class="mb-3">
+                  <label for="descuento" class="form-label text-left">Descuento:</label>
+                  <select v-model="nuevoPresupuesto.descuento" class="form-select" id="descuento" name="descuento" required>
+                    <option v-for="(option, key) in descuentoOptions" :key="key" :value="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
   
-                <button @click="guardarArancel" type="button" class="btn btn-primary w-100">Guardar</button>
+                <button @click="guardarPresupuesto" type="button" class="btn btn-primary w-100">Guardar</button>
               </form>
             </div>
           </div>
@@ -45,12 +71,13 @@
       </div>
   
       <div class="alert alert-success" role="alert" v-if="showSuccessAlert">
-        ¡Éxito! El arancel se ha creado correctamente.
+        ¡Éxito! El presupuesto se ha creado correctamente.
       </div>
       <div class="alert alert-danger" role="alert" v-if="showErrorAlert">
-        ¡Error! Ha ocurrido un problema al guardar el arancel. Por favor, inténtalo de nuevo.
+        ¡Error! Ha ocurrido un problema al guardar el presupuesto. Por favor, inténtalo de nuevo.
       </div>
   
+    </div>
     </div>
   </template>
   
@@ -58,13 +85,26 @@
   import axios from 'axios';
   
   export default {
+    
+    components: {
+    },
+
     data() {
       return {
-        nuevoServicio: {
-          servicio: '',
-          norma: '',
-          arancel: null,
+        inputProps: {
+        placeholder: 'Buscar solicitante',
+        },
+        suggestions: [], 
+
+        nuevoPresupuesto: {
+          nro_solicitante: '',
+          solicitante: '',
+          contacto: '',
+          telefono: null,
+          email: '',
           area_tematica: '',
+          subtotal: null,
+          descuento: '0',
         },
         area_tematicaOptions: [
           { value: 'durabilidad', label: 'Durabilidad' },
@@ -79,44 +119,98 @@
           { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
           { value: 'direccion', label: 'Dirección' },
         ],
+        descuentoOptions: [
+          { value: '0', label: '0%' },
+          { value: '5', label: '5%' },
+          { value: '10', label: '10%' },
+          { value: '15', label: '15%' },
+          { value: '20', label: '20%' },
+          { value: '25', label: '25%' },
+          { value: '30', label: '30%' },
+          { value: '40', label: '40%' },
+          { value: '50', label: '50%' },
+          { value: '60', label: '60%' },
+          { value: '70', label: '70%' },
+          { value: '80', label: '80%' },
+          { value: '90', label: '90%' },
+          { value: '100', label: '100%' },
+        ],
         mostrarModal: false,
         showSuccessAlert: false,
         showErrorAlert: false,
       };
     },
     methods: {
+
+      onInputChange(event) {
+        // Obtiene el identificador del campo que activó el evento
+        // const activeField = event.target.id;
+        console.log('prueba',event);
+        // Verifica si el evento se activó en los campos nro_solicitante o solicitante
+        // if (activeField === 'nro_solicitante' || activeField === 'solicitante') {
+        //   const value = event.target.value;
+        //   console.log('Valor de entrada:', value);
+
+        //   // Realizar la solicitud HTTP para buscar sugerencias de acuerdo al valor proporcionado
+        //   axios.get(`http://localhost:8000/api/presupuestos/buscar_solicitantes/?term=${value}`)
+        //     .then(response => {
+        //       this.suggestions = response.data; // Actualizar la lista de sugerencias con los resultados de la búsqueda
+        //     })
+        //     .catch(error => {
+        //       console.error('Error al buscar solicitantes:', error);
+        //     });
+        // }
+      },
+
+      onSuggestionSelected(suggestion) {
+        // La lógica cuando el usuario selecciona una sugerencia
+        // Se puede actualizar otros campos del formulario con los detalles del solicitante seleccionado
+        this.nuevoPresupuesto.nro_solicitante = suggestion.nro_solicitante;
+        this.nuevoPresupuesto.solicitante = suggestion.nombre_solicitante;
+        this.nuevoPresupuesto.contacto = suggestion.telefono;
+        this.nuevoPresupuesto.email = suggestion.email;
+      },
+
       mostrarFormulario() {
-        this.nuevoServicio = {
-          servicio: '',
-          norma: '',
-          arancel: null,
+        this.nuevoPresupuesto = {
+          nro_solicitante: '', 
+          solicitante: '',
+          contacto: '',
+          telefono: null,
+          email: '',
           area_tematica: '',
+          subtotal: null,
+          descuento: '0',
         };
         this.mostrarModal = true;
       },
       cerrarModal() {
         this.mostrarModal = false;
       },
-      guardarArancel() {
+      guardarPresupuesto() {
         // Validar campos obligatorios
-        if (!this.nuevoServicio.servicio || !this.nuevoServicio.norma || this.nuevoServicio.arancel === null || !this.nuevoServicio.area_tematica) {
+        if (!this.nuevoPresupuesto.contacto || !this.nuevoPresupuesto.email || !this.nuevoPresupuesto.area_tematica || this.nuevoPresupuesto.subtotal === null || this.nuevoPresupuesto.descuento === null ) {
           // Mostrar mensaje de error y no continuar con la acción
           //alert('Por favor, complete todos los campos obligatorios.');
           return;
         }
   
         // Enviar datos al backend usando Axios
-        axios.post('http://localhost:8000/api/aranceles/', this.nuevoServicio)
+        axios.post('/api/presupuestos/', this.nuevoPresupuesto)
           .then(response => {
             console.log(response.data);
             this.cerrarModal();
   
             // Limpiar el formulario y mostrar la alerta de éxito
-            this.nuevoServicio = {
-              servicio: '',
-              norma: '',
-              arancel: null,
+            this.nuevoPresupuesto = {
+              nro_solicitante: '', // Cambié solicitante por nro_solicitante, asumiendo que es el campo donde se ingresa el número del solicitante
+              solicitante: '', // Este campo se llenará automáticamente cuando el usuario seleccione una sugerencia
+              contacto: '',
+              telefono: null,
+              email: '',
               area_tematica: '',
+              subtotal: null,
+              descuento: '0',
             };
   
             this.showSuccessAlert = true;
@@ -130,7 +224,7 @@
             
           })
           .catch(error => {
-            console.error('Error al guardar el arancel:', error);
+            console.error('Error al guardar el presupuesto:', error);
             this.cerrarModal();
             this.showErrorAlert = true;
   
@@ -139,12 +233,17 @@
             }, 5000);
           });
       },
-    }
+    },
+
+    // //computed: {
+    //     hasChanged (){
+    //         console.log("CAMBIO")
+    //     }
+    // }
   };
   </script>
   
   <style scoped>
-  /* Estilos personalizados para el modal */
   .modal {
     display: none;
     position: fixed;
@@ -161,8 +260,8 @@
     justify-content: center;
   }
   
-  #modalService .modal-dialog {
-    max-width: 1500px !important; /* Puedes ajustar este valor según tus necesidades */
+  #modalPresupuesto .modal-dialog {
+    max-width: 1500px !important; 
   }
   
   .form-select {
@@ -179,10 +278,10 @@
   .form-select::after {
     content: '\25BC'; /* Código de la flecha hacia abajo */
     position: absolute;
-    right: 10px; /* Ajusta la posición según sea necesario */
+    right: 10px; 
     top: 50%;
     transform: translateY(-50%);
-    pointer-events: none; /* Asegura que el ícono no interfiera con los eventos del ratón */
+    pointer-events: none; 
   }
   
   .form-select:focus {

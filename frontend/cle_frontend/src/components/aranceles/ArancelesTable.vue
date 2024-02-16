@@ -1,5 +1,6 @@
 <template>
   <div class="aranceles-container">
+    
     <div class="title-container">  
       <h2>Tabla de Aranceles</h2>
     </div>
@@ -31,47 +32,36 @@
 
 <script>
 
-import axios from 'axios';
+  import { ref, onMounted } from 'vue';
+  import axios from 'axios';
+  
+  export default {
+    setup() {
+      const aranceles = ref([]); // Utilizamos ref para aranceles
 
-export default {
-  data() {
-    return {
-      aranceles: [] // Inicialmente vacío
-    };
-  },
-  created() {
-    // Escuchar el evento emitido por NewService.vue
-    //const actualizarArancelesUnaVez = () => {
-      //console.log('Evento recibido en ArancelesTable.vue'); // Agregar este console.log
-      //this.actualizarAranceles();
-      //this.$root.$off('nuevo-servicio-agregado', actualizarArancelesUnaVez);
-    //};
+      const fetchAranceles = async () => {
+        try {
+          const response = await axios.get('api/aranceles/todos/');
+          aranceles.value = response.data; // Actualizamos aranceles.value
+        } 
+        
+        catch (error) {
+          console.error('Error al obtener aranceles:', error);
+        }
+      };
 
-    //this.$root.$on('nuevo-servicio-agregado', actualizarArancelesUnaVez);
-    this.fetchAranceles();
-  },
-  methods: {
-    async fetchAranceles() {
-      try {
-        // Realizar una solicitud HTTP utilizando Axios
-        const response = await axios.get('api/aranceles/todos/');
-        this.aranceles = response.data; // Asignar los aranceles obtenidos a la variable aranceles
-      } catch (error) {
-        console.error('Error al obtener aranceles:', error);
-      }
+      onMounted(fetchAranceles); // Utilizamos onMounted para llamar a fetchAranceles en la creación del componente
+
+      return { aranceles }; // Devolvemos aranceles para usarlo en el template
     }
-  }
-};
+  };
 </script>
 
 <style scoped>
-/* Ajuste de la posición vertical del título */
 .title-container {
   position: relative;
   top: 50px;
 }
-
-/* Espaciado entre el título y la tabla */
 .table-container {
   margin-top: 80px;
 }

@@ -15,6 +15,7 @@
     "popper.js": "^1.16.1",
     "portal-vue": "^3.0.0",
     "terser-webpack-plugin": "^4.2.3",
+    "vue-autosuggest": "^2.2.0",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {

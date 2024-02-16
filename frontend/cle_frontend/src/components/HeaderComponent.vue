@@ -1,30 +1,34 @@
 <template>
     <header class="header-container">
       <div class="logo-container">
-        <!-- Asegúrate de ajustar la ruta del logo -->
-        <img alt="Logo" src="../assets/logo_L.png" class="logo">
+        <img alt="Logo" :src="logoPath" class="logo">
       </div>
-      <!-- Otros elementos del encabezado, como el título, menú, etc. -->
     </header>
-  </template>
+</template>
   
-  <script>
+<script>
+  import logo from '@/assets/logo_L.png';
+  
   export default {
-    // Datos y métodos de tu componente Header
+    data() {
+      return {
+        logoPath: logo
+      };
+    }
   };
-  </script>
+</script>
   
-  <style scoped>
-  .header-container {
-    background-color: #026290;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+<style scoped>
+ .header-container {
+   background-color: #026290;
+   padding: 10px;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
   }
   
   .logo {
     width: 40px; /* Ajusta el tamaño del logo según tus necesidades */
   }
   
-  </style>  
+</style>  
