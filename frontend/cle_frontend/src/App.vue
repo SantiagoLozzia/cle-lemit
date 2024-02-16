@@ -7,6 +7,7 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
 import HeaderComponent from './components/HeaderComponent.vue';
 import HorizontalMenu from './components/HorizontalMenu.vue';
 
@@ -16,18 +17,23 @@ export default {
     HeaderComponent,
     HorizontalMenu,
   },
-  data() {
+  setup() {
+    // Estado reactivo
+    const userPermissions = ref({
+      option1: true,
+      option2: false,
+      // ... y así sucesivamente
+    });
+
+    // Efecto secundario al montar el componente
+    onMounted(() => {
+      document.title = "Circuito Legajo Electronico";
+    });
+
+    // Devolver el estado y los efectos secundarios
     return {
-      userPermissions: {
-        option1: true,
-        option2: false,
-        // ... y así sucesivamente
-      },
+      userPermissions,
     };
-  },
-  created() {
-    // Cambiar el título de la página
-    document.title = "Circuito Legajo Electronico";
   },
 };
 </script>

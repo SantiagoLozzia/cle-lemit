@@ -21,18 +21,30 @@
   </template>
   
   <script>
+  //import { ref } from 'vue';
+  import { useRoute, useRouter } from 'vue-router';
+  
   export default {
-    methods: {
-      navigateTo(item) {
+    setup() {
+      const $route = useRoute();
+      const $router = useRouter();
+
+      const isRouteActive = (route) => {
+        return $route.matched.some(record => record.path === route);
+      };
+  
+      const navigateTo = (item) => {
         // Cambiar la ruta solo si no está ya en la página correspondiente
-        if (this.$route.path !== '/' + item.toLowerCase()) {
-          this.$router.push('/' + item.toLowerCase());
+        if ($route.path !== '/' + item.toLowerCase()) {
+          $router.push('/' + item.toLowerCase());
         }
-      },
-      isRouteActive(route) {
-        return this.$route.matched.some(record => record.path === route);
-      },
-    },
+      };
+  
+      return {
+        isRouteActive,
+        navigateTo
+      };
+    }
   };
   </script>
   

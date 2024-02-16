@@ -55,92 +55,99 @@
 </template>
 
 <script>
+import { ref } from 'vue';
 import axios from 'axios';
 
 export default {
-  data() {
-    return {
-      nuevoServicio: {
-        servicio: '',
-        norma: '',
-        arancel: null,
-        area_tematica: '',
-      },
-      area_tematicaOptions: [
-        { value: 'durabilidad', label: 'Durabilidad' },
-        { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
-        { value: 'geologia', label: 'Geología' },
-        { value: 'hormigones', label: 'Hormigones' },
-        { value: 'metalurgia', label: 'Metalurgia' },
-        { value: 'patrimonio', label: 'Patrimonio' },
-        { value: 'quimica', label: 'Química' },
-        { value: 'tecnologia_vial', label: 'Tecnología Vial' },
-        { value: 'estudios_especiales', label: 'Estudios Especiales' },
-        { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
-        { value: 'direccion', label: 'Dirección' },
-      ],
-      mostrarModal: false,
-      showSuccessAlert: false,
-      showErrorAlert: false,
-    };
-  },
-  methods: {
-    mostrarFormulario() {
-      this.nuevoServicio = {
+  setup() {
+    const nuevoServicio = ref({
+      servicio: '',
+      norma: '',
+      arancel: null,
+      area_tematica: '',
+    });
+
+    const area_tematicaOptions = [
+      { value: 'durabilidad', label: 'Durabilidad' },
+      { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
+      { value: 'geologia', label: 'Geología' },
+      { value: 'hormigones', label: 'Hormigones' },
+      { value: 'metalurgia', label: 'Metalurgia' },
+      { value: 'patrimonio', label: 'Patrimonio' },
+      { value: 'quimica', label: 'Química' },
+      { value: 'tecnologia_vial', label: 'Tecnología Vial' },
+      { value: 'estudios_especiales', label: 'Estudios Especiales' },
+      { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
+      { value: 'direccion', label: 'Dirección' },
+    ];
+
+    const mostrarModal = ref(false);
+    const showSuccessAlert = ref(false);
+    const showErrorAlert = ref(false);
+
+    const mostrarFormulario = () => {
+      nuevoServicio.value = {
         servicio: '',
         norma: '',
         arancel: null,
         area_tematica: '',
       };
-      this.mostrarModal = true;
-    },
-    cerrarModal() {
-      this.mostrarModal = false;
-    },
-    guardarArancel() {
-      // Validar campos obligatorios
-      if (!this.nuevoServicio.servicio || !this.nuevoServicio.norma || this.nuevoServicio.arancel === null || !this.nuevoServicio.area_tematica) {
-        // Mostrar mensaje de error y no continuar con la acción
-        //alert('Por favor, complete todos los campos obligatorios.');
+      mostrarModal.value = true;
+    };
+
+    const cerrarModal = () => {
+      mostrarModal.value = false;
+    };
+
+    const guardarArancel = () => {
+      if (!nuevoServicio.value.servicio || !nuevoServicio.value.norma || nuevoServicio.value.arancel === null || !nuevoServicio.value.area_tematica) {
         return;
       }
 
-      // Enviar datos al backend usando Axios
-      axios.post('http://localhost:8000/api/aranceles/', this.nuevoServicio)
+      axios.post('http://localhost:8000/api/aranceles/', nuevoServicio.value)
         .then(response => {
           console.log(response.data);
-          this.cerrarModal();
+          cerrarModal();
 
-          // Limpiar el formulario y mostrar la alerta de éxito
-          this.nuevoServicio = {
+          nuevoServicio.value = {
             servicio: '',
             norma: '',
             arancel: null,
             area_tematica: '',
           };
 
-          this.showSuccessAlert = true;
+          showSuccessAlert.value = true;
 
           setTimeout(() => {
-            this.showSuccessAlert = false;
+            showSuccessAlert.value = false;
           }, 3000);
         })
         .catch(error => {
           console.error('Error al guardar el arancel:', error);
-          this.cerrarModal();
-          this.showErrorAlert = true;
+          cerrarModal();
+          showErrorAlert.value = true;
 
           setTimeout(() => {
-            this.showErrorAlert = false;
+            showErrorAlert.value = false;
           }, 5000);
         });
-    },
+    };
+
+    return {
+      nuevoServicio,
+      area_tematicaOptions,
+      mostrarModal,
+      showSuccessAlert,
+      showErrorAlert,
+      mostrarFormulario,
+      cerrarModal,
+      guardarArancel
+    };
   }
 };
 </script>
 
 <style scoped>
-/* Estilos personalizados para el modal */
 .modal {
   display: none;
   position: fixed;
@@ -158,7 +165,7 @@ export default {
 }
 
 #modalService .modal-dialog {
-  max-width: 1500px !important; /* Puedes ajustar este valor según tus necesidades */
+  max-width: 1500px !important; 
 }
 
 .form-select {
@@ -168,22 +175,21 @@ export default {
   border-radius: 5px;
   width: 100%;
   appearance: none;
-  padding-right: 2.25rem; /* Espaciado para el ícono */
+  padding-right: 2.25rem; 
 }
 
-/* Espaciado para el ícono de flecha en el desplegable */
 .form-select::after {
   content: '\25BC'; /* Código de la flecha hacia abajo */
   position: absolute;
-  right: 10px; /* Ajusta la posición según sea necesario */
+  right: 10px; 
   top: 50%;
   transform: translateY(-50%);
-  pointer-events: none; /* Asegura que el ícono no interfiera con los eventos del ratón */
+  pointer-events: none; 
 }
 
 .form-select:focus {
-  border-color: #007bff; /* Color de resaltado cuando el desplegable está enfocado */
-  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); /* Efecto de resaltado cuando está enfocado */
+  border-color: #007bff; 
+  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); 
 }
 
 form div.label-container label {

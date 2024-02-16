@@ -71,17 +71,17 @@
     <div class="alert alert-danger" role="alert" v-if="showErrorAlert">
       ¡Error! Ha ocurrido un problema al guardar el solicitante Por favor, inténtalo de nuevo.
     </div>
-
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+  import { ref } from 'vue'; 
+  import axios from 'axios';
 
-export default {
-  data() {
-    return {
-      nuevoSolicitante: {
+  export default {
+    setup() {
+      const mostrarModal = ref(false);
+      const nuevoSolicitante = ref({
         nombre_solicitante: '',
         cuit: null,
         pais: '',
@@ -91,132 +91,134 @@ export default {
         telefono: '',
         email: '',
         codigoPostal: null,
-      },
-      
-      mostrarModal: false,
-      showSuccessAlert: false,
-      showErrorAlert: false,
-    };
-  },
-  methods: {
-    mostrarFormulario() {
-      this.nuevoSolicitante = {
-        nombre_solicitante: '',
-        cuit: null,
-        pais: '',
-        provincia: '',
-        localidad: '',
-        direccion: '',
-        telefono: '',
-        email: '',
-        codigoPostal: null,
+      });
+
+      const showSuccessAlert = ref(false);
+      const showErrorAlert = ref(false);
+
+      const mostrarFormulario = () => {
+        nuevoSolicitante.value = {
+          nombre_solicitante: '',
+          cuit: null,
+          pais: '',
+          provincia: '',
+          localidad: '',
+          direccion: '',
+          telefono: '',
+          email: '',
+          codigoPostal: null,
+        };
+        mostrarModal.value = true;
       };
-      this.mostrarModal = true;
-    },
-    cerrarModal() {
-      this.mostrarModal = false;
-    },
-    guardarSolicitante() {
-      // Validar campos obligatorios
-      if (!this.nuevoSolicitante.nombre_solicitante || !this.nuevoSolicitante.cuit  === null || !this.nuevoSolicitante.pais || !this.nuevoSolicitante.provincia || !this.nuevoSolicitante.localidad || !this.nuevoSolicitante.direccion || !this.nuevoSolicitante.telefono || !this.nuevoSolicitante.email || !this.nuevoSolicitante.codigoPostal) {
-        // Mostrar mensaje de error y no continuar con la acción
-        //alert('Por favor, complete todos los campos obligatorios.');
-        return;
-      }
 
-      // Enviar datos al backend usando Axios
-      axios.post('api/solicitantes/', this.nuevoSolicitante)
-        .then(response => {
-          console.log(response.data);
-          this.cerrarModal();
+      const cerrarModal = () => {
+        mostrarModal.value = false;
+      };
 
-          // Limpiar el formulario y mostrar la alerta de éxito
-          this.nuevoSolicitante = {
-            nombre_solicitante: '',
-            cuit: null,
-            pais: '',
-            provincia: '',
-            localidad: '',
-            direccion: '',
-            telefono: '',
-            email: '',
-            codigoPostal: null,
-          };
+      const guardarSolicitante = () => {
+        // Validar campos obligatorios
+        if (!nuevoSolicitante.value.nombre_solicitante || nuevoSolicitante.value.cuit === null || !nuevoSolicitante.value.pais || !nuevoSolicitante.value.provincia || !nuevoSolicitante.value.localidad || !nuevoSolicitante.value.direccion || !nuevoSolicitante.value.telefono || !nuevoSolicitante.value.email || !nuevoSolicitante.value.codigoPostal) {
+          // Mostrar mensaje de error y no continuar con la acción
+          return;
+        }
 
-          this.showSuccessAlert = true;
+        // Enviar datos al backend
+        axios.post('api/solicitantes/', nuevoSolicitante.value)
+          .then(response => {
+            console.log(response.data);
+            cerrarModal();
 
-          setTimeout(() => {
-            this.showSuccessAlert = false;
-          }, 3000);
+            // Limpiar el formulario y mostrar la alerta de éxito
+            nuevoSolicitante.value = {
+              nombre_solicitante: '',
+              cuit: null,
+              pais: '',
+              provincia: '',
+              localidad: '',
+              direccion: '',
+              telefono: '',
+              email: '',
+              codigoPostal: null,
+            };
 
-          //console.log('Evento emitido desde NewSolicitante.vue');
-          //this.$root.$emit('nuevo-nombre_solicitante-agregado');
-          
-        })
-        .catch(error => {
-          console.error('Error al guardar el solicitante:', error);
-          this.cerrarModal();
-          this.showErrorAlert = true;
+            showSuccessAlert.value = true;
 
-          setTimeout(() => {
-            this.showErrorAlert = false;
-          }, 5000);
-        });
-    },
-  }
-};
+            setTimeout(() => {
+              showSuccessAlert.value = false;
+            }, 3000);
+          })
+          .catch(error => {
+            console.error('Error al guardar el solicitante:', error);
+            cerrarModal();
+            showErrorAlert.value = true;
+
+            setTimeout(() => {
+              showErrorAlert.value = false;
+            }, 5000);
+          });
+      };
+
+      return {
+        mostrarModal,
+        nuevoSolicitante,
+        showSuccessAlert,
+        showErrorAlert,
+        mostrarFormulario,
+        cerrarModal,
+        guardarSolicitante,
+      };
+    }
+  };
 </script>
 
 <style scoped>
-/* Estilos personalizados para el modal */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 
-.modal.show {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-#modalSolicitante {
-  max-width: 100% !important;
-  margin: 0 auto; /* Centra el modal horizontalmente */
-  margin-top: 0px; /* Agrega un margen superior para evitar que el modal se pegue en la parte superior */
-}
+  #modalSolicitante {
+    max-width: 100% !important;
+    margin: 0 auto; 
+    margin-top: 0px; 
+  }
 
-.form-select {
-  font-size: 16px;
-  padding: 6px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
-  width: 100%;
-  appearance: none;
-  padding-right: 2.25rem; /* Espaciado para el ícono */
-}
+  .form-select {
+    font-size: 16px;
+    padding: 6px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    width: 100%;
+    appearance: none;
+    padding-right: 2.25rem; 
+  }
 
-/* Espaciado para el ícono de flecha en el desplegable */
-.form-select::after {
-  content: '\25BC'; /* Código de la flecha hacia abajo */
-  position: absolute;
-  right: 10px; /* Ajusta la posición según sea necesario */
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none; /* Asegura que el ícono no interfiera con los eventos del ratón */
-}
+  .form-select::after {
+    content: '\25BC'; /* Código de la flecha hacia abajo */
+    position: absolute;
+    right: 10px; 
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; 
+  }
 
-.form-select:focus {
-  border-color: #007bff; /* Color de resaltado cuando el desplegable está enfocado */
-  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); /* Efecto de resaltado cuando está enfocado */
-}
+  .form-select:focus {
+    border-color: #007bff; 
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+  }
 
-form div.label-container label {
-  text-align: left !important;
-}
+  form div.label-container label {
+    text-align: left !important;
+  }
 </style>
