@@ -1,15 +1,6 @@
 <template>
   <div>
     <div>
-    <vue-autosuggest
-      :suggestions="suggestions"
-      :input-props="inputProps"
-      @input="onInputChange"
-      @selected="onSuggestionSelected"
-    ></vue-autosuggest>
-    </div>
-
-    <div>
       <div class="button-container">
         <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Nuevo +</button>
       </div>
@@ -92,12 +83,10 @@
   
   <script>
   import axios from 'axios';
-  import VueAutosuggest from 'vue-autosuggest';
   
   export default {
     
     components: {
-    VueAutosuggest,
     },
 
     data() {
@@ -155,22 +144,22 @@
 
       onInputChange(event) {
         // Obtiene el identificador del campo que activó el evento
-        const activeField = event.target.id;
-        console.log('activeField',activeField);
+        // const activeField = event.target.id;
+        console.log('prueba',event);
         // Verifica si el evento se activó en los campos nro_solicitante o solicitante
-        if (activeField === 'nro_solicitante' || activeField === 'solicitante') {
-          const value = event.target.value;
-          console.log('Valor de entrada:', value);
+        // if (activeField === 'nro_solicitante' || activeField === 'solicitante') {
+        //   const value = event.target.value;
+        //   console.log('Valor de entrada:', value);
 
-          // Realizar la solicitud HTTP para buscar sugerencias de acuerdo al valor proporcionado
-          axios.get(`http://localhost:8000/api/presupuestos/buscar_solicitantes/?term=${value}`)
-            .then(response => {
-              this.suggestions = response.data; // Actualizar la lista de sugerencias con los resultados de la búsqueda
-            })
-            .catch(error => {
-              console.error('Error al buscar solicitantes:', error);
-            });
-        }
+        //   // Realizar la solicitud HTTP para buscar sugerencias de acuerdo al valor proporcionado
+        //   axios.get(`http://localhost:8000/api/presupuestos/buscar_solicitantes/?term=${value}`)
+        //     .then(response => {
+        //       this.suggestions = response.data; // Actualizar la lista de sugerencias con los resultados de la búsqueda
+        //     })
+        //     .catch(error => {
+        //       console.error('Error al buscar solicitantes:', error);
+        //     });
+        // }
       },
 
       onSuggestionSelected(suggestion) {
@@ -244,7 +233,13 @@
             }, 5000);
           });
       },
-    }
+    },
+
+    // //computed: {
+    //     hasChanged (){
+    //         console.log("CAMBIO")
+    //     }
+    // }
   };
   </script>
   

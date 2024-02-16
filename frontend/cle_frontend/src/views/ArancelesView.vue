@@ -1,10 +1,9 @@
 <template>
-    <div>
-      <NewService :data="servicioData" />
-      <ArancelesTable :data="arancelesData" />
-    </div>
+  <div>
+    <NewService :data="servicioData" />
+    <ArancelesTable :data="arancelesData" />
+  </div>
 </template>
-  
 
 <script>
   import NewService from '../components/aranceles/NewService.vue';
@@ -25,7 +24,7 @@
   };
 </script>
   
-<style>
+<style scoped>
 
 </style>
   
