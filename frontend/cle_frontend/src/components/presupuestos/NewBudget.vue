@@ -2,7 +2,7 @@
   <div>
     <div>
       <div class="button-container">
-        <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Nuevo +</button>
+        <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">+ Nuevo</button>
       </div>
   
       <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">
@@ -17,13 +17,23 @@
 
                 <div class="mb-3">
                   <label for="nro_solicitante" class="form-label text-left">Nro Solicitante:</label>
-                  <input v-model="nuevoPresupuesto.nro_solicitante" type="text" class="form-control" id="nro_solicitante" name="nro_solicitante" required ref="nro_solicitante" />
+                  <input v-model="nuevoPresupuesto.nro_solicitante" :readonly="solicitanteSeleccionado" type="text" class="form-control" id="nro_solicitante" name="nro_solicitante" required ref="nro_solicitante" />
                 </div>
 
                 <div class="mb-3">
-                  <label for="solicitante" class="form-label text-left">Solicitante:</label>
-                  <input v-model="nuevoPresupuesto.solicitante" type="text" class="form-control" id="solicitante" name="solicitante" required ref="solicitante" />
+                    <label for="solicitante" class="form-label text-left">Solicitante:</label>
+                    <input v-model="nuevoPresupuesto.nombre_solicitante" type="text" class="form-control" id="solicitante" name="solicitante" required ref="solicitante" @input="buscarSugerencias">
+                    <select v-if="sugerencias.length > 0" v-model="selectedSolicitante" @change="seleccionarSugerencia(selectedSolicitante)" class="form-select mt-1">
+                        <option v-for="sugerencia in sugerencias" :key="sugerencia.nro_solicitante" :value="sugerencia">
+                            {{ sugerencia.nro_solicitante }} - {{ sugerencia.nombre_solicitante }}
+                        </option>
+                    </select>
                 </div>
+
+                <!-- <div class="mb-3">
+                    <label for="solicitante" class="form-label text-left">Solicitante:</label>
+                    <v-select v-model="nuevoPresupuesto.solicitante" :options="sugerencias" label="nombre_solicitante" />
+                </div> -->
 
                 <div class="mb-3">
                   <label for="contacto" class="form-label text-left">Contacto:</label>
@@ -49,6 +59,8 @@
                   </select>
                 </div>
 
+                <DetallePresupuesto/>
+
                 <div class="mb-3">
                   <label for="subtotal" class="form-label text-left">SubTotal:</label>
                   <input v-model="nuevoPresupuesto.subtotal" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="subtotal" name="subtotal" required />
@@ -61,6 +73,17 @@
                       {{ option.label }}
                     </option>
                   </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="total" class="form-label text-left">Total:</label>
+                  <input v-model="nuevoPresupuesto.total" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="total" name="total" required />
+                </div>
+
+                <span class="left-align">Validez de 30 dias</span>
+                <div class="mb-3">
+                  <label for="observaciones" class="form-label text-left">Observaciones:</label>
+                  <input v-model="nuevoPresupuesto.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" required />
                 </div>
   
                 <button @click="guardarPresupuesto" type="button" class="btn btn-primary w-100">Guardar</button>
@@ -79,34 +102,38 @@
   
     </div>
     </div>
-  </template>
-  
-  <script>
+</template>
+
+<script>
   import axios from 'axios';
-  
+  import { ref } from 'vue';
+  import { debounce } from 'lodash';
+  import DetallePresupuesto from './DetallePresupuesto.vue';
+  // eslint-disable-next-line no-unused-vars
+  // import vSelect from 'vue-select';
+  // import 'vue-select/dist/vue-select.css';
+
   export default {
-    
     components: {
+      DetallePresupuesto,
     },
 
-    data() {
-      return {
-        inputProps: {
-        placeholder: 'Buscar solicitante',
-        },
-        suggestions: [], 
-
-        nuevoPresupuesto: {
-          nro_solicitante: '',
-          solicitante: '',
-          contacto: '',
-          telefono: null,
-          email: '',
-          area_tematica: '',
-          subtotal: null,
-          descuento: '0',
-        },
-        area_tematicaOptions: [
+    setup() {
+      const inputProps = ref({ placeholder: 'Buscar solicitante' });
+      const sugerencias = ref([]);
+      const selectedSolicitante = ref(null);
+      let solicitanteSeleccionado = ref(false);
+      const nuevoPresupuesto = ref({
+        nro_solicitante: '',
+        nombre_solicitante: '',
+        contacto: '',
+        telefono: null,
+        email: '',
+        area_tematica: '',
+        subtotal: null,
+        descuento: '0',
+        });
+        const area_tematicaOptions = ref([
           { value: 'durabilidad', label: 'Durabilidad' },
           { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
           { value: 'geologia', label: 'Geología' },
@@ -118,8 +145,8 @@
           { value: 'estudios_especiales', label: 'Estudios Especiales' },
           { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
           { value: 'direccion', label: 'Dirección' },
-        ],
-        descuentoOptions: [
+        ]);
+        const descuentoOptions = ref([
           { value: '0', label: '0%' },
           { value: '5', label: '5%' },
           { value: '10', label: '10%' },
@@ -134,116 +161,144 @@
           { value: '80', label: '80%' },
           { value: '90', label: '90%' },
           { value: '100', label: '100%' },
-        ],
-        mostrarModal: false,
-        showSuccessAlert: false,
-        showErrorAlert: false,
-      };
-    },
-    methods: {
+        ]);
+        const mostrarModal = ref(false);
+        const showSuccessAlert = ref(false);
+        const showErrorAlert = ref(false);
 
-      onInputChange(event) {
-        // Obtiene el identificador del campo que activó el evento
-        // const activeField = event.target.id;
-        console.log('prueba',event);
-        // Verifica si el evento se activó en los campos nro_solicitante o solicitante
-        // if (activeField === 'nro_solicitante' || activeField === 'solicitante') {
-        //   const value = event.target.value;
-        //   console.log('Valor de entrada:', value);
-
-        //   // Realizar la solicitud HTTP para buscar sugerencias de acuerdo al valor proporcionado
-        //   axios.get(`http://localhost:8000/api/presupuestos/buscar_solicitantes/?term=${value}`)
-        //     .then(response => {
-        //       this.suggestions = response.data; // Actualizar la lista de sugerencias con los resultados de la búsqueda
-        //     })
-        //     .catch(error => {
-        //       console.error('Error al buscar solicitantes:', error);
-        //     });
-        // }
-      },
-
-      onSuggestionSelected(suggestion) {
-        // La lógica cuando el usuario selecciona una sugerencia
-        // Se puede actualizar otros campos del formulario con los detalles del solicitante seleccionado
-        this.nuevoPresupuesto.nro_solicitante = suggestion.nro_solicitante;
-        this.nuevoPresupuesto.solicitante = suggestion.nombre_solicitante;
-        this.nuevoPresupuesto.contacto = suggestion.telefono;
-        this.nuevoPresupuesto.email = suggestion.email;
-      },
-
-      mostrarFormulario() {
-        this.nuevoPresupuesto = {
-          nro_solicitante: '', 
-          solicitante: '',
-          contacto: '',
-          telefono: null,
-          email: '',
-          area_tematica: '',
-          subtotal: null,
-          descuento: '0',
+        // Definir métodos
+        const mostrarFormulario = () => {
+          nuevoPresupuesto.value = {
+            nro_solicitante: '',
+            nombre_solicitante: '',
+            contacto: '',
+            telefono: null,
+            email: '',
+            area_tematica: '',
+            subtotal: null,
+            descuento: '0',
+          };
+          mostrarModal.value = true;
+          solicitanteSeleccionado.value = false;
         };
-        this.mostrarModal = true;
-      },
-      cerrarModal() {
-        this.mostrarModal = false;
-      },
-      guardarPresupuesto() {
-        // Validar campos obligatorios
-        if (!this.nuevoPresupuesto.contacto || !this.nuevoPresupuesto.email || !this.nuevoPresupuesto.area_tematica || this.nuevoPresupuesto.subtotal === null || this.nuevoPresupuesto.descuento === null ) {
-          // Mostrar mensaje de error y no continuar con la acción
-          //alert('Por favor, complete todos los campos obligatorios.');
-          return;
-        }
-  
-        // Enviar datos al backend usando Axios
-        axios.post('/api/presupuestos/', this.nuevoPresupuesto)
+
+        const cerrarModal = () => {
+          mostrarModal.value = false;
+        };
+
+        const guardarPresupuesto = () => {
+          // Validar campos obligatorios
+          if (!nuevoPresupuesto.value.contacto || !nuevoPresupuesto.value.email || !nuevoPresupuesto.value.area_tematica || nuevoPresupuesto.value.subtotal === null || nuevoPresupuesto.value.descuento === null) {
+            return;
+          }
+
+          nuevoPresupuesto.value.estado_presupuesto = 'en_espera';
+          nuevoPresupuesto.value.
+
+          // Enviar datos al backend usando Axios
+          axios.post('http://localhost:8000/api/presupuestos/', nuevoPresupuesto.value)
+            .then(response => {
+              console.log(response.data);
+              cerrarModal();
+
+              // Limpiar el formulario y mostrar la alerta de éxito
+              nuevoPresupuesto.value = {
+                nro_solicitante: '',
+                nombre_solicitante: '',
+                contacto: '',
+                telefono: null,
+                email: '',
+                area_tematica: '',
+                subtotal: null,
+                descuento: '0',
+              };
+
+              showSuccessAlert.value = true;
+
+              setTimeout(() => {
+                showSuccessAlert.value = false;
+              }, 3000);
+            })
+            .catch(error => {
+              console.error('Error al guardar el presupuesto:', error);
+              cerrarModal();
+              showErrorAlert.value = true;
+
+              setTimeout(() => {
+                showErrorAlert.value = false;
+              }, 5000);
+
+              solicitanteSeleccionado.value = false;
+            });
+      };
+
+      const buscarSugerencias = debounce(() => {
+        const term = nuevoPresupuesto.value.nombre_solicitante;
+        if (term.trim() !== '') {
+          axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
+            params: {
+              q: term
+            }
+          })
           .then(response => {
-            console.log(response.data);
-            this.cerrarModal();
-  
-            // Limpiar el formulario y mostrar la alerta de éxito
-            this.nuevoPresupuesto = {
-              nro_solicitante: '', // Cambié solicitante por nro_solicitante, asumiendo que es el campo donde se ingresa el número del solicitante
-              solicitante: '', // Este campo se llenará automáticamente cuando el usuario seleccione una sugerencia
-              contacto: '',
-              telefono: null,
-              email: '',
-              area_tematica: '',
-              subtotal: null,
-              descuento: '0',
-            };
-  
-            this.showSuccessAlert = true;
-  
-            setTimeout(() => {
-              this.showSuccessAlert = false;
-            }, 3000);
-  
-            //console.log('Evento emitido desde NewService.vue');
-            //this.$root.$emit('nuevo-servicio-agregado');
-            
+            sugerencias.value = response.data;
+            console.log(sugerencias);
           })
           .catch(error => {
-            console.error('Error al guardar el presupuesto:', error);
-            this.cerrarModal();
-            this.showErrorAlert = true;
-  
-            setTimeout(() => {
-              this.showErrorAlert = false;
-            }, 5000);
+            console.error('Error al buscar solicitantes:', error);
           });
-      },
-    },
+        } else {
+          // Si el término de búsqueda está vacío, limpiar las sugerencias
+          sugerencias.value = [];
+        }
+      }, 1000); // Tiempo de espera en milisegundos antes de ejecutar la búsqueda
+      
 
-    // //computed: {
-    //     hasChanged (){
-    //         console.log("CAMBIO")
-    //     }
-    // }
+      const seleccionarSugerencia = () => {
+        console.log("selectedSolicitante:", selectedSolicitante.value.nro_solicitante);
+        // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
+        axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${selectedSolicitante.value.nro_solicitante}/`)
+          .then(response => {
+            console.log("Respuesta del servidor:", response.data);
+            // Actualizar los campos del formulario con los detalles del solicitante
+            nuevoPresupuesto.value.nro_solicitante = response.data.nro_solicitante;
+            nuevoPresupuesto.value.nombre_solicitante = response.data.nombre_solicitante;
+            nuevoPresupuesto.value.telefono = response.data.telefono;
+            nuevoPresupuesto.value.email = response.data.email;
+
+            // Para que no se pueda modificar nro_solicitante una vez seleccionado un solicitante
+            console.log(solicitanteSeleccionado.value);
+            solicitanteSeleccionado.value = true;
+            console.log(solicitanteSeleccionado.value);
+          })
+          .catch(error => {
+            console.error('Error al obtener los detalles del solicitante:', error);
+          });
+      };
+    
+      return {
+        inputProps,
+        sugerencias,
+        nuevoPresupuesto,
+        area_tematicaOptions,
+        descuentoOptions,
+        mostrarModal,
+        showSuccessAlert,
+        showErrorAlert,
+        buscarSugerencias,
+        selectedSolicitante,
+        seleccionarSugerencia,
+        mostrarFormulario,
+        cerrarModal,
+        guardarPresupuesto
+      };
+    }
   };
-  </script>
+</script>
+
   
-  <style scoped>
+  
+<style scoped>
   .modal {
     display: none;
     position: fixed;
@@ -292,5 +347,5 @@
   form div.label-container label {
     text-align: left !important;
   }
-  </style>
+</style>
   
