@@ -16,8 +16,13 @@
               <form class="was-validated">
 
                 <div class="mb-3">
+                  <label for="fecha" class="form-label text-left">Fecha:</label>
+                  <input v-model="nuevoPresupuesto.fecha" type="date" readonly class="form-control" id="fecha" name="fecha" required />
+              </div>
+
+                <div class="mb-3">
                   <label for="nro_solicitante" class="form-label text-left">Nro Solicitante:</label>
-                  <input v-model="nuevoPresupuesto.nro_solicitante" :readonly="solicitanteSeleccionado" type="text" class="form-control" id="nro_solicitante" name="nro_solicitante" required ref="nro_solicitante" />
+                  <input v-model="nuevoPresupuesto.nro_solicitante" readonly type="text" class="form-control" id="nro_solicitante" name="nro_solicitante" required ref="nro_solicitante" />
                 </div>
 
                 <div class="mb-3">
@@ -59,7 +64,7 @@
                   </select>
                 </div>
 
-                <DetallePresupuesto/>
+                <DetallePresupuesto @actualizar-subtotal="actualizarSubTotal"></DetallePresupuesto>
 
                 <div class="mb-3">
                   <label for="subtotal" class="form-label text-left">SubTotal:</label>
@@ -76,8 +81,8 @@
                 </div>
 
                 <div class="mb-3">
-                  <label for="total" class="form-label text-left">Total:</label>
-                  <input v-model="nuevoPresupuesto.total" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="total" name="total" required />
+                  <label for="arancel_presupuesto" class="form-label text-left">Total:</label>
+                  <input v-model="nuevoPresupuesto.arancel_presupuesto" type="number" step="0.01" class="form-control" id="arancel_presupuesto" name="arancel_presupuesto" required />
                 </div>
 
                 <span class="left-align">Validez de 30 dias</span>
@@ -106,7 +111,7 @@
 
 <script>
   import axios from 'axios';
-  import { ref } from 'vue';
+  import { ref, watch } from 'vue';
   import { debounce } from 'lodash';
   import DetallePresupuesto from './DetallePresupuesto.vue';
   // eslint-disable-next-line no-unused-vars
@@ -124,6 +129,7 @@
       const selectedSolicitante = ref(null);
       let solicitanteSeleccionado = ref(false);
       const nuevoPresupuesto = ref({
+        fecha: null,
         nro_solicitante: '',
         nombre_solicitante: '',
         contacto: '',
@@ -132,6 +138,7 @@
         area_tematica: '',
         subtotal: null,
         descuento: '0',
+        arancel_presupuesto: null,
         });
         const area_tematicaOptions = ref([
           { value: 'durabilidad', label: 'Durabilidad' },
@@ -168,7 +175,26 @@
 
         // Definir métodos
         const mostrarFormulario = () => {
+          
+          // Calcular la fecha actual
+          const today = new Date();
+          const year = today.getFullYear();
+          let month = today.getMonth() + 1;
+          let day = today.getDate();
+
+          // Formatear la fecha como "YYYY-MM-DD"
+          if (month < 10) {
+              month = '0' + month;
+          }
+          if (day < 10) {
+              day = '0' + day;
+          }
+          const formattedDate = `${year}-${month}-${day}`;
+          // Asignar la fecha actual al campo de fecha del nuevo presupuesto
+          nuevoPresupuesto.value.fecha = formattedDate;
+          
           nuevoPresupuesto.value = {
+            fecha: formattedDate,
             nro_solicitante: '',
             nombre_solicitante: '',
             contacto: '',
@@ -177,7 +203,10 @@
             area_tematica: '',
             subtotal: null,
             descuento: '0',
+            arancel_presupuesto: null,
           };
+          
+
           mostrarModal.value = true;
           solicitanteSeleccionado.value = false;
         };
@@ -193,9 +222,8 @@
           }
 
           nuevoPresupuesto.value.estado_presupuesto = 'en_espera';
-          nuevoPresupuesto.value.
-
-          // Enviar datos al backend usando Axios
+          console.log('nuevo presupuesto',nuevoPresupuesto)
+          //Enviar datos al backend usando Axios
           axios.post('http://localhost:8000/api/presupuestos/', nuevoPresupuesto.value)
             .then(response => {
               console.log(response.data);
@@ -203,6 +231,7 @@
 
               // Limpiar el formulario y mostrar la alerta de éxito
               nuevoPresupuesto.value = {
+                fecha: null,
                 nro_solicitante: '',
                 nombre_solicitante: '',
                 contacto: '',
@@ -211,6 +240,7 @@
                 area_tematica: '',
                 subtotal: null,
                 descuento: '0',
+                arancel_presupuesto: null,
               };
 
               showSuccessAlert.value = true;
@@ -222,6 +252,8 @@
             .catch(error => {
               console.error('Error al guardar el presupuesto:', error);
               cerrarModal();
+              // Imprimir detalles del error
+              console.error('Error details:', error.response.data);
               showErrorAlert.value = true;
 
               setTimeout(() => {
@@ -230,68 +262,79 @@
 
               solicitanteSeleccionado.value = false;
             });
-      };
+        };
 
-      const buscarSugerencias = debounce(() => {
-        const term = nuevoPresupuesto.value.nombre_solicitante;
-        if (term.trim() !== '') {
-          axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
-            params: {
-              q: term
-            }
-          })
-          .then(response => {
-            sugerencias.value = response.data;
-            console.log(sugerencias);
-          })
-          .catch(error => {
-            console.error('Error al buscar solicitantes:', error);
-          });
-        } else {
-          // Si el término de búsqueda está vacío, limpiar las sugerencias
-          sugerencias.value = [];
-        }
-      }, 1000); // Tiempo de espera en milisegundos antes de ejecutar la búsqueda
+        const buscarSugerencias = debounce(() => {
+          const term = nuevoPresupuesto.value.nombre_solicitante;
+          if (term.trim() !== '') {
+            axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
+              params: {
+                q: term
+              }
+            })
+            .then(response => {
+              sugerencias.value = response.data;
+              console.log(sugerencias);
+            })
+            .catch(error => {
+              console.error('Error al buscar solicitantes:', error);
+            });
+          } else {
+            // Si el término de búsqueda está vacío, limpiar las sugerencias
+            sugerencias.value = [];
+          }
+        }, 1000); // Tiempo de espera en milisegundos antes de ejecutar la búsqueda
       
 
-      const seleccionarSugerencia = () => {
-        console.log("selectedSolicitante:", selectedSolicitante.value.nro_solicitante);
-        // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
-        axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${selectedSolicitante.value.nro_solicitante}/`)
-          .then(response => {
-            console.log("Respuesta del servidor:", response.data);
-            // Actualizar los campos del formulario con los detalles del solicitante
-            nuevoPresupuesto.value.nro_solicitante = response.data.nro_solicitante;
-            nuevoPresupuesto.value.nombre_solicitante = response.data.nombre_solicitante;
-            nuevoPresupuesto.value.telefono = response.data.telefono;
-            nuevoPresupuesto.value.email = response.data.email;
+        const seleccionarSugerencia = () => {
+          console.log("selectedSolicitante:", selectedSolicitante.value.nro_solicitante);
+          // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
+          axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${selectedSolicitante.value.nro_solicitante}/`)
+            .then(response => {
+              console.log("Respuesta del servidor:", response.data);
+              // Actualizar los campos del formulario con los detalles del solicitante
+              nuevoPresupuesto.value.nro_solicitante = response.data.nro_solicitante;
+              nuevoPresupuesto.value.nombre_solicitante = response.data.nombre_solicitante;
+              nuevoPresupuesto.value.telefono = response.data.telefono;
+              nuevoPresupuesto.value.email = response.data.email;
 
-            // Para que no se pueda modificar nro_solicitante una vez seleccionado un solicitante
-            console.log(solicitanteSeleccionado.value);
-            solicitanteSeleccionado.value = true;
-            console.log(solicitanteSeleccionado.value);
-          })
-          .catch(error => {
-            console.error('Error al obtener los detalles del solicitante:', error);
-          });
-      };
-    
-      return {
-        inputProps,
-        sugerencias,
-        nuevoPresupuesto,
-        area_tematicaOptions,
-        descuentoOptions,
-        mostrarModal,
-        showSuccessAlert,
-        showErrorAlert,
-        buscarSugerencias,
-        selectedSolicitante,
-        seleccionarSugerencia,
-        mostrarFormulario,
-        cerrarModal,
-        guardarPresupuesto
-      };
+              // Para que no se pueda modificar nro_solicitante una vez seleccionado un solicitante
+              console.log(solicitanteSeleccionado.value);
+              solicitanteSeleccionado.value = true;
+              console.log(solicitanteSeleccionado.value);
+            })
+            .catch(error => {
+              console.error('Error al obtener los detalles del solicitante:', error);
+            });
+        };
+        
+        const actualizarSubTotal = (nuevoSubTotal) => {
+          console.log('Evento recibido en el componente padre. Subtotal:', nuevoSubTotal);
+          nuevoPresupuesto.value.subtotal = nuevoSubTotal;
+        }
+
+        watch([() => nuevoPresupuesto.value.subtotal, () => nuevoPresupuesto.value.descuento], ([subtotal, descuento]) => {
+            const descuentoDecimal = descuento / 100; // Convertir el descuento de porcentaje a decimal
+            nuevoPresupuesto.value.arancel_presupuesto = subtotal * (1 - descuentoDecimal); // Calcular el total con descuento
+        });
+
+        return {
+          inputProps,
+          sugerencias,
+          nuevoPresupuesto,
+          area_tematicaOptions,
+          descuentoOptions,
+          mostrarModal,
+          showSuccessAlert,
+          showErrorAlert,
+          buscarSugerencias,
+          selectedSolicitante,
+          seleccionarSugerencia,
+          mostrarFormulario,
+          cerrarModal,
+          guardarPresupuesto,
+          actualizarSubTotal
+        };
     }
   };
 </script>
