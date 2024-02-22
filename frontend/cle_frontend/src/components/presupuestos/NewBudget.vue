@@ -18,7 +18,7 @@
                 <div class="mb-3">
                   <label for="fecha" class="form-label text-left">Fecha:</label>
                   <input v-model="nuevoPresupuesto.fecha" type="date" readonly class="form-control" id="fecha" name="fecha" required />
-              </div>
+                </div>
 
                 <div class="mb-3">
                   <label for="nro_solicitante" class="form-label text-left">Nro Solicitante:</label>

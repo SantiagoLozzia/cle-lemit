@@ -39,6 +39,8 @@ export default {
 </script>
 
 <style>
+@import "~bootstrap-icons/font/bootstrap-icons.css";
+
 body {
   background-color: #ccc;
 }

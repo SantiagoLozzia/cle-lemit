@@ -7,6 +7,11 @@ class PresupuestoSerializer(serializers.ModelSerializer):
         model = Presupuesto
         fields = '__all__'
 
+class PresupuestoEnEsperaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presupuesto
+        fields = ['nro_presupuesto', 'fecha', 'area_tematica', 'estado_presupuesto']
+
 class SolicitanteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Solicitante
@@ -20,9 +25,9 @@ class SeleccionarSolicitanteSerializer(serializers.ModelSerializer):
 class ServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
-        fields = ['nro_servicio', 'servicio', 'servicio', 'norma', 'area_tematica']
+        fields = ['nro_servicio', 'servicio', 'norma', 'area_tematica']
 
 class SeleccionarServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
-        fields = ['nro_servicio', 'servicio', 'servicio', 'norma', 'area_tematica', 'arancel']
+        fields = ['nro_servicio', 'servicio', 'norma', 'area_tematica', 'arancel']
