@@ -41,7 +41,7 @@
 
   export default {
     setup() {
-      const aranceles = ref([]); // Utilizamos ref para aranceles
+      const aranceles = ref([]); 
 
       const fetchAranceles = async () => {
         try {

@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .serializers import NroPresupuestoSerializer, DataServicioSerializer, ObtenerServiciosEnCursoSerializer, PresupuestoSerializer, GuardarAdjuntoSolicitudDataServicioSerializer
-from database.models import DataServicio, Presupuesto, DetallePresupuesto, Solicitante, Servicio, Circuito
+from .serializers import *
+from database.models import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -65,16 +65,66 @@ class GuardarDataServicioView(APIView):
         else:
             return Response(data_servicio_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ObtenerServiciosEnCurso(APIView):
+class ObtenerTodoEnCurso(APIView):
     def get(self, request, format=None):
-        # Obtener todos los servicios en curso
-        servicios_en_curso = DataServicio.objects.all()
+        # Obtener todos los DataServicio donde DataServicio.finalizado = False
+        servicios_en_curso = DataServicio.objects.filter(finalizado=False)
 
-        # Serializar los servicios en curso con información de presupuesto
-        serializer = ObtenerServiciosEnCursoSerializer(servicios_en_curso, many=True)
+        # Obtener el numero de presupuesto de los DataServicio
+        numeros_presupuesto = servicios_en_curso.values_list('nro_presupuesto', flat=True)
 
-        # Devolver la respuesta con los datos serializados
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Obtener el área temática de cada presupuesto
+        areas_tematicas = Presupuesto.objects.filter(nro_presupuesto__in=numeros_presupuesto) \
+                                               .values('nro_presupuesto', 'area_tematica')
+
+        # Crear un diccionario para mapear el número de presupuesto con su área temática
+        presupuesto_map = {presupuesto['nro_presupuesto']: presupuesto['area_tematica'] 
+                           for presupuesto in areas_tematicas}
+
+        # Serializar los datos de los DataServicio
+        servicios_en_curso_serializer = DataServicioSerializer(servicios_en_curso, many=True)
+
+        # Agregar el campo 'area_tematica' a los datos de DataServicio
+        for data_servicio in servicios_en_curso_serializer.data:
+            nro_presupuesto = data_servicio['nro_presupuesto']
+            data_servicio['area_tematica'] = presupuesto_map.get(nro_presupuesto, '')
+
+        # Obtener el numero de circuito de los DataServicio
+        numeros_circuito = servicios_en_curso.values_list('nro_circuito', flat=True)
+
+        # Obtener los datos de los otros modelos
+        legajos = Legajo.objects.filter(nro_circuito__in=numeros_circuito)
+        recepciones = Recepcion.objects.filter(nro_circuito__in=numeros_circuito)
+        ordenes_servicio = OrdenServicio.objects.filter(nro_circuito__in=numeros_circuito)
+        informes_area = InformeArea.objects.filter(nro_circuito__in=numeros_circuito)
+        informes_servicio = InformeServicio.objects.filter(nro_circuito__in=numeros_circuito)
+        solicitudes_inter_area = SolicitudInterarea.objects.filter(nro_circuito__in=numeros_circuito)
+        informes_inter_area = InformeInterarea.objects.filter(nro_circuito__in=numeros_circuito)
+
+        # Serializar los datos
+        legajos_serializer = LegajoEnCursoSerializer(legajos, many=True)
+        recepciones_serializer = RecepcionEnCursoSerializer(recepciones, many=True)
+        ordenes_servicio_serializer = OrdenServicioEmCursoSerializer(ordenes_servicio, many=True)
+        informes_area_serializer = InformeAreaEnCursoSerializer(informes_area, many=True)
+        informes_servicio_serializer = InformeServicioEnCursoSerializer(informes_servicio, many=True)
+        solicitudes_inter_area_serializer = SolicitudInterAreaEnCursoSerializer(solicitudes_inter_area, many=True)
+        informes_inter_area_serializer = InformeInterAreaEnCursoSerializer(informes_inter_area, many=True)
+
+        # Construir la respuesta
+        response_data = {
+            'solicitudes': servicios_en_curso_serializer.data,
+            'legajos': legajos_serializer.data,
+            'recepciones': recepciones_serializer.data,
+            'ordenes_servicio': ordenes_servicio_serializer.data,
+            'informes_area': informes_area_serializer.data,
+            'informes_servicio': informes_servicio_serializer.data,
+            'solicitudes_inter_area': solicitudes_inter_area_serializer.data,
+            'informes_inter_area': informes_inter_area_serializer.data
+        }
+
+        # Devolver la respuesta
+        return Response(response_data)
+
 
 class GuardarAdjuntoSolicitud(APIView):
     def post(self, request):

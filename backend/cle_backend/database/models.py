@@ -62,6 +62,13 @@ PAGO_CHOICES = [
         (50, '50%'),
         (100, '100%'),
 ]
+
+ESTADO_INFORME_AREA_CHOICES = [
+        ('sin_informe','Sin Informe'),
+        ('parcial', 'Parcial'),
+        ('total', 'Total'),
+]
+
 class Solicitante(models.Model):
     nro_solicitante = models.AutoField(primary_key=True)
     nombre_solicitante = models.CharField(max_length=255)
@@ -79,7 +86,7 @@ class Solicitante(models.Model):
 
 class Presupuesto(models.Model):
     nro_presupuesto = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_presupuesto = models.DateField()
     contacto = models.CharField(max_length=100)
     telefono2 = models.CharField(max_length=20, null=True)
     email2 = models.EmailField(max_length=50, null=True)
@@ -118,7 +125,7 @@ class DetallePresupuesto(models.Model):
     
 class DataServicio(models.Model):
     nro_dataServicio = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_dataServicio = models.DateField()
     adjunto_solicitudServicio = models.FileField(upload_to='solicitudes_servicio/', null=True)
     obra = models.CharField(max_length=255, null=True)
     plazo_estimado = models.IntegerField() 
@@ -128,21 +135,19 @@ class DataServicio(models.Model):
     nro_presupuesto = models.ForeignKey('Presupuesto', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    finalizado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"DataServicio #{self.nro_dataServicio} - Presupuesto #{self.nro_presupuesto.nro_presupuesto} - Legajo #{self.nro_legajo.nro_legajo}"
 
 class Legajo(models.Model):
     nro_legajo = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_legajo = models.DateField()
     rangos_laboratorios = models.CharField(max_length=255)
     ultimo_numero = models.IntegerField(default=0)
     pago = models.CharField(choices=PAGO_CHOICES)
     plazo_pago = models.IntegerField(default=30)
-    facturaAdjunta = models.BooleanField()
     adjunto_factura = models.FileField(upload_to='facturas/')
-    nro_ordenServicio = models.ForeignKey('OrdenServicio', on_delete=models.CASCADE)
-    nro_recepcion = models.ForeignKey('Recepcion', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
@@ -175,7 +180,7 @@ class Recepcion(models.Model):
 
 class OrdenServicio(models.Model):
     nro_ordenServicio = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_ordenServicio = models.DateField()
     observaciones = models.TextField(max_length=255, null=True)
     nro_informeArea = models.ForeignKey('InformeArea', on_delete=models.CASCADE)  # Asegúrate de tener definida la clase InformeArea
     nro_legajo = models.ForeignKey('Legajo', on_delete=models.CASCADE)
@@ -187,12 +192,13 @@ class OrdenServicio(models.Model):
 
 class InformeArea(models.Model):
     nro_informeArea = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_informeArea = models.DateField()
     adjunto_informeArea = models.FileField(upload_to='informes_areas/')
     nro_solicitud_interarea = models.ForeignKey('SolicitudInterarea', on_delete=models.CASCADE)  
     nro_informeServicio = models.ForeignKey('InformeServicio', on_delete=models.CASCADE)  
     nro_ordenServicio = models.ForeignKey('OrdenServicio', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
+    estado_informeArea = models.CharField(choices=ESTADO_INFORME_AREA_CHOICES, default='sin_informe')
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
@@ -200,7 +206,7 @@ class InformeArea(models.Model):
     
 class InformeServicio(models.Model):
     nro_informeServicio = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_informeServicio = models.DateField()
     adjunto_informeServicio = models.FileField(upload_to='informes_servicio/')
     revision = models.BooleanField()
     firma_area = models.BooleanField()
@@ -214,8 +220,8 @@ class InformeServicio(models.Model):
 
 class SolicitudInterarea(models.Model):
     nro_solicitudInterarea = models.AutoField(primary_key=True)
-    fecha = models.DateField()
-    area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
+    fecha_solicitudInterarea = models.DateField()
+    inter_areaTematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
     muestras_solicitudIa = models.TextField()
     num_labs = models.IntegerField()
     observaciones = models.TextField(max_length=255, null=True)
@@ -236,7 +242,7 @@ class DetalleInterarea(models.Model):
 
 class InformeInterarea(models.Model):
     nro_informeInterarea = models.AutoField(primary_key=True)
-    fecha = models.DateField()
+    fecha_informeInterarea = models.DateField()
     area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
     adjunto_informeInterarea = models.FileField(upload_to='informes_interarea/')
     nro_solicitudInterarea = models.ForeignKey('SolicitudInterarea', on_delete=models.CASCADE)

@@ -78,18 +78,18 @@
                 if (servicioSeleccionado) {
                     axios.get(`http://localhost:8000/api/presupuestos/seleccionar_servicio/${servicioSeleccionado}/`)
                         .then(response => {
-                            console.log("Respuesta del servidor:", response.data);
+                            // console.log("Respuesta del servidor:", response.data);
                             fila.nro_servicio = response.data.nro_servicio;
                             fila.servicio = response.data.servicio;
                             fila.norma = response.data.norma;
                             const arancel = response.data.arancel;
                             const modulo = response.data.modulo;
-                            console.log('arancel-----', response.data.arancel)
-                            console.log('modulo-----', response.data.modulo)
+                            // console.log('arancel-----', response.data.arancel)
+                            // console.log('modulo-----', response.data.modulo)
                             fila.precioUnitario = parseInt(arancel) * parseInt(modulo);
-                            console.log('luego del autocompletado',fila.sugerencias);
+                            // console.log('luego del autocompletado',fila.sugerencias);
                             fila.sugerencias = []; // Limpiar el array de sugerencias después de seleccionar un servicio
-                            console.log('luego del autocompletado',fila.sugerencias);
+                            // console.log('luego del autocompletado',fila.sugerencias);
                         })
                         .catch(error => {
                             console.error('Error al obtener los detalles del servicio:', error);

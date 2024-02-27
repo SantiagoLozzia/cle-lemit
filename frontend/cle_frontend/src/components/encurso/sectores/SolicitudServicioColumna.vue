@@ -17,11 +17,15 @@ export default {
   setup(props, { emit }) {
     const subColumnasHijo = ref(props.subcolumnasSolicitud);
 
+    // const filas = ref([
+    //     'nro_dataServicio', 'fecha_dataServicio', 'area_tematica', 'nro_presupuesto', 'doc_dataServicio', 'adjunto_solicitudServicio', 'nro_legajo', 'fecha', 'doc_legajo', 'adjunto_factura', 'pago_legajo', 'plazo_pago', 'nros_remitos', 'muestras', 'plazo', 'doc_ordenServicio', 'plazo', 'fecha', 'area_tematica', 'adjunto_informe'
+    //   ]);
+
+
     // Método para obtener los datos de la API y completar el array
     const fetchData = () => {
       axios.get('api/encurso/obtener_serviciosencurso/')
         .then(response => {
-          // Actualizamos la prop subcolumnasSolicitud con los datos de la API
           console.log('Los DataServicio en curso son:', response.data)
           subColumnasHijo.value = response.data;
           // console.log('subcolumnasHijo:', subColumnasHijo.value)
