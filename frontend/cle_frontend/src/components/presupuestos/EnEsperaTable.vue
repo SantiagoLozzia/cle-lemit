@@ -61,8 +61,8 @@ export default {
           ...presupuesto,
           area_tematica: formatAreaTematica(presupuesto.area_tematica),
           estado_presupuesto: formatEstadoPresupuesto(presupuesto.estado_presupuesto),
-          mostrarMenu: false, // Agregar propiedad para controlar la visibilidad del menú
-          nuevoEstado: '' // Nuevo estado seleccionado
+          mostrarMenu: false, 
+          nuevoEstado: '' 
         }));
       } catch (error) {
         console.error('Error al obtener presupuestos:', error);

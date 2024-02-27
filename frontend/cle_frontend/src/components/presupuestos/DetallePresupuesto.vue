@@ -42,7 +42,7 @@
 
     export default {
         setup() {
-            const filas = ref([{ nro_servicio: null, servicio: '', norma: '', arancel: '', precioUnitario: null, cantidad: null, total: null, sugerencias: [] }]);
+            const filas = ref([{ nro_servicio: null, servicio: '', norma: '', precioUnitario: null, cantidad: null, total: null, sugerencias: [] }]);
             const { emit } = getCurrentInstance();
             const buscarServicio = debounce((term) => {
                 console.log('Term de búsqueda:', term);
@@ -82,7 +82,11 @@
                             fila.nro_servicio = response.data.nro_servicio;
                             fila.servicio = response.data.servicio;
                             fila.norma = response.data.norma;
-                            fila.precioUnitario = response.data.arancel;
+                            const arancel = response.data.arancel;
+                            const modulo = response.data.modulo;
+                            console.log('arancel-----', response.data.arancel)
+                            console.log('modulo-----', response.data.modulo)
+                            fila.precioUnitario = parseInt(arancel) * parseInt(modulo);
                             console.log('luego del autocompletado',fila.sugerencias);
                             fila.sugerencias = []; // Limpiar el array de sugerencias después de seleccionar un servicio
                             console.log('luego del autocompletado',fila.sugerencias);

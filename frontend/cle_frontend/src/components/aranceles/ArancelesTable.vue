@@ -1,6 +1,10 @@
 <template>
   <div class="aranceles-container">
     
+    <div class="modulo">  
+      <h3>Valor del m = </h3>
+    </div>
+
     <div class="title-container">  
       <h2>Tabla de Aranceles</h2>
     </div>
@@ -34,7 +38,7 @@
 
   import { ref, onMounted } from 'vue';
   import axios from 'axios';
-  
+
   export default {
     setup() {
       const aranceles = ref([]); // Utilizamos ref para aranceles
@@ -58,6 +62,12 @@
 </script>
 
 <style scoped>
+
+.modulo {
+  position: fixed; /* Establece la posición fija para que permanezca en la misma ubicación incluso al desplazarse */
+  left: 10px; /* Lo sitúa en el extremo izquierdo de la pantalla */
+  transform: translateY(120%); /* Centra verticalmente el elemento */
+}
 .title-container {
   position: relative;
   top: 50px;

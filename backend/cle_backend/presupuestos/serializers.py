@@ -30,4 +30,4 @@ class ServicioSerializer(serializers.ModelSerializer):
 class SeleccionarServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
-        fields = ['nro_servicio', 'servicio', 'norma', 'area_tematica', 'arancel']
+        fields = ['nro_servicio', 'servicio', 'norma', 'area_tematica', 'arancel', 'modulo']

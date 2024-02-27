@@ -47,12 +47,22 @@
                 
                 <div class="mb-3">
                   <label for="telefono" class="form-label text-left">Teléfono:</label>
-                  <input v-model="nuevoPresupuesto.telefono" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="telefono" name="telefono" required />
+                  <input v-model="nuevoPresupuesto.telefono" type="text" inputmode="numeric" pattern="[0-9]*" readonly class="form-control" id="telefono" name="telefono" required />
+                </div>
+
+                <div class="mb-3">
+                  <label for="telefono2" class="form-label text-left">Teléfono 2:</label>
+                  <input v-model="nuevoPresupuesto.telefono2" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="telefono" name="telefono"/>
                 </div>
 
                 <div class="mb-3">
                   <label for="email" class="form-label text-left">Email:</label>
-                  <input v-model="nuevoPresupuesto.email" type="text" class="form-control" id="email" name="email" required />
+                  <input v-model="nuevoPresupuesto.email" type="text" readonly class="form-control" id="email" name="email" required />
+                </div>
+
+                <div class="mb-3">
+                  <label for="email2" class="form-label text-left">Email 2:</label>
+                  <input v-model="nuevoPresupuesto.email2" type="text" class="form-control" id="email2" name="email2"/>
                 </div>
   
                 <div class="mb-3">
@@ -68,7 +78,7 @@
 
                 <div class="mb-3">
                   <label for="subtotal" class="form-label text-left">SubTotal:</label>
-                  <input v-model="nuevoPresupuesto.subtotal" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="subtotal" name="subtotal" required />
+                  <input v-model="nuevoPresupuesto.subtotal" type="text" inputmode="numeric" pattern="[0-9]*" readonly class="form-control" id="subtotal" name="subtotal" required />
                 </div>
 
                 <div class="mb-3">
@@ -88,7 +98,7 @@
                 <span class="left-align">Validez de 30 dias</span>
                 <div class="mb-3">
                   <label for="observaciones" class="form-label text-left">Observaciones:</label>
-                  <input v-model="nuevoPresupuesto.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" required />
+                  <input v-model="nuevoPresupuesto.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                 </div>
   
                 <button @click="guardarPresupuesto" type="button" class="btn btn-primary w-100">Guardar</button>
@@ -106,7 +116,7 @@
       </div>
   
     </div>
-    </div>
+  </div>
 </template>
 
 <script>
@@ -133,8 +143,8 @@
         nro_solicitante: '',
         nombre_solicitante: '',
         contacto: '',
-        telefono: null,
-        email: '',
+        telefono2: null,
+        email2: '',
         area_tematica: '',
         subtotal: null,
         descuento: '0',
@@ -176,39 +186,39 @@
         // Definir métodos
         const mostrarFormulario = () => {
           
-          // Calcular la fecha actual
-          const today = new Date();
-          const year = today.getFullYear();
-          let month = today.getMonth() + 1;
-          let day = today.getDate();
+            // Calcular la fecha actual
+            const today = new Date();
+            const year = today.getFullYear();
+            let month = today.getMonth() + 1;
+            let day = today.getDate();
 
-          // Formatear la fecha como "YYYY-MM-DD"
-          if (month < 10) {
-              month = '0' + month;
-          }
-          if (day < 10) {
-              day = '0' + day;
-          }
-          const formattedDate = `${year}-${month}-${day}`;
-          // Asignar la fecha actual al campo de fecha del nuevo presupuesto
-          nuevoPresupuesto.value.fecha = formattedDate;
-          
-          nuevoPresupuesto.value = {
-            fecha: formattedDate,
-            nro_solicitante: '',
-            nombre_solicitante: '',
-            contacto: '',
-            telefono: null,
-            email: '',
-            area_tematica: '',
-            subtotal: null,
-            descuento: '0',
-            arancel_presupuesto: null,
-          };
-          
+            // Formatear la fecha como "YYYY-MM-DD"
+            if (month < 10) {
+                month = '0' + month;
+            }
+            if (day < 10) {
+                day = '0' + day;
+            }
+            const formattedDate = `${year}-${month}-${day}`;
+            // Asignar la fecha actual al campo de fecha del nuevo presupuesto
+            nuevoPresupuesto.value.fecha = formattedDate;
+            
+            nuevoPresupuesto.value = {
+              fecha: formattedDate,
+              nro_solicitante: '',
+              nombre_solicitante: '',
+              contacto: '',
+              telefono2: null,
+              email2: '',
+              area_tematica: '',
+              subtotal: null,
+              descuento: '0',
+              arancel_presupuesto: null,
+            };
+            
 
-          mostrarModal.value = true;
-          solicitanteSeleccionado.value = false;
+            mostrarModal.value = true;
+            solicitanteSeleccionado.value = false;
         };
 
         const cerrarModal = () => {
@@ -235,8 +245,8 @@
                 nro_solicitante: '',
                 nombre_solicitante: '',
                 contacto: '',
-                telefono: null,
-                email: '',
+                telefono2: null,
+                email2: '',
                 area_tematica: '',
                 subtotal: null,
                 descuento: '0',

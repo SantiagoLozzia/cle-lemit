@@ -1,24 +1,24 @@
 <template>
   <div>
     <NewCircuit :data="circuitData" />
-    <ArancelesTable :data="arancelesData" />
+    <ProgressTable :data="progressData"/>
   </div>
 </template>
 
 <script>
 import NewCircuit from '../components/encurso/NewCircuit';
-import ArancelesTable from '../components/aranceles/ArancelesTable.vue';
+import ProgressTable from '../components/encurso/ProgressTable';
 
 export default {
   data() {
     return {
       circuitData: [],
-      arancelesData: []
+      progressData: []
     };
   },
   components: {
     NewCircuit,
-    ArancelesTable
+    ProgressTable
   }
 };
 </script>
