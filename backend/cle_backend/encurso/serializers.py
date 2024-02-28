@@ -42,7 +42,7 @@ class InformeServicioEnCursoSerializer(serializers.ModelSerializer):
         model = InformeArea
         fields = '__all__'
      
-class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializesr):
+class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
      class Meta:
         model = SolicitudInterarea
         fields = '__all__'
