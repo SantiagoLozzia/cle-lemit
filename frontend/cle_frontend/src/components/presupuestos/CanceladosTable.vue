@@ -119,7 +119,12 @@
   
         onMounted(fetchPresupuestos); // Utilizamos onMounted para llamar a fetchPresupuestos en la creación del componente
     
-        return { presupuestos, mostrarMenu, cambiarEstado, cerrarMenu }; // Devolvemos presupuestos para usarlo en el template
+        return { 
+          presupuestos, 
+          mostrarMenu, 
+          cambiarEstado, 
+          cerrarMenu 
+        }; 
     }
   };
   </script>

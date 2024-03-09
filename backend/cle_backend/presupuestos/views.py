@@ -32,7 +32,7 @@ def presupuestos_enEspera(request):
     for presupuesto in presupuestos:
         presupuesto_dict = {
             'nro_presupuesto': presupuesto.nro_presupuesto,
-            'fecha': presupuesto.fecha,
+            'fecha_presupuesto': presupuesto.fecha_presupuesto,
             'area_tematica': presupuesto.area_tematica,
             'estado_presupuesto': presupuesto.estado_presupuesto,
             'nombre_solicitante': presupuesto.nro_solicitante.nombre_solicitante  
@@ -54,7 +54,7 @@ def presupuestos_cancelados(request):
     for presupuesto in presupuestos:
         presupuesto_dict = {
             'nro_presupuesto': presupuesto.nro_presupuesto,
-            'fecha': presupuesto.fecha,
+            'fecha_presupuesto': presupuesto.fecha_presupuesto,
             'area_tematica': presupuesto.area_tematica,
             'estado_presupuesto': presupuesto.estado_presupuesto,
             'nombre_solicitante': presupuesto.nro_solicitante.nombre_solicitante  

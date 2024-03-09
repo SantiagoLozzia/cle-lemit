@@ -16,8 +16,8 @@
                 <form class="was-validated">
   
                   <div class="mb-3">
-                    <label for="fecha" class="form-label text-left">Fecha:</label>
-                    <input v-model="nuevoDataServicio.fecha" type="date" readonly class="form-control" id="fecha" name="fecha" required />
+                    <label for="fecha_dataServicio" class="form-label text-left">Fecha:</label>
+                    <input v-model="nuevoDataServicio.fecha_dataServicio" type="date" readonly class="form-control" id="fecha_dataServicio" name="fecha_dataServicio" required />
                   </div>
   
                   <div class="mb-3">
@@ -54,7 +54,7 @@
                     <input v-model="nuevoDataServicio.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                   </div>
     
-                  <button @click="guardarPresupuesto" type="button" class="btn btn-primary w-100">Guardar</button>
+                  <button @click="guardarDataServicio" type="button" class="btn btn-primary w-100">Guardar</button>
                 </form>
               </div>
             </div>
@@ -88,7 +88,7 @@
         const sugerencias = ref([]);
         const selectedPresupuesto = ref(null);
         const nuevoDataServicio = ref({
-            fecha: null,
+            fecha_dataServicio: null,
             obra: null,
             muestras:null,
             plazo_estimado: null,
@@ -116,10 +116,10 @@
           }
           const formattedDate = `${year}-${month}-${day}`;
           // Asignar la fecha actual al campo de fecha del nuevo presupuesto
-          nuevoDataServicio.value.fecha = formattedDate;
+          nuevoDataServicio.value.fecha_dataServicio = formattedDate;
               
           nuevoDataServicio.value = {
-            fecha: formattedDate,
+            fecha_dataServicio: formattedDate,
             obra: null,
             muestras:null,
             plazo_estimado: null,
@@ -133,7 +133,7 @@
           mostrarModal.value = false;
         };
   
-        const guardarPresupuesto = () => {
+        const guardarDataServicio = () => {
           // Validar campos obligatorios
           if (!nuevoDataServicio.value.plazo_estimado || !nuevoDataServicio.value.cant_numLabs) {
             return;
@@ -146,7 +146,7 @@
     
               // Limpiar el formulario y mostrar la alerta de éxito
               nuevoDataServicio.value = {
-                fecha: null,
+                fecha_dataServicio: null,
                 obra: null,
                 muestras:null, 
                 plazo_estimado: null,
@@ -212,7 +212,7 @@
             presupuestoSeleccionado,
             mostrarFormulario,
             cerrarModal,
-            guardarPresupuesto,
+            guardarDataServicio,
           };
       }
     };

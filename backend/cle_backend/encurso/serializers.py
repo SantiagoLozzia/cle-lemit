@@ -14,9 +14,12 @@ class DataServicioSerializer(serializers.ModelSerializer):
 class PresupuestoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Presupuesto
-        fields = ['area_tematica']
+        fields = '__all__'
 
-
+class SolicitanteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Solicitante
+        fields = '__all__'
 
 class LegajoEnCursoSerializer(serializers.ModelSerializer):
      class Meta:

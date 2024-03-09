@@ -16,8 +16,8 @@
               <form class="was-validated">
 
                 <div class="mb-3">
-                  <label for="fecha" class="form-label text-left">Fecha:</label>
-                  <input v-model="nuevoPresupuesto.fecha" type="date" readonly class="form-control" id="fecha" name="fecha" required />
+                  <label for="fecha_presupuesto" class="form-label text-left">Fecha:</label>
+                  <input v-model="nuevoPresupuesto.fecha_presupuesto" type="date" readonly class="form-control" id="fecha_presupuesto" name="fecha_presupuesto" required />
                 </div>
 
                 <div class="mb-3">
@@ -74,7 +74,7 @@
                   </select>
                 </div>
 
-                <DetallePresupuesto @actualizar-subtotal="actualizarSubTotal"></DetallePresupuesto>
+                <DetallePresupuesto @actualizar-subtotal="actualizarSubTotal" @agregar-detallePresupuesto="agregarDetallePresupuesto"></DetallePresupuesto>
 
                 <div class="mb-3">
                   <label for="subtotal" class="form-label text-left">SubTotal:</label>
@@ -138,8 +138,9 @@
       const sugerencias = ref([]);
       const selectedSolicitante = ref(null);
       let solicitanteSeleccionado = ref(false);
+      
       const nuevoPresupuesto = ref({
-        fecha: null,
+        fecha_presupuesto: null,
         nro_solicitante: '',
         nombre_solicitante: '',
         contacto: '',
@@ -183,6 +184,8 @@
         const showSuccessAlert = ref(false);
         const showErrorAlert = ref(false);
 
+        const detallesPresupuesto = ref([]);
+
         // Definir métodos
         const mostrarFormulario = () => {
           
@@ -201,10 +204,10 @@
             }
             const formattedDate = `${year}-${month}-${day}`;
             // Asignar la fecha actual al campo de fecha del nuevo presupuesto
-            nuevoPresupuesto.value.fecha = formattedDate;
+            nuevoPresupuesto.value.fecha_presupuesto = formattedDate;
             
             nuevoPresupuesto.value = {
-              fecha: formattedDate,
+              fecha_presupuesto: formattedDate,
               nro_solicitante: '',
               nombre_solicitante: '',
               contacto: '',
@@ -241,7 +244,7 @@
 
               // Limpiar el formulario y mostrar la alerta de éxito
               nuevoPresupuesto.value = {
-                fecha: null,
+                fecha_presupuesto: null,
                 nro_solicitante: '',
                 nombre_solicitante: '',
                 contacto: '',
@@ -318,6 +321,7 @@
             });
         };
         
+        // Evento recibido del componente hijo, DetallePresupuesto
         const actualizarSubTotal = (nuevoSubTotal) => {
           console.log('Evento recibido en el componente padre. Subtotal:', nuevoSubTotal);
           nuevoPresupuesto.value.subtotal = nuevoSubTotal;
@@ -327,6 +331,15 @@
             const descuentoDecimal = descuento / 100; // Convertir el descuento de porcentaje a decimal
             nuevoPresupuesto.value.arancel_presupuesto = subtotal * (1 - descuentoDecimal); // Calcular el total con descuento
         });
+
+        const agregarDetallePresupuesto = (detallePresupuesto) => {
+            console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
+            detallePresupuesto.value.forEach(detalle => {
+                detallesPresupuesto.value.push(detalle);
+            });
+            console.log('Agregando detalles presupuesto a detallesPresupuesto:', detallesPresupuesto);
+        };
+        
 
         return {
           inputProps,
@@ -343,7 +356,9 @@
           mostrarFormulario,
           cerrarModal,
           guardarPresupuesto,
-          actualizarSubTotal
+          actualizarSubTotal,
+          agregarDetallePresupuesto,
+          detallesPresupuesto
         };
     }
   };

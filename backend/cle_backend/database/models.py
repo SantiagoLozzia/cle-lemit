@@ -41,20 +41,9 @@ ESTADO_PRESUPUESTO_CHOICES = [
     ]
 
 ESTADO_RECEPCION_CHOICES = [
-        (0, '0%'),
-        (5, '5%'),
-        (10, '10%'),
-        (15, '15%'),
-        (20, '20%'),
-        (25, '25%'),
-        (30, '30%'),
-        (40, '40%'),
-        (50, '50%'),
-        (60, '60%'),
-        (70, '70%'),
-        (80, '80%'),
-        (90, '90%'),
-        (100, '100%'),
+        ('sin_llegar','Sin LLegar'),
+        ('parcial', 'Parcial'),
+        ('total', 'Total'),
     ]
 
 PAGO_CHOICES = [
@@ -144,34 +133,20 @@ class Legajo(models.Model):
     nro_legajo = models.AutoField(primary_key=True)
     fecha_legajo = models.DateField()
     rangos_laboratorios = models.CharField(max_length=255)
-    ultimo_numero = models.IntegerField(default=0)
     pago = models.CharField(choices=PAGO_CHOICES)
     plazo_pago = models.IntegerField(default=30)
-    adjunto_factura = models.FileField(upload_to='facturas/')
+    adjunto_factura = models.FileField(upload_to='facturas/', null=True)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"Legajo #{self.nro_legajo} - DataServicio #{self.nro_dataServicio.nro_dataServicio}"
 
-    def actualizar_rangos_laboratorios(self, cant_numLabs):
-        i = self.ultimo_numero + 1
-        num_laboratorios = [str(i)]
-        
-        for _ in range(cant_numLabs - 1):
-            i += 1
-            num_laboratorios.append(str(i))
-        
-        self.ultimo_numero = i
-        self.num_laboratorios = ', '.join(num_laboratorios)
-        self.save()
-
 class Recepcion(models.Model):
     nro_recepcion = models.AutoField(primary_key=True)
     nros_remitos = models.CharField(max_length=255)
-    estado_recepcion = models.CharField(choices=ESTADO_RECEPCION_CHOICES)
+    estado_recepcion = models.CharField(choices=ESTADO_RECEPCION_CHOICES, default='sin_llegar')
     plazo_muestras = models.IntegerField(default=30)
-    nro_legajo = models.OneToOneField('Legajo', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
@@ -182,8 +157,6 @@ class OrdenServicio(models.Model):
     nro_ordenServicio = models.AutoField(primary_key=True)
     fecha_ordenServicio = models.DateField()
     observaciones = models.TextField(max_length=255, null=True)
-    nro_informeArea = models.ForeignKey('InformeArea', on_delete=models.CASCADE)  # Asegúrate de tener definida la clase InformeArea
-    nro_legajo = models.ForeignKey('Legajo', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
@@ -194,9 +167,6 @@ class InformeArea(models.Model):
     nro_informeArea = models.AutoField(primary_key=True)
     fecha_informeArea = models.DateField()
     adjunto_informeArea = models.FileField(upload_to='informes_areas/')
-    nro_solicitud_interarea = models.ForeignKey('SolicitudInterarea', on_delete=models.CASCADE)  
-    nro_informeServicio = models.ForeignKey('InformeServicio', on_delete=models.CASCADE)  
-    nro_ordenServicio = models.ForeignKey('OrdenServicio', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
     estado_informeArea = models.CharField(choices=ESTADO_INFORME_AREA_CHOICES, default='sin_informe')
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
@@ -211,7 +181,6 @@ class InformeServicio(models.Model):
     revision = models.BooleanField()
     firma_area = models.BooleanField()
     firma_direccion = models.BooleanField()
-    nro_informeArea = models.ForeignKey('InformeArea', on_delete=models.CASCADE)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
@@ -226,7 +195,6 @@ class SolicitudInterarea(models.Model):
     num_labs = models.IntegerField()
     observaciones = models.TextField(max_length=255, null=True)
     adjunto_solicitudInterarea = models.FileField(upload_to='solicitudes_interarea/')
-    nro_informeInterarea = models.ForeignKey('InformeInterarea', on_delete=models.CASCADE)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
@@ -254,3 +222,22 @@ class InformeInterarea(models.Model):
 class Circuito(models.Model):
     nro_circuito = models.AutoField(primary_key=True)
     finalizado = models.BooleanField(default=False)
+
+class UltimoNumeroSingleton:
+    _instance = None
+    _ultimo_numero = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            # Inicializar el último número aquí, por ejemplo, con un valor predeterminado o recuperándolo de algún lugar.
+            cls._nuevo_ultimo_numero = 0
+        return cls._instance
+
+    @property
+    def ultimo_numero(self):
+        return self._nuevo_ultimo_numero
+
+    @ultimo_numero.setter
+    def ultimo_numero(self, value):
+        self._nuevo_ultimo_numero = value

@@ -43,6 +43,8 @@
     export default {
         setup() {
             const filas = ref([{ nro_servicio: null, servicio: '', norma: '', precioUnitario: null, cantidad: null, total: null, sugerencias: [] }]);
+            const detallesPresupuesto = ref([]);
+
             const { emit } = getCurrentInstance();
             const buscarServicio = debounce((term) => {
                 console.log('Term de búsqueda:', term);
@@ -112,8 +114,15 @@
                         fila.total = null;
                     }
                 });
+                // Actualizar detallesPresupuesto cuando cambian las filas
+                detallesPresupuesto.value = [...nuevasFilas];   
+                console.log('DETALLE PRESUPUESTO:', detallesPresupuesto.value)
+                emit('agregar-detallePresupuesto', detallesPresupuesto);
+                
             }, { deep: true }); 
             
+            
+
             const agregarServicio = () => {
                 filas.value.push({ nro_servicio: '', servicio: '', norma: '', precioUnitario: null, cantidad: null, total: null, sugerencias: [] });
                 console.log('Se agregó un nuevo servicio. Filas actualizadas:', filas.value); 
@@ -123,14 +132,19 @@
                 const total = nuevasFilas.reduce((acc, fila) => acc + fila.total, 0);
                 console.log('Calculando subtotal. Filas:', nuevasFilas); 
                 console.log('Subtotal calculado:', total); 
+                
                 emit('actualizar-subtotal', total);
             }, { deep: true });
+
+
+            
 
             return {
                 filas,
                 buscarServicio,
                 seleccionarServicio,
                 agregarServicio,
+                detallesPresupuesto,
             };
         }
     };

@@ -10,12 +10,15 @@
 import { ref, onMounted } from 'vue';
 import HeaderComponent from './components/HeaderComponent.vue';
 import HorizontalMenu from './components/HorizontalMenu.vue';
+// import VueGoodTablePlugin from 'vue-good-table';
+// import 'vue-good-table/dist/vue-good-table.css';
 
 export default {
   name: 'App',
   components: {
     HeaderComponent,
     HorizontalMenu,
+    // VueGoodTable: VueGoodTablePlugin.VueGoodTable,
   },
   setup() {
     // Estado reactivo
