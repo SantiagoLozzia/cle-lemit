@@ -141,6 +141,26 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# Configuración de registro
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Cambia el nivel a DEBUG para ver mensajes de depuración
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Cambia el nivel a DEBUG para ver mensajes de depuración
+            'propagate': True,
+        },
+    },
+}
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 APPEND_SLASH = False

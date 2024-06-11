@@ -1,6 +1,6 @@
 from rest_framework import generics
 from database.models import Presupuesto, Solicitante, Servicio
-from .serializers import PresupuestoSerializer, SolicitanteSerializer, SeleccionarSolicitanteSerializer, ServicioSerializer, SeleccionarServicioSerializer, PresupuestoEnEsperaSerializer
+from .serializers import PresupuestoSerializer, DetallePresupuestoSerializer, SolicitanteSerializer, SeleccionarSolicitanteSerializer, ServicioSerializer, SeleccionarServicioSerializer, PresupuestoEnEsperaSerializer
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, api_view
 from django.views.decorators.http import require_http_methods
@@ -13,6 +13,37 @@ from django.db.models import Q
 class PresupuestoListView(generics.ListCreateAPIView):
     queryset = Presupuesto.objects.all()
     serializer_class = PresupuestoSerializer
+
+    # def create(self, request, *args, **kwargs):
+    #     # Llama al método create de la clase base para crear el Presupuesto
+    #     response = super().create(request, *args, **kwargs)
+
+        
+    #     # Si la creación del Presupuesto fue exitosa, obtengo su PK
+    #     # if response.status_code == status.HTTP_201_CREATED:
+    #     #     presupuesto_pk = response.data['nro_presupuesto']
+    #     #     print("Presupuesto creado con PK:", presupuesto_pk)
+
+    #     #     # Ahora con la PK del Presupuesto, puedo crear los DetallePresupuesto
+    #     #     detalles_presupuesto_data = request.data.get('detallesPresupuesto', [])
+    #     #     detalles_presupuesto = []
+    #     #     for detalle_data in detalles_presupuesto_data:
+    #     #         # Asigna la PK del Presupuesto al DetallePresupuesto
+    #     #         detalle_data['presupuesto'] = presupuesto_pk  
+    #     #         # Serializa los datos del detalle del presupuesto
+    #     #         detalle_serializer = DetallePresupuestoSerializer(data=detalle_data)
+    #     #         if detalle_serializer.is_valid():
+    #     #             # Agrega el detalle del presupuesto serializado a la lista
+    #     #             detalles_presupuesto.append(detalle_serializer.save())
+    #     #         else:
+    #     #             # 
+    #     #             pass
+            
+    #         # Actualiza el objeto Presupuesto con los detalles de presupuesto creados
+    #         # presupuesto_instance = Presupuesto.objects.get(pk=presupuesto_pk)
+    #         # presupuesto_instance.detalles_presupuesto.add(*detalles_presupuesto)
+
+    #     return response
 
 class PresupuestoDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Presupuesto.objects.all()
