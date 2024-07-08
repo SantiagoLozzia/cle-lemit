@@ -144,7 +144,7 @@ class Legajo(models.Model):
 
 class Recepcion(models.Model):
     nro_recepcion = models.AutoField(primary_key=True)
-    nros_remitos = models.CharField(max_length=255)
+    nros_remitos = models.CharField(max_length=255, null=True)
     estado_recepcion = models.CharField(choices=ESTADO_RECEPCION_CHOICES, default='sin_llegar')
     plazo_muestras = models.IntegerField(default=30)
     completo = models.BooleanField(default=False)
@@ -194,7 +194,7 @@ class SolicitudInterarea(models.Model):
     muestras_solicitudIa = models.TextField()
     num_labs = models.IntegerField()
     observaciones = models.TextField(max_length=255, null=True)
-    adjunto_solicitudInterarea = models.FileField(upload_to='solicitudes_interarea/')
+    # adjunto_solicitudInterarea = models.FileField(upload_to='solicitudes_interarea/')
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):

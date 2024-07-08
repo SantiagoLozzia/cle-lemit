@@ -25,10 +25,10 @@
                     </div>
                 </td>
 
-                <td><input v-model.number="fila.norma" type="text" readonly></td>                 
+                <td><input v-model.number="fila.norma" type="text" readonly required></td>                 
                 <td><input v-model.number="fila.precioUnitario" type="number" readonly></td>
-                <td><input v-model.number="fila.cantidad" type="number"></td>
-                <td><input v-model.number="fila.total" type="number" readonly></td>
+                <td><input v-model.number="fila.cant" type="number"></td>
+                <td><input v-model.number="fila.subtotal" type="number" readonly></td>
             </tr>
         </tbody>
     </table>
@@ -42,8 +42,8 @@
 
     export default {
         setup() {
-            const filas = ref([{ nro_servicio: null, servicio: '', norma: '', precioUnitario: null, cantidad: null, total: null, sugerencias: [] }]);
-            const detallesPresupuesto = ref([]);
+            const filas = ref([{ nro_servicio: null, servicio: '', norma: '', precioUnitario: null, cant: null, subtotal: null, sugerencias: [] }]);
+            const detallePresupuesto = ref([]);
 
             const { emit } = getCurrentInstance();
             const buscarServicio = debounce((term) => {
@@ -107,32 +107,42 @@
             watch(filas, (nuevasFilas) => {
                 nuevasFilas.forEach(fila => {
                     // Verificar si la cantidad y el precio unitario son números válidos
-                    if (!isNaN(fila.cantidad) && !isNaN(fila.precioUnitario)) {
-                        fila.total = fila.cantidad * fila.precioUnitario;
+                    if (!isNaN(fila.cant) && !isNaN(fila.precioUnitario)) {
+                        fila.subtotal = fila.cant * fila.precioUnitario;
+                        
+                        // emit('detalle-Presupuesto', detallePresupuesto);
+
                     } else {
                         // Si la cantidad o el precio unitario no son válidos, establecer el total como null
-                        fila.total = null;
+                        fila.subtotal = null;
                     }
                 });
-                // Actualizar detallesPresupuesto cuando cambian las filas
-                detallesPresupuesto.value = [...nuevasFilas];   
-                console.log('DETALLE PRESUPUESTO:', detallesPresupuesto.value)
-                emit('agregar-detallePresupuesto', detallesPresupuesto);
-                
             }, { deep: true }); 
-            
+
+            // Watcher para detectar cambios en la propiedad 'total' de cada fila en 'filas'
+            watch(filas, (nuevasFilas) => {
+                // nuevasFilas.forEach(fila => {
+                    // Verificar si la fila tiene un valor en la propiedad 'total'
+                    // if (fila.total !== null && fila.total !== 0 && !isNaN(fila.total)) {
+                        // Agregar detalle presupuesto
+                        detallePresupuesto.value = [...nuevasFilas]; 
+                        // console.log('DETALLE PRESUPUESTO DESDE HIJO:', detallePresupuesto.value)
+                        emit('detalle-Presupuesto', detallePresupuesto);
+                    // }
+                // }); 
+            }, { deep: true });
+
             
 
             const agregarServicio = () => {
-                filas.value.push({ nro_servicio: '', servicio: '', norma: '', precioUnitario: null, cantidad: null, total: null, sugerencias: [] });
+                filas.value.push({ nro_servicio: '', cant: null, subtotal: null, sugerencias: [] });
                 console.log('Se agregó un nuevo servicio. Filas actualizadas:', filas.value); 
             };
 
             watch(filas, (nuevasFilas) => {
-                const total = nuevasFilas.reduce((acc, fila) => acc + fila.total, 0);
-                console.log('Calculando subtotal. Filas:', nuevasFilas); 
-                console.log('Subtotal calculado:', total); 
-                
+                const total = nuevasFilas.reduce((acc, fila) => acc + fila.subtotal, 0);
+                // console.log('Calculando subtotal. Filas:', nuevasFilas); 
+                // console.log('Subtotal calculado:', total); 
                 emit('actualizar-subtotal', total);
             }, { deep: true });
 
@@ -144,7 +154,7 @@
                 buscarServicio,
                 seleccionarServicio,
                 agregarServicio,
-                detallesPresupuesto,
+                detallePresupuesto,
             };
         }
     };

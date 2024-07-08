@@ -74,7 +74,7 @@
                   </select>
                 </div>
 
-                <DetallePresupuesto @actualizar-subtotal="actualizarSubTotal" @agregar-detallePresupuesto="agregarDetallePresupuesto"></DetallePresupuesto>
+                <DetallePresupuesto @actualizar-subtotal="actualizarSubTotal" @detalle-Presupuesto="agregarDetallePresupuesto"></DetallePresupuesto>
 
                 <div class="mb-3">
                   <label for="subtotal" class="form-label text-left">SubTotal:</label>
@@ -101,7 +101,7 @@
                   <input v-model="nuevoPresupuesto.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                 </div>
   
-                <button @click="guardarPresupuesto" type="button" class="btn btn-primary w-100">Guardar</button>
+                <button @click="guardarPresupuesto()" type="button" class="btn btn-primary w-100">Guardar</button>
               </form>
             </div>
           </div>
@@ -150,8 +150,16 @@
         subtotal: null,
         descuento: '0',
         arancel_presupuesto: null,
-        });
-        const area_tematicaOptions = ref([
+        detalles_presupuesto: [
+          {
+            nro_servicio: '',
+            cant: 0,
+            subtotal: null
+          }
+        ]
+      });
+      
+      const area_tematicaOptions = ref([
           { value: 'durabilidad', label: 'Durabilidad' },
           { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
           { value: 'geologia', label: 'Geología' },
@@ -163,8 +171,8 @@
           { value: 'estudios_especiales', label: 'Estudios Especiales' },
           { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
           { value: 'direccion', label: 'Dirección' },
-        ]);
-        const descuentoOptions = ref([
+      ]);
+      const descuentoOptions = ref([
           { value: '0', label: '0%' },
           { value: '5', label: '5%' },
           { value: '10', label: '10%' },
@@ -179,49 +187,55 @@
           { value: '80', label: '80%' },
           { value: '90', label: '90%' },
           { value: '100', label: '100%' },
-        ]);
-        const mostrarModal = ref(false);
-        const showSuccessAlert = ref(false);
-        const showErrorAlert = ref(false);
+      ]);
+      const mostrarModal = ref(false);
+      const showSuccessAlert = ref(false);
+      const showErrorAlert = ref(false);
 
-        const detallesPresupuesto = ref([]);
+      // const detallesPresupuesto = ref([]);
 
-        // Definir métodos
-        const mostrarFormulario = () => {
+      // Definir métodos
+      const mostrarFormulario = () => {
           
-            // Calcular la fecha actual
-            const today = new Date();
-            const year = today.getFullYear();
-            let month = today.getMonth() + 1;
-            let day = today.getDate();
-
-            // Formatear la fecha como "YYYY-MM-DD"
-            if (month < 10) {
-                month = '0' + month;
-            }
-            if (day < 10) {
-                day = '0' + day;
-            }
-            const formattedDate = `${year}-${month}-${day}`;
-            // Asignar la fecha actual al campo de fecha del nuevo presupuesto
-            nuevoPresupuesto.value.fecha_presupuesto = formattedDate;
+        // Calcular la fecha actual
+        const today = new Date();
+        const year = today.getFullYear();
+        let month = today.getMonth() + 1;
+        let day = today.getDate();
+        // Formatear la fecha como "YYYY-MM-DD"
+        if (month < 10) {
+            month = '0' + month;
+        }
+        if (day < 10) {
+            day = '0' + day;
+        }
+        const formattedDate = `${year}-${month}-${day}`;
+        // Asignar la fecha actual al campo de fecha del nuevo presupuesto
+        nuevoPresupuesto.value.fecha_presupuesto = formattedDate;
             
-            nuevoPresupuesto.value = {
-              fecha_presupuesto: formattedDate,
-              nro_solicitante: '',
-              nombre_solicitante: '',
-              contacto: '',
-              telefono2: null,
-              email2: '',
-              area_tematica: '',
-              subtotal: null,
-              descuento: '0',
-              arancel_presupuesto: null,
-            };
+        nuevoPresupuesto.value = {
+          fecha_presupuesto: formattedDate,
+          nro_solicitante: '',
+          nombre_solicitante: '',
+          contacto: '',
+          telefono2: null,
+          email2: '',
+          area_tematica: '',
+          subtotal: null,
+          descuento: '0',
+          arancel_presupuesto: null,
+          detalles_presupuesto: [
+          {
+            nro_servicio: '',
+            cant: 0,
+            subtotal: null
+          }
+        ]
+        };
             
 
-            mostrarModal.value = true;
-            solicitanteSeleccionado.value = false;
+        mostrarModal.value = true;
+          solicitanteSeleccionado.value = false;
         };
 
         const cerrarModal = () => {
@@ -235,7 +249,8 @@
           }
 
           nuevoPresupuesto.value.estado_presupuesto = 'en_espera';
-          console.log('nuevo presupuesto',nuevoPresupuesto)
+          console.log('nuevo presupuesto enviando al backend',nuevoPresupuesto)
+          // return
           //Enviar datos al backend usando Axios
           axios.post('http://localhost:8000/api/presupuestos/', nuevoPresupuesto.value)
             .then(response => {
@@ -254,6 +269,13 @@
                 subtotal: null,
                 descuento: '0',
                 arancel_presupuesto: null,
+                detalles_presupuesto: [
+                  {
+                    nro_servicio: '',
+                    cant: 0,
+                    subtotal: null
+                  }
+                ]
               };
 
               showSuccessAlert.value = true;
@@ -332,15 +354,30 @@
             nuevoPresupuesto.value.arancel_presupuesto = subtotal * (1 - descuentoDecimal); // Calcular el total con descuento
         });
 
+        // const agregarDetallePresupuesto = (detallePresupuesto) => {
+        //     console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
+            // const detalle = detallePresupuesto.value;
+            // // Agregar el detalle recibido al array detallesPresupuesto
+            // nuevoPresupuesto.detallesPresupuesto.value.push(detalle);
+            // console.log('Array detallesPresupuesto:', nuevoPresupuesto.detallesPresupuesto.value)
+            // console.log('numero primer servicio', nuevoPresupuesto.detallesPresupuesto.value[0].nro_servicio)
+            // console.log('cantidad primer setvicio', nuevoPresupuesto.detallesPresupuesto.value[0].cantidad)
+            // console.log('total primer servicio', nuevoPresupuesto.detallesPresupuesto.value[0].total)
+        // };s
+
         const agregarDetallePresupuesto = (detallePresupuesto) => {
             console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
-            detallePresupuesto.value.forEach(detalle => {
-                detallesPresupuesto.value.push(detalle);
-            });
-            console.log('Agregando detalles presupuesto a detallesPresupuesto:', detallesPresupuesto);
+            // Asegúrate de que detallePresupuesto es un ref y tiene un valor
+            if (detallePresupuesto && detallePresupuesto.value) {
+                // detallePresupuesto.value es el array que contiene tus objetos de detalles
+                console.log('Reemplazando detalles:', detallePresupuesto.value);
+
+                // Asignamos el nuevo array de detalles directamente
+                nuevoPresupuesto.value.detalles_presupuesto = detallePresupuesto.value;
+            }
+            console.log('Array dentro de nuevoPresupuesto', nuevoPresupuesto.value.detalles_presupuesto);
         };
         
-
         return {
           inputProps,
           sugerencias,
@@ -358,7 +395,7 @@
           guardarPresupuesto,
           actualizarSubTotal,
           agregarDetallePresupuesto,
-          detallesPresupuesto
+          // detallesPresupuesto
         };
     }
   };
@@ -367,7 +404,7 @@
   
   
 <style scoped>
-  .modal {
+  /* .modal {
     display: none;
     position: fixed;
     top: 0;
@@ -375,13 +412,13 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-  }
+  } */
   
-  .modal.show {
+  /* .modal.show {
     display: flex;
     align-items: center;
     justify-content: center;
-  }
+  } */
   
   #modalPresupuesto .modal-dialog {
     max-width: 1500px !important; 

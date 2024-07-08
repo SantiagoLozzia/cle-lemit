@@ -53,6 +53,7 @@
     background-color: #fff;
     border-bottom: 1px solid #ccc;
     display: flex;
+    width: 160%;
   }
   
   .router-link-item {
@@ -89,4 +90,11 @@
   .router-link-item a.router-link-exact-active {
     text-decoration: none !important;
   }
+
+  a {
+    color: transparent;
+  }
+  
   </style>
+
+ 

@@ -12,14 +12,13 @@ class DetallePresupuestoSerializer(serializers.ModelSerializer):
         fields = ['nro_servicio', 'cant', 'subtotal']
 
 class PresupuestoSerializer(serializers.ModelSerializer):
-    detalles_presupuesto = DetallePresupuestoSerializer(many=True, source="detallepresupuesto_set")
+    detalles_presupuesto = DetallePresupuestoSerializer(many=True)
 
     class Meta:
         model = Presupuesto
         fields = ['fecha_presupuesto', 'contacto', 'telefono2', 'email2', 'area_tematica', 'subtotal', 'descuento', 'arancel_presupuesto', 'observaciones', 'estado_presupuesto', 'nro_solicitante', 'detalles_presupuesto']
     
     def create(self, validated_data):
-        # breakpoint()
         detalles_presupuesto_data = validated_data.pop('detalles_presupuesto', [])
         
         # Convertir subtotal y cant a números si son cadenas

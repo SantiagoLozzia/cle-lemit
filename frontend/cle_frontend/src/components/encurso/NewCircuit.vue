@@ -2,7 +2,7 @@
     <div>
       <div>
         <div class="button-container">
-          <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">+ Data Servicio</button>
+          <button class="btn btn-primary float-start ms-2 mt-4" @click="mostrarFormulario">+ Data Servicio</button>
         </div>
     
         <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">
@@ -54,7 +54,7 @@
                     <input v-model="nuevoDataServicio.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                   </div>
     
-                  <button @click="guardarDataServicio" type="button" class="btn btn-primary w-100">Guardar</button>
+                  <button @click="crearDataServicio" type="button" class="btn btn-primary w-100">Guardar</button>
                 </form>
               </div>
             </div>
@@ -133,13 +133,13 @@
           mostrarModal.value = false;
         };
   
-        const guardarDataServicio = () => {
+        const crearDataServicio = () => {
           // Validar campos obligatorios
           if (!nuevoDataServicio.value.plazo_estimado || !nuevoDataServicio.value.cant_numLabs) {
             return;
           }
           console.log('nuevo presupuesto',nuevoDataServicio)
-          axios.post('http://localhost:8000/api/encurso/guardar_dataServicio/', nuevoDataServicio.value)
+          axios.post('http://localhost:8000/api/encurso/crear_dataServicio/', nuevoDataServicio.value)
             .then(response => {
               console.log(response.data);
               cerrarModal();
@@ -212,7 +212,7 @@
             presupuestoSeleccionado,
             mostrarFormulario,
             cerrarModal,
-            guardarDataServicio,
+            crearDataServicio,
           };
       }
     };
