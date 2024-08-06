@@ -1,16 +1,24 @@
 <template>
-    <div>
-      <!-- Contenido de la vista ArchivoView -->
-    </div>
-  </template>
-  
-  <script>
+  <div>
+    <CanceladosTable :data="canceladosData" />
+  </div>
+</template>
+
+<script>
+  import CanceladosTable from '../../components/presupuestos/CanceladosTable.vue';
+
   export default {
-    // Configuración del componente
+    data() {
+      return {
+        canceladosData: []
+      };
+    },
+    components: {
+      CanceladosTable
+    }
   };
-  </script>
-  
-  <style scoped>
-  /* Estilos específicos de la vista ArchivoView */
-  </style>
-  
+</script>
+
+<style scoped>
+
+</style>

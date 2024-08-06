@@ -1,16 +1,26 @@
 <template>
-    <div>
-      <!-- Contenido de la vista ArchivoView -->
-    </div>
-  </template>
+  <div>
+    <ArchivedCircuits :data="moduloData" />
+  </div>
+</template>
+
+<script>
+  import ArchivedCircuits from '../components/archivo/ArchivedCircuits.vue';
   
-  <script>
+
   export default {
-    // Configuración del componente
+    data() {
+      return {
+        ArchivedCircuits,
+      };
+    },
+    components: {
+      ArchivedCircuits,
+    }
   };
-  </script>
+</script>
   
-  <style scoped>
-  /* Estilos específicos de la vista ArchivoView */
-  </style>
+<style scoped>
+
+</style>
   

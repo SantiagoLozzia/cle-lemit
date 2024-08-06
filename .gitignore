@@ -82,20 +82,9 @@ tmtags
 # Rider
 .idea/
 
-# User-specific files
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Mono Auto Generated Files
-mono_crash.*
-
-# Windows In
+# Python-generated files
+*.pyc
+__pycache__/
 
 # Ignorar el directorio venv
 /backend/venv/
-
-# Archivos generados por Python
-*.pyc
-__pycache__/

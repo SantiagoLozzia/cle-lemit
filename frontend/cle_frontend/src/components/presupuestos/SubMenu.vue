@@ -70,4 +70,8 @@ nav {
 .router-link-item a.router-link-exact-active {
   text-decoration: none !important;
 }
+
+a {
+    color: transparent;
+  }
 </style>

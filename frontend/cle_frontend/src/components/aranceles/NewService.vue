@@ -1,14 +1,14 @@
 <template>
   <div>
     <div class="button-container">
-      <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Nuevo +</button>
+      <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Servicio +</button>
     </div>
 
     <div class="modal" :class="{ 'show': mostrarModal }" id="modalService">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5 fw-bold">Nuevo Arancel</h1>
+            <h1 class="modal-title fs-5 fw-bold">Nuevo Servicio</h1>
             <button type="button" class="btn-close" @click="cerrarModal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -24,7 +24,7 @@
               </div>
 
               <div class="mb-3">
-                <label for="arancel" class="form-label text-left">Arancel:</label>
+                <label for="arancel" class="form-label text-left">Valor:</label>
                 <input v-model="nuevoServicio.arancel" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="arancel" name="arancel" required />
               </div>
 
@@ -104,7 +104,7 @@ export default {
         return;
       }
 
-      axios.post('http://localhost:8000/api/aranceles/', nuevoServicio.value)
+      axios.post(`http://localhost:8000/api/aranceles/`, nuevoServicio.value)
         .then(response => {
           console.log(response.data);
           cerrarModal();

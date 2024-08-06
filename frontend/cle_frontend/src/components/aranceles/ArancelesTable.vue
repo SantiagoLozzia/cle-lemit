@@ -9,20 +9,20 @@
       <table class="table aranceles-table">
         <thead>
           <tr>
-            <th>Nro</th>
-            <th>Servicio</th>
-            <th>Norma</th>
-            <th>Arancel</th>
-            <th>Area Tematica</th>
+            <th class="add-border-right">Nro</th>
+            <th class="add-border-right">Servicio</th>
+            <th class="add-border-right">Norma</th>
+            <th class="add-border-right">Valor</th>
+            <th class="add-border-right">Area Tematica</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(arancel, index) in aranceles" :key="index">
-            <td>{{ arancel.nro_servicio }}</td>
-            <td>{{ arancel.servicio }}</td>
-            <td>{{ arancel.norma }}</td>
-            <td>{{ arancel.arancel }}</td>
-            <td>{{ arancel.area_tematica }}</td>
+            <td class="add-border-right">{{ arancel.nro_servicio }}</td>
+            <td class="text-start add-border-right">{{ arancel.servicio }}</td>
+            <td class="add-border-right">{{ arancel.norma }}</td>
+            <td class="add-border-right">{{ arancel.arancel }}</td>
+            <td class="add-border-right">{{ formatAreaTematica(arancel.area_tematica) }}</td>
           </tr>
         </tbody>
       </table>
@@ -34,14 +34,18 @@
 
   import { ref, onMounted } from 'vue';
   import axios from 'axios';
-  
+
   export default {
     setup() {
-      const aranceles = ref([]); // Utilizamos ref para aranceles
+
+      
+
+      const aranceles = ref([]); 
 
       const fetchAranceles = async () => {
         try {
-          const response = await axios.get('api/aranceles/todos/');
+          const response = await axios.get(`http://localhost:8000/api/aranceles/todos/`);
+          
           aranceles.value = response.data; // Actualizamos aranceles.value
         } 
         
@@ -50,19 +54,37 @@
         }
       };
 
+      // Función para formatear el campo area_tematica
+      const formatAreaTematica = (areaTematica) => {
+        return areaTematica.replace(/_/g, ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+      };
+
       onMounted(fetchAranceles); // Utilizamos onMounted para llamar a fetchAranceles en la creación del componente
 
-      return { aranceles }; // Devolvemos aranceles para usarlo en el template
+      return { 
+        aranceles,
+        formatAreaTematica,
+      };
     }
   };
 </script>
 
 <style scoped>
+
+.modulo {
+  position: fixed; /* Establece la posición fija para que permanezca en la misma ubicación incluso al desplazarse */
+  left: 10px; /* Lo sitúa en el extremo izquierdo de la pantalla */
+  transform: translateY(120%); /* Centra verticalmente el elemento */
+}
 .title-container {
   position: relative;
   top: 50px;
 }
 .table-container {
   margin-top: 80px;
+}
+
+.add-border-right {
+  border-right: 1px solid gainsboro; /* Establece el borde derecho */
 }
 </style>
