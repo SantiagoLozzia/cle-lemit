@@ -92,3 +92,10 @@ tmtags
 mono_crash.*
 
 # Windows In
+
+# Ignorar el directorio venv
+/backend/venv/
+
+# Archivos generados por Python
+*.pyc
+__pycache__/
