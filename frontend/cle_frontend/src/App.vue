@@ -127,7 +127,9 @@ body {
   text-align: left;
 }
 
-
+.modal-footer .btn {
+  width: 45%; /* Establece el ancho de los botones */
+}
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;

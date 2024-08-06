@@ -1,6 +1,6 @@
 from rest_framework import generics
-from database.models import Presupuesto, Solicitante, Servicio
-from .serializers import PresupuestoSerializer, DetallePresupuestoSerializer, SolicitanteSerializer, SeleccionarSolicitanteSerializer, ServicioSerializer, SeleccionarServicioSerializer, PresupuestoEnEsperaSerializer
+from database.models import Presupuesto, Solicitante, Servicio, Modulo
+from .serializers import *
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, api_view
 from django.views.decorators.http import require_http_methods
@@ -9,41 +9,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.response import Response
 from django.db.models import Q
+import json
 
 class PresupuestoListView(generics.ListCreateAPIView):
     queryset = Presupuesto.objects.all()
     serializer_class = PresupuestoSerializer
-
-    # def create(self, request, *args, **kwargs):
-    #     # Llama al método create de la clase base para crear el Presupuesto
-    #     response = super().create(request, *args, **kwargs)
-
-        
-    #     # Si la creación del Presupuesto fue exitosa, obtengo su PK
-    #     # if response.status_code == status.HTTP_201_CREATED:
-    #     #     presupuesto_pk = response.data['nro_presupuesto']
-    #     #     print("Presupuesto creado con PK:", presupuesto_pk)
-
-    #     #     # Ahora con la PK del Presupuesto, puedo crear los DetallePresupuesto
-    #     #     detalles_presupuesto_data = request.data.get('detallesPresupuesto', [])
-    #     #     detalles_presupuesto = []
-    #     #     for detalle_data in detalles_presupuesto_data:
-    #     #         # Asigna la PK del Presupuesto al DetallePresupuesto
-    #     #         detalle_data['presupuesto'] = presupuesto_pk  
-    #     #         # Serializa los datos del detalle del presupuesto
-    #     #         detalle_serializer = DetallePresupuestoSerializer(data=detalle_data)
-    #     #         if detalle_serializer.is_valid():
-    #     #             # Agrega el detalle del presupuesto serializado a la lista
-    #     #             detalles_presupuesto.append(detalle_serializer.save())
-    #     #         else:
-    #     #             # 
-    #     #             pass
-            
-    #         # Actualiza el objeto Presupuesto con los detalles de presupuesto creados
-    #         # presupuesto_instance = Presupuesto.objects.get(pk=presupuesto_pk)
-    #         # presupuesto_instance.detalles_presupuesto.add(*detalles_presupuesto)
-
-    #     return response
 
 class PresupuestoDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Presupuesto.objects.all()
@@ -93,6 +63,12 @@ def presupuestos_cancelados(request):
         presupuestos_con_solicitante.append(presupuesto_dict)
     
     return JsonResponse(presupuestos_con_solicitante, safe=False)
+
+@require_http_methods(["GET"])
+def presupuestos_aceptados(request):
+    presupuestos = Presupuesto.objects.filter(estado_presupuesto='aceptado').select_related('nro_solicitante')
+    serializer = PresupuestosAceptadosSerializer(presupuestos, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 @api_view(['PUT'])
 def actualizar_estado_presupuesto(request, nro_presupuesto):
@@ -145,3 +121,76 @@ def seleccionar_servicio(request, nro_servicio):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# @api_view(['GET'])
+# def obtener_modulo(request):
+#     try:
+#         modulo = Modulo()  # Obtiene la instancia Singleton de Modulo
+#         return JsonResponse({'valor': modulo.obtener_valor()})
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=500)
+
+
+# Configurar el logger
+logger = logging.getLogger(__name__)
+
+def obtener_presupuesto(request, nro_presupuesto):
+    try:
+        # Obtener el objeto Presupuesto
+        presupuesto = Presupuesto.objects.get(nro_presupuesto=nro_presupuesto)
+
+        # Obtener los detalles asociados al Presupuesto
+        detalles_presupuesto = DetallePresupuesto.objects.filter(nro_presupuesto=presupuesto)
+        
+        # Crear una lista con los detalles de presupuesto, incluyendo el nombre del servicio
+        detalles_con_servicio = []
+        for detalle in detalles_presupuesto:
+            servicio = Servicio.objects.get(nro_servicio=detalle.nro_servicio.nro_servicio)
+            detalle_dict = {
+                'nro_servicio': detalle.nro_servicio.nro_servicio,
+                'nombre_servicio': servicio.servicio,
+                'cant': detalle.cant,
+                'subtotal': detalle.subtotal
+            }
+            detalles_con_servicio.append(detalle_dict)
+        
+        # Serializar el presupuesto
+        presupuesto_serializer = PresupuestoSerializer(presupuesto)
+        presupuesto_data = presupuesto_serializer.data
+
+        # Obtener el solicitante asociado al presupuesto
+        solicitante = presupuesto.nro_solicitante
+        solicitante_serializer = SolicitanteSerializer(solicitante)
+        nro_solicitante = solicitante_serializer.data['nro_solicitante']
+        nombre_solicitante = solicitante_serializer.data['nombre_solicitante']
+
+        solicitante_data = solicitante_serializer.data
+        telefono = solicitante_data.get('telefono')
+        email = solicitante_data.get('email')
+
+        # Construir el diccionario de respuesta
+        response_data = {
+           'nro_presupuesto': presupuesto_data['nro_presupuesto'],
+           'fecha_presupuesto': presupuesto_data['fecha_presupuesto'],
+           'contacto': presupuesto_data['contacto'],
+           'telefono2': presupuesto_data['telefono2'],
+           'email2': presupuesto_data['email2'],
+           'area_tematica': presupuesto_data['area_tematica'],
+           'subtotal': presupuesto_data['subtotal'],
+           'descuento': presupuesto_data['descuento'],
+           'arancel_presupuesto': presupuesto_data['arancel_presupuesto'],
+           'observaciones': presupuesto_data['observaciones'],
+           'nro_solicitante': nro_solicitante,
+           'nombre_solicitante': nombre_solicitante,
+           'telefono': telefono,
+           'email': email,
+           'detalles_presupuesto': detalles_con_servicio
+        }
+
+        return JsonResponse(response_data, status=200)
+    except Presupuesto.DoesNotExist:
+        return JsonResponse({'error': 'Presupuesto no encontrado'}, status=404)
+    except Exception as e:
+        logger.error("Error en obtener_presupuesto: %s", str(e))
+        return JsonResponse({'error': str(e)}, status=500)

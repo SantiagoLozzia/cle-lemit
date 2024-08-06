@@ -51,7 +51,7 @@ class DetallePresupuestoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DetallePresupuesto
-        fields = ['servicio', 'cant']
+        fields = ['nro_servicio', 'servicio', 'cant']
 
 class InformeAreaEnCursoSerializer(serializers.ModelSerializer):
         class Meta:   
@@ -60,7 +60,7 @@ class InformeAreaEnCursoSerializer(serializers.ModelSerializer):
 
 class InformeServicioEnCursoSerializer(serializers.ModelSerializer):
         class Meta:
-                model = InformeArea
+                model = InformeServicio
                 fields = '__all__'
         
 class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
@@ -100,7 +100,44 @@ class CambiarPlazoMuestrasSerializer(serializers.ModelSerializer):
                 model = Recepcion
                 fields = ['plazo_muestras']
 
+class CambiarPlazoEstimadoSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = DataServicio
+                fields = ['plazo_estimado']
+
 class GuardarAdjuntoInformeArea(serializers.ModelSerializer):
         class Meta:
                 model = InformeArea
                 fields = ['']
+
+class SolicitudInterareaSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = SolicitudInterarea
+                fields = '__all__'
+
+class DetalleInterareaSerializer(serializers.ModelSerializer):
+    servicio = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = DetalleInterarea
+        fields = ('nro_servicio', 'cant', 'servicio')
+    
+    def get_servicio(self, obj):
+        # Obtener el nombre del servicio usando el nro_servicio
+        servicio = Servicio.objects.get(pk=obj.nro_servicio.pk)
+        return servicio.servicio
+    
+class InformeInterareaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InformeInterarea
+        fields = '__all__'
+
+class InformeServicioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InformeServicio
+        fields = '__all__'
+
+class CambiarRevision(serializers.ModelSerializer):
+       class Meta:
+        model = InformeServicio
+        fields = '__all__'

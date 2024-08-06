@@ -101,7 +101,7 @@
                   <input v-model="nuevoPresupuesto.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                 </div>
   
-                <button @click="guardarPresupuesto()" type="button" class="btn btn-primary w-100">Guardar</button>
+                <button @click="crearPresupuesto()" type="button" class="btn btn-primary w-100">Guardar</button>
               </form>
             </div>
           </div>
@@ -137,7 +137,6 @@
       const inputProps = ref({ placeholder: 'Buscar solicitante' });
       const sugerencias = ref([]);
       const selectedSolicitante = ref(null);
-      let solicitanteSeleccionado = ref(false);
       
       const nuevoPresupuesto = ref({
         fecha_presupuesto: null,
@@ -232,171 +231,139 @@
           }
         ]
         };
-            
 
         mostrarModal.value = true;
-          solicitanteSeleccionado.value = false;
-        };
 
-        const cerrarModal = () => {
-          mostrarModal.value = false;
-        };
+      };
 
-        const guardarPresupuesto = () => {
-          // Validar campos obligatorios
-          if (!nuevoPresupuesto.value.contacto || !nuevoPresupuesto.value.email || !nuevoPresupuesto.value.area_tematica || nuevoPresupuesto.value.subtotal === null || nuevoPresupuesto.value.descuento === null) {
-            return;
-          }
-
-          nuevoPresupuesto.value.estado_presupuesto = 'en_espera';
-          console.log('nuevo presupuesto enviando al backend',nuevoPresupuesto)
-          // return
-          //Enviar datos al backend usando Axios
-          axios.post('http://localhost:8000/api/presupuestos/', nuevoPresupuesto.value)
-            .then(response => {
-              console.log(response.data);
-              cerrarModal();
-
-              // Limpiar el formulario y mostrar la alerta de éxito
-              nuevoPresupuesto.value = {
-                fecha_presupuesto: null,
-                nro_solicitante: '',
-                nombre_solicitante: '',
-                contacto: '',
-                telefono2: null,
-                email2: '',
-                area_tematica: '',
-                subtotal: null,
-                descuento: '0',
-                arancel_presupuesto: null,
-                detalles_presupuesto: [
-                  {
-                    nro_servicio: '',
-                    cant: 0,
-                    subtotal: null
-                  }
-                ]
-              };
-
-              showSuccessAlert.value = true;
-
-              setTimeout(() => {
-                showSuccessAlert.value = false;
-              }, 3000);
-            })
-            .catch(error => {
-              console.error('Error al guardar el presupuesto:', error);
-              cerrarModal();
-              // Imprimir detalles del error
-              console.error('Error details:', error.response.data);
-              showErrorAlert.value = true;
-
-              setTimeout(() => {
-                showErrorAlert.value = false;
-              }, 5000);
-
-              solicitanteSeleccionado.value = false;
-            });
-        };
-
-        const buscarSugerencias = debounce(() => {
-          const term = nuevoPresupuesto.value.nombre_solicitante;
-          if (term.trim() !== '') {
-            axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
-              params: {
-                q: term
-              }
-            })
-            .then(response => {
-              sugerencias.value = response.data;
-              console.log(sugerencias);
-            })
-            .catch(error => {
-              console.error('Error al buscar solicitantes:', error);
-            });
-          } else {
-            // Si el término de búsqueda está vacío, limpiar las sugerencias
-            sugerencias.value = [];
-          }
-        }, 1000); // Tiempo de espera en milisegundos antes de ejecutar la búsqueda
+      const cerrarModal = () => {
+        mostrarModal.value = false;
+      };
+     const crearPresupuesto = () => {
+        // Validar campos obligatorios
+        if (!nuevoPresupuesto.value.contacto || !nuevoPresupuesto.value.email || !nuevoPresupuesto.value.area_tematica || nuevoPresupuesto.value.subtotal === null || nuevoPresupuesto.value.descuento === null) {
+          return;
+        }
+       nuevoPresupuesto.value.estado_presupuesto = 'en_espera';
+        console.log('nuevo presupuesto enviando al backend',nuevoPresupuesto)
+        // return
+        //Enviar datos al backend usando Axios
+        axios.post('http://localhost:8000/api/presupuestos/', nuevoPresupuesto.value)
+          .then(response => {
+            console.log(response.data);
+            cerrarModal();
+           // Limpiar el formulario y mostrar la alerta de éxito
+            nuevoPresupuesto.value = {
+              fecha_presupuesto: null,
+              nro_solicitante: '',
+              nombre_solicitante: '',
+              contacto: '',
+              telefono2: null,
+              email2: '',
+              area_tematica: '',
+              subtotal: null,
+              descuento: '0',
+              arancel_presupuesto: null,
+              detalles_presupuesto: [
+                {
+                  nro_servicio: '',
+                  cant: 0,
+                  subtotal: null
+                }
+              ]
+            };
+           showSuccessAlert.value = true;
+           setTimeout(() => {
+              showSuccessAlert.value = false;
+            }, 3000);
+          })
+          .catch(error => {
+            console.error('Error al guardar el presupuesto:', error);
+            cerrarModal();
+            // Imprimir detalles del error
+            console.error('Error details:', error.response.data);
+            showErrorAlert.value = true;
+           setTimeout(() => {
+              showErrorAlert.value = false;
+            }, 5000);
+         });
+      };
+     const buscarSugerencias = debounce(() => {
+        const term = nuevoPresupuesto.value.nombre_solicitante;
+        if (term.trim() !== '') {
+          axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
+            params: {
+              q: term
+            }
+          })
+          .then(response => {
+            sugerencias.value = response.data;
+            console.log(sugerencias);
+          })
+          .catch(error => {
+            console.error('Error al buscar solicitantes:', error);
+          });
+        } else {
+          // Si el término de búsqueda está vacío, limpiar las sugerencias
+          sugerencias.value = [];
+        }
+      }, 1000); // Tiempo de espera en milisegundos antes de ejecutar la búsqueda
+           const seleccionarSugerencia = () => {
+        console.log("selectedSolicitante:", selectedSolicitante.value.nro_solicitante);
+        // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
+        axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${selectedSolicitante.value.nro_solicitante}/`)
+          .then(response => {
+            console.log("Respuesta del servidor:", response.data);
+            // Actualizar los campos del formulario con los detalles del solicitante
+            nuevoPresupuesto.value.nro_solicitante = response.data.nro_solicitante;
+            nuevoPresupuesto.value.nombre_solicitante = response.data.nombre_solicitante;
+            nuevoPresupuesto.value.telefono = response.data.telefono;
+            nuevoPresupuesto.value.email = response.data.email;
+         })
+          .catch(error => {
+            console.error('Error al obtener los detalles del solicitante:', error);
+          });
+      };
       
-
-        const seleccionarSugerencia = () => {
-          console.log("selectedSolicitante:", selectedSolicitante.value.nro_solicitante);
-          // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
-          axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${selectedSolicitante.value.nro_solicitante}/`)
-            .then(response => {
-              console.log("Respuesta del servidor:", response.data);
-              // Actualizar los campos del formulario con los detalles del solicitante
-              nuevoPresupuesto.value.nro_solicitante = response.data.nro_solicitante;
-              nuevoPresupuesto.value.nombre_solicitante = response.data.nombre_solicitante;
-              nuevoPresupuesto.value.telefono = response.data.telefono;
-              nuevoPresupuesto.value.email = response.data.email;
-
-              // Para que no se pueda modificar nro_solicitante una vez seleccionado un solicitante
-              console.log(solicitanteSeleccionado.value);
-              solicitanteSeleccionado.value = true;
-              console.log(solicitanteSeleccionado.value);
-            })
-            .catch(error => {
-              console.error('Error al obtener los detalles del solicitante:', error);
-            });
-        };
-        
-        // Evento recibido del componente hijo, DetallePresupuesto
-        const actualizarSubTotal = (nuevoSubTotal) => {
+      // Evento recibido del componente hijo, DetallePresupuesto
+      const actualizarSubTotal = (nuevoSubTotal) => {
           console.log('Evento recibido en el componente padre. Subtotal:', nuevoSubTotal);
           nuevoPresupuesto.value.subtotal = nuevoSubTotal;
-        }
-
-        watch([() => nuevoPresupuesto.value.subtotal, () => nuevoPresupuesto.value.descuento], ([subtotal, descuento]) => {
+      }
+     watch([() => nuevoPresupuesto.value.subtotal, () => nuevoPresupuesto.value.descuento], ([subtotal, descuento]) => {
             const descuentoDecimal = descuento / 100; // Convertir el descuento de porcentaje a decimal
             nuevoPresupuesto.value.arancel_presupuesto = subtotal * (1 - descuentoDecimal); // Calcular el total con descuento
-        });
-
-        // const agregarDetallePresupuesto = (detallePresupuesto) => {
-        //     console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
-            // const detalle = detallePresupuesto.value;
-            // // Agregar el detalle recibido al array detallesPresupuesto
-            // nuevoPresupuesto.detallesPresupuesto.value.push(detalle);
-            // console.log('Array detallesPresupuesto:', nuevoPresupuesto.detallesPresupuesto.value)
-            // console.log('numero primer servicio', nuevoPresupuesto.detallesPresupuesto.value[0].nro_servicio)
-            // console.log('cantidad primer setvicio', nuevoPresupuesto.detallesPresupuesto.value[0].cantidad)
-            // console.log('total primer servicio', nuevoPresupuesto.detallesPresupuesto.value[0].total)
-        // };s
-
-        const agregarDetallePresupuesto = (detallePresupuesto) => {
-            console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
-            // Asegúrate de que detallePresupuesto es un ref y tiene un valor
-            if (detallePresupuesto && detallePresupuesto.value) {
-                // detallePresupuesto.value es el array que contiene tus objetos de detalles
-                console.log('Reemplazando detalles:', detallePresupuesto.value);
-
-                // Asignamos el nuevo array de detalles directamente
-                nuevoPresupuesto.value.detalles_presupuesto = detallePresupuesto.value;
-            }
-            console.log('Array dentro de nuevoPresupuesto', nuevoPresupuesto.value.detalles_presupuesto);
-        };
-        
-        return {
-          inputProps,
-          sugerencias,
-          nuevoPresupuesto,
-          area_tematicaOptions,
-          descuentoOptions,
-          mostrarModal,
-          showSuccessAlert,
-          showErrorAlert,
-          buscarSugerencias,
-          selectedSolicitante,
-          seleccionarSugerencia,
-          mostrarFormulario,
-          cerrarModal,
-          guardarPresupuesto,
-          actualizarSubTotal,
-          agregarDetallePresupuesto,
-          // detallesPresupuesto
-        };
+      });
+     const agregarDetallePresupuesto = (detallePresupuesto) => {
+          console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
+          if (detallePresupuesto && detallePresupuesto.value) {
+              // detallePresupuesto.value es el array que contiene los objetos de detalles
+              console.log('Reemplazando detalles:', detallePresupuesto.value);
+             // Asignamos el nuevo array de detalles directamente
+              nuevoPresupuesto.value.detalles_presupuesto = detallePresupuesto.value;
+          }
+          console.log('Array dentro de nuevoPresupuesto', nuevoPresupuesto.value.detalles_presupuesto);
+      };
+      
+      return {
+        inputProps,
+        sugerencias,
+        nuevoPresupuesto,
+        area_tematicaOptions,
+        descuentoOptions,
+        mostrarModal,
+        showSuccessAlert,
+        showErrorAlert,
+        buscarSugerencias,
+        selectedSolicitante,
+        seleccionarSugerencia,
+        mostrarFormulario,
+        cerrarModal,
+        crearPresupuesto,
+        actualizarSubTotal,
+        agregarDetallePresupuesto,
+        // detallesPresupuesto
+      };
     }
   };
 </script>

@@ -1,6 +1,6 @@
 # pylint: disable=import-error
 from rest_framework import serializers
-from database.models import Presupuesto, DetallePresupuesto, Solicitante, Servicio
+from database.models import Presupuesto, DetallePresupuesto, Solicitante, Servicio, DataServicio
 import logging
 
 # Configurar el logger
@@ -11,20 +11,16 @@ class DetallePresupuestoSerializer(serializers.ModelSerializer):
         model = DetallePresupuesto
         fields = ['nro_servicio', 'cant', 'subtotal']
 
+
 class PresupuestoSerializer(serializers.ModelSerializer):
     detalles_presupuesto = DetallePresupuestoSerializer(many=True)
 
     class Meta:
         model = Presupuesto
-        fields = ['fecha_presupuesto', 'contacto', 'telefono2', 'email2', 'area_tematica', 'subtotal', 'descuento', 'arancel_presupuesto', 'observaciones', 'estado_presupuesto', 'nro_solicitante', 'detalles_presupuesto']
+        fields = '__all__'
     
     def create(self, validated_data):
         detalles_presupuesto_data = validated_data.pop('detalles_presupuesto', [])
-        
-        # Convertir subtotal y cant a números si son cadenas
-        validated_data['subtotal'] = float(validated_data.get('subtotal', 0))
-        validated_data['descuento'] = float(validated_data.get('descuento', 0))
-        validated_data['arancel_presupuesto'] = float(validated_data.get('arancel_presupuesto', 0))
         
         logger.debug("Validated Data: %s", validated_data)
         logger.debug("Detalles Presupuesto Data: %s", detalles_presupuesto_data)
@@ -38,9 +34,6 @@ class PresupuestoSerializer(serializers.ModelSerializer):
         for detalle_data in detalles_presupuesto_data:
             try:
                 logger.debug("Detalle Data: %s", detalle_data)
-                # Convertir subtotal y cant a números si son cadenas
-                detalle_data['subtotal'] = float(detalle_data.get('subtotal', 0))
-                detalle_data['cant'] = int(detalle_data.get('cant', 0))
                 DetallePresupuesto.objects.create(nro_presupuesto=presupuesto, **detalle_data)
             except Exception as e:
                 logger.error("Error creating DetallePresupuesto: %s", str(e))
@@ -57,7 +50,7 @@ class PresupuestoEnEsperaSerializer(serializers.ModelSerializer):
 class SolicitanteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Solicitante
-        fields = ['nro_solicitante', 'nombre_solicitante']
+        fields = ['nro_solicitante', 'nombre_solicitante', 'telefono', 'email']
 
 class SeleccionarSolicitanteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -73,3 +66,15 @@ class SeleccionarServicioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servicio
         fields = ['nro_servicio', 'servicio', 'norma', 'area_tematica', 'arancel', 'modulo']
+
+class PresupuestosAceptadosSerializer(serializers.ModelSerializer):
+    nombre_solicitante = serializers.CharField(source='nro_solicitante.nombre_solicitante')
+    nro_dataServicio = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Presupuesto
+        fields = ['nro_presupuesto', 'fecha_presupuesto', 'area_tematica', 'estado_presupuesto', 'nombre_solicitante', 'nro_dataServicio']
+
+    def get_nro_dataServicio(self, obj):
+        data_servicio = DataServicio.objects.filter(nro_presupuesto=obj).first()
+        return data_servicio.nro_dataServicio if data_servicio else None

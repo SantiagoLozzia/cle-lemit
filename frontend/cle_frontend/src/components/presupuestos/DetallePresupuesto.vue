@@ -36,16 +36,38 @@
 </template>
   
 <script>
-    import { ref, watch, getCurrentInstance  } from 'vue';
+    import { ref, watch, getCurrentInstance, onMounted } from 'vue';
     import axios from 'axios';
     import { debounce } from 'lodash';
 
     export default {
         setup() {
-            const filas = ref([{ nro_servicio: null, servicio: '', norma: '', precioUnitario: null, cant: null, subtotal: null, sugerencias: [] }]);
+            const filas = ref([{ 
+                nro_servicio: null, 
+                servicio: '', 
+                norma: '', 
+                precioUnitario: null, 
+                cant: null, 
+                subtotal: null, 
+                sugerencias: [] 
+            }]);
+
+            const moduloValor = ref ();
+
             const detallePresupuesto = ref([]);
 
             const { emit } = getCurrentInstance();
+            
+            const obtenerModulo = async () => {
+                try {
+                    const response = await axios.get('http://localhost:8000/api/aranceles/obtener_modulo/');
+                    moduloValor.value = response.data.valor;
+                    console.log('valor modulo', moduloValor.value);
+                } catch (error) {
+                    console.error('Error al obtener el valor del módulo:', error);
+                }
+            };
+
             const buscarServicio = debounce((term) => {
                 console.log('Term de búsqueda:', term);
                 if (term && term.trim() !== '') {
@@ -85,10 +107,8 @@
                             fila.servicio = response.data.servicio;
                             fila.norma = response.data.norma;
                             const arancel = response.data.arancel;
-                            const modulo = response.data.modulo;
                             // console.log('arancel-----', response.data.arancel)
-                            // console.log('modulo-----', response.data.modulo)
-                            fila.precioUnitario = parseInt(arancel) * parseInt(modulo);
+                            fila.precioUnitario = parseInt(arancel) * parseInt(moduloValor.value);
                             // console.log('luego del autocompletado',fila.sugerencias);
                             fila.sugerencias = []; // Limpiar el array de sugerencias después de seleccionar un servicio
                             // console.log('luego del autocompletado',fila.sugerencias);
@@ -147,10 +167,15 @@
             }, { deep: true });
 
 
-            
+            onMounted(() => {
+                obtenerModulo();
+            });
 
             return {
                 filas,
+                moduloValor,
+                onMounted,
+                obtenerModulo,
                 buscarServicio,
                 seleccionarServicio,
                 agregarServicio,

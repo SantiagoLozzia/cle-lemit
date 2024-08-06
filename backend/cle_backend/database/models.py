@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from datetime import datetime, date
+from django.utils import timezone
 
 AREA_TEMATICA_CHOICES = [
     ('durabilidad', 'Durabilidad'),
@@ -77,19 +79,23 @@ class Presupuesto(models.Model):
     nro_presupuesto = models.AutoField(primary_key=True)
     fecha_presupuesto = models.DateField()
     contacto = models.CharField(max_length=100)
-    telefono2 = models.CharField(max_length=20, null=True)
-    email2 = models.EmailField(max_length=50, null=True)
+    telefono2 = models.CharField(max_length=20, null=True, blank=True)
+    email2 = models.EmailField(max_length=50, null=True, blank=True)
     area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     descuento = models.IntegerField(choices=DESCUENTO_CHOICES)
     arancel_presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
-    observaciones = models.TextField(max_length=255, null=True)
+    observaciones = models.TextField(max_length=255, null=True, blank=True)
     estado_presupuesto = models.CharField(choices=ESTADO_PRESUPUESTO_CHOICES)
     nro_solicitante = models.ForeignKey('Solicitante', on_delete=models.PROTECT)
 
     def __str__(self):
         return f"Presupuesto #{self.nro_presupuesto} - Solicitante: {self.nro_solicitante.nombre_solicitante}, Área Temática: {self.get_area_tematica_display()}"
 
+    @property
+    def detalles_presupuesto(self):
+        return DetallePresupuesto.objects.filter(nro_presupuesto=self)
+    
 class Servicio(models.Model):
     nro_servicio = models.AutoField(primary_key=True)
     servicio = models.CharField(max_length=255)
@@ -116,13 +122,13 @@ class DataServicio(models.Model):
     nro_dataServicio = models.AutoField(primary_key=True)
     fecha_dataServicio = models.DateField()
     adjunto_solicitudServicio = models.FileField(upload_to='solicitudes_servicio/', null=True)
-    obra = models.CharField(max_length=255, null=True)
+    obra = models.CharField(max_length=255, null=True, blank=True)
     plazo_estimado = models.IntegerField() 
     cant_numLabs = models.IntegerField()
     muestras = models.TextField()
-    observaciones = models.TextField(max_length=255, null=True)
+    observaciones = models.TextField(max_length=255, null=True, blank=True)
     nro_presupuesto = models.ForeignKey('Presupuesto', on_delete=models.CASCADE)
-    completo = models.BooleanField(default=False)
+    completo = models.BooleanField(default=False) #Si es True habilito a adjuntar adjunto_solicitudServicio
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
     finalizado = models.BooleanField(default=False)
 
@@ -144,7 +150,7 @@ class Legajo(models.Model):
 
 class Recepcion(models.Model):
     nro_recepcion = models.AutoField(primary_key=True)
-    nros_remitos = models.CharField(max_length=255, null=True)
+    nros_remitos = models.CharField(max_length=255, null=True, blank=True)
     estado_recepcion = models.CharField(choices=ESTADO_RECEPCION_CHOICES, default='sin_llegar')
     plazo_muestras = models.IntegerField(default=30)
     completo = models.BooleanField(default=False)
@@ -156,7 +162,7 @@ class Recepcion(models.Model):
 class OrdenServicio(models.Model):
     nro_ordenServicio = models.AutoField(primary_key=True)
     fecha_ordenServicio = models.DateField()
-    observaciones = models.TextField(max_length=255, null=True)
+    observaciones = models.TextField(max_length=255, null=True, blank=True)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
@@ -176,11 +182,14 @@ class InformeArea(models.Model):
     
 class InformeServicio(models.Model):
     nro_informeServicio = models.AutoField(primary_key=True)
-    fecha_informeServicio = models.DateField()
+    fecha_informeServicio = models.DateField(default=date.today)
     adjunto_informeServicio = models.FileField(upload_to='informes_servicio/')
-    revision = models.BooleanField()
-    firma_area = models.BooleanField()
-    firma_direccion = models.BooleanField()
+    revision = models.BooleanField(default=False)
+    # fecha_revision = models.DateField(null=True, blank=True)
+    firma_area = models.BooleanField(default=False)
+    # fecha_firmaArea = models.DateField(null=True, blank=True)
+    firma_direccion = models.BooleanField(default=False)
+    # fecha_firmaDireccion= models.DateField(null=True, blank=True)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
@@ -190,12 +199,13 @@ class InformeServicio(models.Model):
 class SolicitudInterarea(models.Model):
     nro_solicitudInterarea = models.AutoField(primary_key=True)
     fecha_solicitudInterarea = models.DateField()
+    areaTematica_origen = models.CharField(choices=AREA_TEMATICA_CHOICES)
     inter_areaTematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
     muestras_solicitudIa = models.TextField()
-    num_labs = models.IntegerField()
-    observaciones = models.TextField(max_length=255, null=True)
-    # adjunto_solicitudInterarea = models.FileField(upload_to='solicitudes_interarea/')
+    num_labs = models.CharField(null=True, blank=True)
+    observaciones = models.TextField(max_length=255, null=True, blank=True)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    completo = models.BooleanField(default=False)
 
     def __str__(self):
         return f"SolicitudInterarea #{self.nro_solicitudInterarea} - InformeInterarea #{self.nro_informeInterarea.nro_informeInterarea}"
@@ -204,6 +214,7 @@ class DetalleInterarea(models.Model):
     nro_detalle = models.AutoField(primary_key=True)
     nro_solicitudInterarea = models.ForeignKey('SolicitudInterarea', on_delete=models.CASCADE)
     nro_servicio = models.ForeignKey('Servicio', on_delete=models.CASCADE)
+    cant = models.IntegerField()
 
     def __str__(self):
         return f"DetalleInterarea #{self.nro_detalle} - SolicitudInterarea #{self.nro_solicitudInterarea.nro_solicitudInterarea} - Servicio #{self.nro_servicio.nro_servicio}"
@@ -211,7 +222,7 @@ class DetalleInterarea(models.Model):
 class InformeInterarea(models.Model):
     nro_informeInterarea = models.AutoField(primary_key=True)
     fecha_informeInterarea = models.DateField()
-    area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
+    # area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
     adjunto_informeInterarea = models.FileField(upload_to='informes_interarea/')
     nro_solicitudInterarea = models.ForeignKey('SolicitudInterarea', on_delete=models.CASCADE)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
@@ -223,21 +234,111 @@ class Circuito(models.Model):
     nro_circuito = models.AutoField(primary_key=True)
     finalizado = models.BooleanField(default=False)
 
-class UltimoNumeroSingleton:
-    _instance = None
-    _ultimo_numero = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            # Inicializar el último número aquí, por ejemplo, con un valor predeterminado o recuperándolo de algún lugar.
-            cls._nuevo_ultimo_numero = 0
-        return cls._instance
+class UltimoNumero(models.Model):
+    anio = models.IntegerField(default=datetime.now().year)
+    ultimo_numero = models.IntegerField(default=0)
+
+    @classmethod
+    def obtener(cls):
+        """Obtiene el objeto de UltimoNumero para el año actual, o crea uno nuevo si no existe."""
+        anio_actual = datetime.now().year
+        obj, created = cls.objects.get_or_create(anio=anio_actual, defaults={'ultimo_numero': 0})
+        obj._check_and_reset_anio()
+        return obj
 
     @property
-    def ultimo_numero(self):
-        return self._nuevo_ultimo_numero
+    def ultimo_numero_actual(self):
+        """Devuelve el último número actual, ajustado si es necesario."""
+        self._check_and_reset_anio()
+        return self.ultimo_numero
 
-    @ultimo_numero.setter
-    def ultimo_numero(self, value):
-        self._nuevo_ultimo_numero = value
+    @ultimo_numero_actual.setter
+    def ultimo_numero_actual(self, value):
+        """Actualiza el último número y guarda el objeto."""
+        self.ultimo_numero = value
+        self.save()
+
+    def _check_and_reset_anio(self):
+        """Reinicia el número si cambia el año."""
+        anio_actual = datetime.now().year
+        if self.anio != anio_actual:
+            self.anio = anio_actual
+            self.ultimo_numero = 0
+            self.save()
+
+class Modulo(models.Model):
+    fecha = models.DateTimeField(default=timezone.now)
+    valor = models.IntegerField(default=1000)
+
+    @classmethod
+    def obtener_ultimo_modulo(cls):
+        return cls.objects.latest('fecha')  # Obtiene la última instancia basada en la fecha
+
+    @classmethod
+    def actualizar_modulo(cls, nuevo_valor):
+        # Crea una nueva instancia con el nuevo valor
+        cls.objects.create(valor=nuevo_valor)
+
+# Clases singleton que podria borrar
+# class UltimoNumeroSingleton:
+#     _instance = None
+#     _ultimo_numero = None
+#     _ultimo_anio = None
+
+#     def __new__(cls):
+#         if cls._instance is None:
+#             cls._instance = super().__new__(cls)
+#             # Inicializar el último número y año aquí
+#             cls._ultimo_numero = 0
+#             cls._ultimo_anio = datetime.now().year  # Obtener el año actual al inicializar
+#         return cls._instance
+    
+#     @property
+#     def ultimo_numero(self):
+#         return self._ultimo_numero
+
+#     @ultimo_numero.setter
+#     def ultimo_numero(self, value):
+#         self._ultimo_numero = value
+
+#     def _check_and_reset_anio(self):
+#         anio_actual = datetime.now().year
+#         if self._ultimo_anio != anio_actual:
+#             self._ultimo_anio = anio_actual
+#             self._ultimo_numero = 0 # Reiniciar el último número si cambia el año
+    
+# class ModuloHistory(models.Model):
+#     valor = models.IntegerField()
+#     fecha_cambio = models.DateTimeField(auto_now_add=True)
+    
+#     def __str__(self):
+#         return f"{self.valor} - {self.fecha_cambio}"
+
+# class Modulo:
+#     _instance = None
+
+#     def __new__(cls, *args, **kwargs):
+#         if not cls._instance:
+#             cls._instance = super(Modulo, cls).__new__(cls, *args, **kwargs)
+#             cls._instance._initialize()
+#         return cls._instance
+
+#     def _initialize(self):
+#         if not hasattr(self, 'valor'):
+#             # Aquí puedes inicializar desde la base de datos si lo deseas
+#             self.valor = 1000  # Valor inicial
+#             self.registrar_cambio(self.valor)
+
+#     def obtener_valor(self):
+#         return self.valor
+
+#     def actualizar_valor(self, nuevo_valor):
+#         self.valor = nuevo_valor
+#         self.registrar_cambio(nuevo_valor)
+
+#     def registrar_cambio(self, valor):
+#         ModuloHistory.objects.create(valor=valor)
+
+#     def __str__(self):
+#         return f"Modulo(value={self.valor})"
