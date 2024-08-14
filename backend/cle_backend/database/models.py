@@ -2,6 +2,9 @@ from django.db import models
 from django.core.validators import MaxValueValidator
 from datetime import datetime, date
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 AREA_TEMATICA_CHOICES = [
     ('durabilidad', 'Durabilidad'),
@@ -59,6 +62,22 @@ ESTADO_INFORME_AREA_CHOICES = [
         ('parcial', 'Parcial'),
         ('total', 'Total'),
 ]
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES, max_length=50)
+    rol = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_area_tematica_display()} - {self.rol}"
+
+    # Crear o actualizar la señal para crear o guardar el UserProfile automáticamente cuando se crea o guarda un User
+
+    @receiver(post_save, sender=User)
+    def create_or_update_user_profile(sender, instance, created, **kwargs):
+        if created:
+            UserProfile.objects.create(user=instance)
+        instance.userprofile.save()
 
 class Solicitante(models.Model):
     nro_solicitante = models.AutoField(primary_key=True)
