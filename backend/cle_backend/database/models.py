@@ -77,7 +77,10 @@ class UserProfile(models.Model):
     def create_or_update_user_profile(sender, instance, created, **kwargs):
         if created:
             UserProfile.objects.create(user=instance)
-        instance.userprofile.save()
+        else:
+            # Solo actualiza el perfil si el usuario ya existe
+            if hasattr(instance, 'userprofile'):
+                instance.userprofile.save()
 
 class Solicitante(models.Model):
     nro_solicitante = models.AutoField(primary_key=True)
