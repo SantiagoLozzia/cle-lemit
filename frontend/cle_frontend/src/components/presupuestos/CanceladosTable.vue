@@ -1,9 +1,5 @@
 <template>
   <div class="cancelados-container">
-    <div class="title-container">
-      <h2>Presupuestos Cancelados</h2>
-    </div>
-
     <div class="table-container">
       <table class="table presupuestos-table">
         <thead>

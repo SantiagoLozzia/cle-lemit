@@ -2,7 +2,7 @@
     <div>
       <div class="button-container">
         <div class="d-flex align-items-center">
-          <span class="badge bg-success fs-4 p-3">${{ valorModuloActual }}</span>
+          <span class="badge bg-success fs-4 p-3 custom-shadow-btn">${{ valorModuloActual }}</span>
           <button class="btn btn-secondary ms-2" @click="abrirActualizarModulo">
             <i class="bi bi-pencil-square"></i>
           </button>
@@ -150,7 +150,7 @@
     display: flex;
     flex-direction: column; /* Alinea los elementos verticalmente en una columna */
     align-items: flex-start; /* Alinea horizontalmente a la izquierda */
-    padding: 10px; /* Espacio alrededor del contenedor (opcional) */
+    padding-top: 20px; 
   }
 
   .valor-modulo-actual {

@@ -2,11 +2,11 @@
   <div>
     <div>
       <div class="button-container">
-        <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">+ Nuevo</button>
+        <button class="btn btn-primary float-start ms-2 mt-2 custom-shadow-btn" @click="mostrarFormulario">+ Nuevo</button>
       </div>
   
       <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">
-        <div class="modal-dialog">
+        <div class="modal-dialog-a4">
           <div class="modal-content">
             <div class="modal-header">
               <h1 class="modal-title fs-5 fw-bold">Nuevo Presupuesto</h1>
@@ -25,20 +25,38 @@
                   <input v-model="nuevoPresupuesto.nro_solicitante" readonly type="text" class="form-control" id="nro_solicitante" name="nro_solicitante" required ref="nro_solicitante" />
                 </div>
 
-                <div class="mb-3">
-                    <label for="solicitante" class="form-label text-left">Solicitante:</label>
-                    <input v-model="nuevoPresupuesto.nombre_solicitante" type="text" class="form-control" id="solicitante" name="solicitante" required ref="solicitante" @input="buscarSugerencias">
-                    <select v-if="sugerencias.length > 0" v-model="selectedSolicitante" @change="seleccionarSugerencia(selectedSolicitante)" class="form-select mt-1">
-                        <option v-for="sugerencia in sugerencias" :key="sugerencia.nro_solicitante" :value="sugerencia">
-                            {{ sugerencia.nro_solicitante }} - {{ sugerencia.nombre_solicitante }}
-                        </option>
-                    </select>
+                <div class="mb-3 position-relative input-container">
+                  <label for="solicitante" class="form-label text-left">Solicitante:</label>
+                  <div class="input-group">
+                    <input
+                      v-model="nuevoPresupuesto.nombre_solicitante"
+                      type="text"
+                      class="form-control"
+                      id="solicitante"
+                      name="solicitante"
+                      required
+                      ref="solicitante"
+                      @input="buscarSugerencias"
+                      @blur="cerrarSugerencias"
+                    />
+                    <button
+                      v-if="nuevoPresupuesto.nombre_solicitante"
+                      type="button"
+                      class="btn-close"
+                      @click="limpiarSolicitante"
+                      aria-label="Close"
+                    ></button>
                 </div>
 
-                <!-- <div class="mb-3">
-                    <label for="solicitante" class="form-label text-left">Solicitante:</label>
-                    <v-select v-model="nuevoPresupuesto.solicitante" :options="sugerencias" label="nombre_solicitante" />
-                </div> -->
+                  <!-- Lista personalizada de sugerencias -->
+                  <ul v-if="sugerencias.length > 0" class="sugerencias-lista">
+                    <li v-for="sugerencia in sugerencias" :key="sugerencia.nro_solicitante" @click="seleccionarSugerencia(sugerencia)">
+                      {{ sugerencia.nombre_solicitante }}
+                    </li>
+                  </ul>
+                </div>
+
+
 
                 <div class="mb-3">
                   <label for="contacto" class="form-label text-left">Contacto:</label>
@@ -52,7 +70,7 @@
 
                 <div class="mb-3">
                   <label for="telefono2" class="form-label text-left">Teléfono 2:</label>
-                  <input v-model="nuevoPresupuesto.telefono2" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="telefono" name="telefono"/>
+                  <input v-model="nuevoPresupuesto.telefono2" type="text" inputmode="numeric" pattern="[0-9]*" class="form-control" id="telefono2" name="telefono2"/>
                 </div>
 
                 <div class="mb-3">
@@ -74,7 +92,10 @@
                   </select>
                 </div>
 
-                <DetallePresupuesto @actualizar-subtotal="actualizarSubTotal" @detalle-Presupuesto="agregarDetallePresupuesto"></DetallePresupuesto>
+                <DetallePresupuesto 
+                    @actualizar-subtotal="actualizarSubTotal" 
+                    @detallePresupuesto="agregarDetallePresupuesto">
+                </DetallePresupuesto>
 
                 <div class="mb-3">
                   <label for="subtotal" class="form-label text-left">SubTotal:</label>
@@ -92,7 +113,7 @@
 
                 <div class="mb-3">
                   <label for="arancel_presupuesto" class="form-label text-left">Total:</label>
-                  <input v-model="nuevoPresupuesto.arancel_presupuesto" type="number" step="0.01" class="form-control" id="arancel_presupuesto" name="arancel_presupuesto" required />
+                  <input v-model="nuevoPresupuesto.arancel_presupuesto" type="number" step="0.01" class="form-control" id="arancel_presupuesto" name="arancel_presupuesto" required readonly/>
                 </div>
 
                 <span class="left-align">Validez de 30 dias</span>
@@ -238,7 +259,9 @@
 
       const cerrarModal = () => {
         mostrarModal.value = false;
+        sugerencias.value = [];
       };
+
      const crearPresupuesto = () => {
         // Validar campos obligatorios
         if (!nuevoPresupuesto.value.contacto || !nuevoPresupuesto.value.email || !nuevoPresupuesto.value.area_tematica || nuevoPresupuesto.value.subtotal === null || nuevoPresupuesto.value.descuento === null) {
@@ -288,8 +311,11 @@
             }, 5000);
          });
       };
-     const buscarSugerencias = debounce(() => {
+
+      const buscarSugerencias = debounce(() => {
         const term = nuevoPresupuesto.value.nombre_solicitante;
+
+        // Verificar si el término de búsqueda no está vacío
         if (term.trim() !== '') {
           axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
             params: {
@@ -297,32 +323,66 @@
             }
           })
           .then(response => {
-            sugerencias.value = response.data;
-            console.log(sugerencias);
+            sugerencias.value = response.data; // Actualizar sugerencias con los datos recibidos
+            console.log('Sugerencias encontradas:', sugerencias.value);
           })
           .catch(error => {
             console.error('Error al buscar solicitantes:', error);
+            sugerencias.value = []; // Asegurarse de limpiar las sugerencias en caso de error
           });
         } else {
-          // Si el término de búsqueda está vacío, limpiar las sugerencias
-          sugerencias.value = [];
+          sugerencias.value = []; // Limpiar sugerencias si el término de búsqueda está vacío
         }
-      }, 1000); // Tiempo de espera en milisegundos antes de ejecutar la búsqueda
-           const seleccionarSugerencia = () => {
-        console.log("selectedSolicitante:", selectedSolicitante.value.nro_solicitante);
-        // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
-        axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${selectedSolicitante.value.nro_solicitante}/`)
-          .then(response => {
-            console.log("Respuesta del servidor:", response.data);
-            // Actualizar los campos del formulario con los detalles del solicitante
-            nuevoPresupuesto.value.nro_solicitante = response.data.nro_solicitante;
-            nuevoPresupuesto.value.nombre_solicitante = response.data.nombre_solicitante;
-            nuevoPresupuesto.value.telefono = response.data.telefono;
-            nuevoPresupuesto.value.email = response.data.email;
-         })
-          .catch(error => {
-            console.error('Error al obtener los detalles del solicitante:', error);
-          });
+      }, 1000); // Tiempo de espera antes de ejecutar la búsqueda
+
+
+        const seleccionarSugerencia = (sugerencia) => {
+          if (!sugerencia || !sugerencia.nro_solicitante) {
+            console.warn('No hay un solicitante seleccionado para obtener detalles.');
+            return;
+          }
+
+          console.log('Solicitante seleccionado:', sugerencia.nro_solicitante);
+
+          // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
+          axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${sugerencia.nro_solicitante}/`)
+            .then(response => {
+              console.log('Detalles del solicitante recibidos:', response.data);
+
+              // Actualizar los campos del formulario con los detalles del solicitante
+              nuevoPresupuesto.value = {
+                ...nuevoPresupuesto.value, // Mantener el resto de los datos existentes
+                nro_solicitante: response.data.nro_solicitante,
+                nombre_solicitante: response.data.nombre_solicitante,
+                telefono: response.data.telefono,
+                email: response.data.email
+              };
+              
+              // Vaciar sugerencias después de seleccionar
+              sugerencias.value = [];
+            })
+            .catch(error => {
+              console.error('Error al obtener los detalles del solicitante:', error);
+            });
+        };
+
+      const cerrarSugerencias = () => {
+        // Vaciar las sugerencias cuando se pierde el foco del input
+        setTimeout(() => {
+           sugerencias.value = [];
+        }, 200);
+      };
+
+      const limpiarSolicitante = () => {
+        nuevoPresupuesto.value.nombre_solicitante = '';
+        nuevoPresupuesto.value.nro_solicitante = '';
+        nuevoPresupuesto.value.contacto = '';
+        nuevoPresupuesto.value.telefono = '';
+        nuevoPresupuesto.value.telefono2 = '';
+        nuevoPresupuesto.value.email = '';
+        nuevoPresupuesto.value.email2 = '';
+        nuevoPresupuesto.value.area_tematica = '';
+        sugerencias.value = []; // Limpiar sugerencias
       };
       
       // Evento recibido del componente hijo, DetallePresupuesto
@@ -330,10 +390,13 @@
           console.log('Evento recibido en el componente padre. Subtotal:', nuevoSubTotal);
           nuevoPresupuesto.value.subtotal = nuevoSubTotal;
       }
+
      watch([() => nuevoPresupuesto.value.subtotal, () => nuevoPresupuesto.value.descuento], ([subtotal, descuento]) => {
-            const descuentoDecimal = descuento / 100; // Convertir el descuento de porcentaje a decimal
+            console.log('>>>>descuento',descuento, subtotal);
+            const descuentoDecimal = Number(descuento) / 100; // Convertir el descuento de porcentaje a decimal
             nuevoPresupuesto.value.arancel_presupuesto = subtotal * (1 - descuentoDecimal); // Calcular el total con descuento
       });
+
      const agregarDetallePresupuesto = (detallePresupuesto) => {
           console.log('Evento detalle presupuesto en el componente padre', detallePresupuesto);
           if (detallePresupuesto && detallePresupuesto.value) {
@@ -344,6 +407,7 @@
           }
           console.log('Array dentro de nuevoPresupuesto', nuevoPresupuesto.value.detalles_presupuesto);
       };
+      
       
       return {
         inputProps,
@@ -362,6 +426,8 @@
         crearPresupuesto,
         actualizarSubTotal,
         agregarDetallePresupuesto,
+        cerrarSugerencias,
+        limpiarSolicitante,
         // detallesPresupuesto
       };
     }
@@ -386,6 +452,48 @@
     align-items: center;
     justify-content: center;
   } */
+  
+  /* Estilo para la lista de sugerencias */
+  .sugerencias-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ddd;
+    z-index: 1000; /* Asegúrate de que la lista esté por encima de otros elementos */
+  }
+
+  /* Estilo para cada ítem de la lista de sugerencias */
+  .sugerencias-lista li {
+    padding: 8px;
+    cursor: pointer; /* Cambiar el cursor a una mano */
+  }
+
+  /* Estilo para resaltar el ítem cuando se pasa el mouse por encima */
+  .sugerencias-lista li:hover {
+    background-color: rgba(18, 100, 189, 0.986); /* Cambiar el color de fondo al pasar el mouse */
+    color: white;
+  }
+
+  .input-container {
+    position: relative;
+  }
+
+  .input-group {
+    display: flex; /* Usa flexbox para alinear el input y el botón en una fila */
+    align-items: center; /* Alinea verticalmente el input y el botón en el centro */
+  }
+
+  .input-group .form-control {
+    flex: 1; /* Permite que el input ocupe el espacio disponible */
+    margin-right: 0.5rem; /* Espacio entre el input y el botón */
+  }
+/* 
+  .input-group .btn-close {
+    /* Estilos opcionales para el botón, ajusta el tamaño y el espaciado según sea necesario */
+  /* } */
   
   #modalPresupuesto .modal-dialog {
     max-width: 1500px !important; 
@@ -418,6 +526,14 @@
   
   form div.label-container label {
     text-align: left !important;
+  }
+
+  .modal-dialog-a4 {
+    width: 300mm !important; 
+    /* max-width: 100%; 
+    height: 297mm; 
+    max-height: 100%; 
+    margin: auto;  */
   }
 </style>
   

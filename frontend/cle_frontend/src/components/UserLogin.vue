@@ -38,12 +38,18 @@ async function login() {
     // Verificar que recibimos el token correctamente
     console.log('Login Response:', response.data);
 
-    // Guardar el token y el nombre de usuario en el localStorage
-    localStorage.setItem('token', response.data.access);
-    localStorage.setItem('username', username.value);
+    // Guardar el token y el nombre de usuario en sessionStorage
+    sessionStorage.setItem('token', response.data.access);
+    sessionStorage.setItem('username', username.value);
 
-    // Verificar que el token se guardó correctamente
-    console.log('Token stored in localStorage:', localStorage.getItem('token'));
+    // Guardar la información adicional del perfil del usuario
+    sessionStorage.setItem('role', response.data.role);
+    sessionStorage.setItem('area_tematica', response.data.area_tematica);
+    sessionStorage.setItem('first_name', response.data.first_name);
+    sessionStorage.setItem('last_name', response.data.last_name);
+
+    console.log('Token stored in sessionStorage:', sessionStorage.getItem('token'));
+    console.log('Role stored in sessionStorage:', sessionStorage.getItem('role'));
 
     // Configurar Axios para incluir el token en futuras solicitudes
     axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
@@ -55,6 +61,7 @@ async function login() {
     errorMessage.value = 'Invalid username or password';
   }
 }
+
 
 </script>
 

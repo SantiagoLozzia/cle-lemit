@@ -1,11 +1,11 @@
 <template>
   <div>
     <div class="button-container">
-      <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Servicio +</button>
+      <button class="btn btn-primary float-start ms-2 mt-2 custom-shadow-btn" @click="mostrarFormulario">+ Servicio</button>
     </div>
 
     <div class="modal" :class="{ 'show': mostrarModal }" id="modalService">
-      <div class="modal-dialog">
+      <div class="modal-dialog-a4">
         <div class="modal-content">
           <div class="modal-header">
             <h1 class="modal-title fs-5 fw-bold">Nuevo Servicio</h1>
@@ -148,48 +148,9 @@ export default {
 </script>
 
 <style scoped>
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
 
-.modal.show {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#modalService .modal-dialog {
-  max-width: 1500px !important; 
-}
-
-.form-select {
-  font-size: 16px;
-  padding: 6px;
-  border: 1px solid #ced4da;
-  border-radius: 5px;
-  width: 100%;
-  appearance: none;
-  padding-right: 2.25rem; 
-}
-
-.form-select::after {
-  content: '\25BC'; /* Código de la flecha hacia abajo */
-  position: absolute;
-  right: 10px; 
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none; 
-}
-
-.form-select:focus {
-  border-color: #007bff; 
-  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); 
+.button-container {
+  margin-left: 0;
 }
 
 form div.label-container label {

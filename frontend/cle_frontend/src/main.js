@@ -1,7 +1,8 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from '../router';
-import vSelect from 'vue-select';
+import Vue3Select from 'vue3-select';
+import 'vue3-select/dist/vue3-select.css';
 import "bootstrap/dist/css/bootstrap.min.css";
 import 'bootstrap';
 import "bootstrap/dist/js/bootstrap.bundle.min.js";  // Importación de Popper.js
@@ -29,9 +30,15 @@ axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.headers.common['X-CSRFToken'] = getCookie('csrftoken');
 axios.defaults.withCredentials = true;
 
+// Configurar Axios para incluir el token JWT en el encabezado de autorización
+const token = sessionStorage.getItem('token');
+if (token) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
 const app = createApp(App);
 
-app.component('v-select', vSelect);
+app.component('Vue3Select', Vue3Select);
 app.use(router);
 app.mount('#app');
 

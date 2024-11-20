@@ -15,7 +15,7 @@ import os
 from datetime import timedelta
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -67,7 +67,10 @@ ROOT_URLCONF = 'cle_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'aranceles' / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'templates', 
+            BASE_DIR / 'aranceles' / 'templates'
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,7 +100,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -129,6 +132,7 @@ DATABASES = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+MEDIA_URL = '/media/'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -164,7 +168,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# Ruta donde Django buscará los archivos estáticos durante el desarrollo
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# Ruta donde Django recopilará los archivos estáticos cuando se ejecute 'collectstatic'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Ruta para archivos estáticos recolectados
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

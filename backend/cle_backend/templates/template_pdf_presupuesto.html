@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Encabezado fijo para impresión */
+        .header {
+            text-align: center;
+            position: fixed; /* Fijo en la parte superior */
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .header img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* Contenido principal */
+        .content {
+            margin: 120px 20px; /* Ajustar el margen para el header fijo */
+            line-height: 1.6;
+            font-size: 12pt;
+            padding-bottom: 100px; /* Espacio suficiente para el footer */
+        }
+
+        .footer {
+            position: fixed; /* Fijo en la parte inferior */
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background-color: white;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .footer img {
+            width: 100%;
+            height: auto;
+        }
+
+        .main-title {
+            margin-bottom: 0px; 
+            text-align: left;
+            font-family: 'sans-serif', serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .info-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .info-left {
+          display: flex;
+          flex-direction: column; /* Alinea los elementos verticalmente */
+          margin-right: 20px;
+        }
+
+        .info-right {
+            text-align: right;
+        }
+
+        .fecha {
+          margin-top: 0px; /* Espacio entre el título y la fecha */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            page-break-inside: avoid; /* Evita el salto de página dentro de la tabla */
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        /* Estilos específicos para impresión */
+        @media print {
+            body {
+                margin: 0;
+            }
+
+            .header, .footer {
+                position: fixed;
+            }
+
+            .header {
+                top: 0;
+            }
+
+            .footer {
+                bottom: 0;
+            }
+
+            .content {
+                margin-top: 120px; /* Ajustar para el encabezado fijo */
+                margin-bottom: 100px; /* Ajustar para el pie de página fijo */
+            }
+
+            /* Repetir encabezado y pie de página en cada página impresa */
+            @page {
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+  <!-- Encabezado -->
+  <div class="header">
+    <img src="file:///C:/Users/santi/cle-lemit/backend/cle_backend/static/img/membrete_lemit.jpeg" alt="Logo del Encabezado"/>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="content">
+    <div style="display: flex; align-items: center; border: 1px solid #000; padding: 10px; max-width: 800px; margin: 20px auto;">
+      <div style="flex: 0 0 auto; margin-right: 20px; padding-right: 20px; border-right: 1px solid #000;">
+        <img src="file:///C:/Users/santi/cle-lemit/backend/cle_backend/static/img/logo-LEMIT_resolucion2-1.png" alt="Logo del Encabezado" style="height: 80px; display: block;" />
+      </div>
+      <div style="flex: 1; text-align: center; padding-left: 20px;">
+        <h1 class="main-title" style="margin: 0;">ST-01 PRESUPUESTO</h1>
+      </div>
+    </div>
+
+    <div class="info-container">
+      <div class="info-left">
+        <h1 class="main-title">PRESUPUESTO N° {{ nro_presupuesto }}</h1>
+        <p class="fecha"><strong>Fecha:</strong> {{ fecha_presupuesto }}</p>
+      </div>
+      <div class="info-right">
+        <div class="d-flex align-items-center mb-1">
+          <span class="me-2"><strong>CUIT:</strong></span>
+          <span><strong>33-68485414-9</strong></span>
+        </div>
+        <div class="d-block mb-1">
+          <span class="d-block"><strong>I.V.A.:</strong> Exento</span>
+        </div>
+        <div class="d-block mb-1">
+          <span class="d-block"><strong>Ingresos Brutos:</strong> Exento</span>
+        </div>
+        <div class="d-block mb-1">
+          <span class="d-block"><strong>Ganancias:</strong> Exento</span>
+        </div>
+      </div>
+    </div>
+    
+    <p><strong>Área Temática:</strong> {{ area_tematica }}</p>
+    <p><strong>Solicitante:</strong> {{ nombre_solicitante }} (Cod:{{ nro_solicitante }}) </p>
+    <p><strong>Contacto:</strong> {{ contacto }}</p>
+
+    <!-- Tabla de detalles del presupuesto -->
+    <table>
+      <thead>
+        <tr>
+          <th class="align-middle text-center">N°</th>
+          <th class="align-middle text-center">Servicio</th>
+          <th class="align-middle text-center">Cantidad</th>
+          <th class="align-middle text-center">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for detalle in detalles_presupuesto %}
+        <tr>
+          <td class="align-middle text-center">{{ detalle.nro_servicio }}</td>
+          <td>{{ detalle.nombre_servicio }}</td>
+          <td class="align-middle text-center">{{ detalle.cant }}</td>
+          <td class="align-middle text-end">{{ detalle.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p><strong>Subtotal:</strong> {{ subtotal }}</p>
+    <p><strong>Descuento:</strong> {{ descuento }}</p>
+    <p><strong>Arancel Presupuesto:</strong> {{ arancel_presupuesto }}</p>
+    <p><strong>Observaciones:</strong> {{ observaciones }}</p>
+
+  </div>
+
+  <!-- Pie de página -->
+  <div class="footer">
+    <img src="file:///C:/Users/santi/cle-lemit/backend/cle_backend/static/img/pie_pagina_lemit.jpeg" alt="Logo del Pie de Página" />
+  </div>
+</body>
+</html>

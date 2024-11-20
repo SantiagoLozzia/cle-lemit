@@ -1,11 +1,14 @@
 <template>
-  <div>
-    <UpdateModule :data="moduloData" />
-
-    <NewService :data="servicioData" />
-    
-    <ArancelesTable :data="arancelesData" />
-
+  <div class="container">
+    <div class="button-module">
+      <UpdateModule :data="moduloData" />
+    </div>
+    <div class="button-new-service">
+      <NewService :data="servicioData" />
+    </div>
+    <div class="table-container">
+      <ArancelesTable :data="arancelesData" />
+    </div>
   </div>
 </template>
 
@@ -34,5 +37,17 @@
   
 <style scoped>
 
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Controla el espacio entre los elementos */
+    width: 100%; 
+    padding: 0; 
+    margin: 0;
+  }
+
+  .button-new-service {
+    margin-left: 0;
+  }
 </style>
   

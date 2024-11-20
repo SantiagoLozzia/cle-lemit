@@ -47,13 +47,20 @@ class OrdenServicioEnCursoSerializer(serializers.ModelSerializer):
                 fields = '__all__'
 
 class DetallePresupuestoSerializer(serializers.ModelSerializer):
-    servicio = serializers.CharField(source='nro_servicio.servicio')
+        servicio = serializers.CharField(source='nro_servicio.servicio')
 
-    class Meta:
-        model = DetallePresupuesto
-        fields = ['nro_servicio', 'servicio', 'cant']
+        class Meta:
+                model = DetallePresupuesto
+                fields = ['nro_servicio', 'servicio', 'cant']
+
+class InformeAreaParcialEnCursoSerializer(serializers.ModelSerializer):
+        class Meta:   
+                model = InformeAreaParcial
+                fields = '__all__'
 
 class InformeAreaEnCursoSerializer(serializers.ModelSerializer):
+        informes_parciales = InformeAreaParcialEnCursoSerializer(many=True, read_only=True)
+        
         class Meta:   
                 model = InformeArea
                 fields = '__all__'
@@ -78,6 +85,7 @@ class GuardarAdjuntoSolicitudDataServicioSerializer(serializers.ModelSerializer)
         class Meta:
                 model = DataServicio
                 fields = ['nro_dataServicio', 'adjunto_solicitudServicio']
+
 
 class GuardarAdjuntoFacturaSerializer(serializers.ModelSerializer):
         class Meta:
@@ -110,6 +118,11 @@ class GuardarAdjuntoInformeArea(serializers.ModelSerializer):
                 model = InformeArea
                 fields = ['']
 
+class GuardarRegistrosEnsayoServicioSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = InformeArea
+                fields = '__all__'
+
 class SolicitudInterareaSerializer(serializers.ModelSerializer):
         class Meta:
                 model = SolicitudInterarea
@@ -137,6 +150,17 @@ class InformeServicioSerializer(serializers.ModelSerializer):
         model = InformeServicio
         fields = '__all__'
 
+class CorregirInformeServicioSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = InformeServicio
+                fields = ['corregir']
+
+class AdvertirCorreccionesSerializer(serializers.ModelSerializer):
+       class Meta:
+                model = InformeServicio
+                fields = ('correcciones', 'corregir', 'revision')
+
+                
 class CambiarRevision(serializers.ModelSerializer):
        class Meta:
         model = InformeServicio

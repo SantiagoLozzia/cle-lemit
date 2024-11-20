@@ -2,11 +2,11 @@
     <div>
       <div>
         <div class="button-container">
-          <button class="btn btn-primary float-start ms-2 mt-4" @click="mostrarFormulario">+ Data Servicio</button>
+          <button class="btn btn-primary float-start ms-2 mt-4 custom-shadow-btn" @click="mostrarFormulario">+ Data Servicio</button>
         </div>
     
-        <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">
-          <div class="modal-dialog">
+        <div class="modal" :class="{ 'show': mostrarModal }" id="modalNuevoDataServicio">
+          <div class="modal-dialog-a4">
             <div class="modal-content">
               <div class="modal-header">
                 <h1 class="modal-title fs-5 fw-bold">Nuevo Data Servicio</h1>
@@ -131,6 +131,7 @@
   
         const cerrarModal = () => {
           mostrarModal.value = false;
+          sugerencias.value = '';
         };
   
         const crearDataServicio = () => {
@@ -221,53 +222,6 @@
     
     
   <style scoped>
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
     
-    .modal.show {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    #modalPresupuesto .modal-dialog {
-      max-width: 1500px !important; 
-    }
-    
-    .form-select {
-      font-size: 16px;
-      padding: 6px;
-      border: 1px solid #ced4da;
-      border-radius: 5px;
-      width: 100%;
-      appearance: none;
-      padding-right: 2.25rem; /* Espaciado para el ícono */
-    }
-    
-    /* Espaciado para el ícono de flecha en el desplegable */
-    .form-select::after {
-      content: '\25BC'; /* Código de la flecha hacia abajo */
-      position: absolute;
-      right: 10px; 
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none; 
-    }
-    
-    .form-select:focus {
-      border-color: #007bff; /* Color de resaltado cuando el desplegable está enfocado */
-      box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25); /* Efecto de resaltado cuando está enfocado */
-    }
-    
-    form div.label-container label {
-      text-align: left !important;
-    }
   </style>
     

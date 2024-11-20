@@ -1,51 +1,45 @@
 <template>
-  <div class="en_espera-container">
-    <div class="title-container">
-      <h2>Presupuestos en Espera</h2>
-    </div>
-
-    <div class="table-container">
-      <table class="table presupuestos-table">
-        <thead>
-          <tr>
-            <th>Nro</th>
-            <th>Fecha</th>
-            <th>Solicitante</th>
-            <th>Area Tematica</th>
-            <th>ST-01 Presupuesto</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(presupuesto, index) in presupuestos" :key="index">
-            <td>{{ presupuesto.nro_presupuesto }}</td>
-            <td>{{ presupuesto.fecha }}</td>
-            <td class="text-left">{{ presupuesto.nombre_solicitante }}</td>
-            <td>{{ presupuesto.area_tematica }}</td>
-            <td><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirPresupuesto(presupuesto.nro_presupuesto)"></i></td>
-            <td>
-              <div class="acciones">
-                <button @click="mostrarMenu(index)" class="btn btn-link"><i class="bi bi-arrow-right-square"></i></button>
-                <!-- Menú desplegable para cambiar el estado -->
-                <div v-if="presupuesto.mostrarMenu" class="menu">
-                  <select v-model="presupuesto.nuevoEstado" class="form-select">
-                    <option value="rechazado">Rechazado</option>
-                    <option value="modificado">Modificado</option>
-                    <option value="actualizado">Actualizado</option>
-                  </select>
-                  <button @click="cambiarEstado(presupuesto)" class="btn btn-primary">Guardar</button>
-                  <button @click="cerrarMenu(index)" class="btn btn-danger">✖</button> <!-- Botón de cerrar -->
-                </div>
+  <div>
+    <table class="table table-hover">
+      <thead class="text-center">
+        <tr>
+          <th>Nro</th>
+          <th>Fecha</th>
+          <th>Solicitante</th>
+          <th>Area Tematica</th>
+          <th>ST-01 Presupuesto</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(presupuesto, index) in presupuestos" :key="index">
+          <td>{{ presupuesto.nro_presupuesto }}</td>
+          <td>{{ presupuesto.fecha }}</td>
+          <td class="text-left">{{ presupuesto.nombre_solicitante }}</td>
+          <td>{{ presupuesto.area_tematica }}</td>
+          <td><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirPresupuesto(presupuesto.nro_presupuesto)"></i></td>
+          <td>
+            <div class="acciones">
+              <button @click="mostrarMenu(index)" class="btn btn-link"><i class="bi bi-arrow-right-square"></i></button>
+              <!-- Menú desplegable para cambiar el estado -->
+              <div v-if="presupuesto.mostrarMenu" class="menu">
+                <select v-model="presupuesto.nuevoEstado" class="form-select">
+                  <option value="rechazado">Rechazado</option>
+                  <option value="modificado">Modificado</option>
+                  <option value="actualizado">Actualizado</option>
+                </select>
+                <button @click="cambiarEstado(presupuesto)" class="btn btn-primary">Guardar</button>
+                <button @click="cerrarMenu(index)" class="btn btn-danger">✖</button> <!-- Botón de cerrar -->
               </div>
-            </td>
-          </tr>
-          <!-- Fila para mensaje cuando no hay datos -->
-          <tr v-if="presupuestos.length === 0" class="no-results">
-            <td colspan="6">No hay resultados para mostrar</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            </div>
+          </td>
+        </tr>
+        <!-- Fila para mensaje cuando no hay datos -->
+        <tr v-if="presupuestos.length === 0" class="no-results">
+          <td colspan="6">No hay resultados para mostrar</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- Modal para mostrar Presupuesto -->
@@ -332,13 +326,7 @@ export default {
 </script>
 
 <style scoped>
-.title-container {
-  position: relative;
-  top: 50px;
-}
-.table-container {
-  margin-top: 80px;
-}
+
 .menu {
   position: absolute;
   z-index: 1;
@@ -364,7 +352,6 @@ export default {
   padding: 50px; /* Ajustar el padding según sea necesario */
   font-size: 2rem; /* Tamaño de la letra, ajustar según sea necesario */
 }
-
 
 .info-separado {
   margin-bottom: 1rem; /* Espacio entre los bloques */
