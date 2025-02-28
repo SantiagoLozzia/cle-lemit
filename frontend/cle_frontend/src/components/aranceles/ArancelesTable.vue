@@ -1,10 +1,5 @@
 <template>
   <div class="aranceles-container">
-    
-    <div class="title-container">  
-      <h2>Tabla de Aranceles</h2>
-    </div>
-
     <div class="table-container">
       <table class="table aranceles-table">
         <thead>
@@ -76,12 +71,16 @@
   left: 10px; /* Lo sitúa en el extremo izquierdo de la pantalla */
   transform: translateY(120%); /* Centra verticalmente el elemento */
 }
-.title-container {
-  position: relative;
-  top: 50px;
-}
+
 .table-container {
-  margin-top: 80px;
+  width: 100%;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.aranceles-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .add-border-right {

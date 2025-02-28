@@ -1,11 +1,9 @@
 <template>
-  <div>
-    <HeaderComponent />
+  <div class="container-submenu">
     <SubMenu :user-permissions="userPermissions" />
     <router-view></router-view>
   </div>
 </template>
-
 
 <script>
   import SubMenu from '../components/presupuestos/SubMenu.vue';
@@ -24,5 +22,10 @@
 </script>
 
 <style scoped>
-
+  .container-submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Controla el espacio entre los elementos */
+    margin-left: 120;
+  }
 </style>

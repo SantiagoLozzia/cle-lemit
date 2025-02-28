@@ -1,7 +1,11 @@
 <template>
-  <div>
-    <NewBudget :data="budgetData" />
+  <div class="container">
+    <div class="button-container">
+      <NewBudget :data="budgetData" />
+    </div>
+    <div class="table-container">
     <EnEsperaTable :data="enesperaData" />
+    </div>
   </div>
 </template>
 
@@ -24,5 +28,10 @@
 </script>
 
 <style scoped>
-
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Controla el espacio entre los elementos */
+    margin-left: 0;
+  }
 </style>

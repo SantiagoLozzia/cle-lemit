@@ -1,7 +1,7 @@
 from rest_framework import generics
 from database.models import Presupuesto, Solicitante, Servicio, Modulo
 from .serializers import *
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpRequest
 from rest_framework.decorators import api_view, permission_classes, api_view
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import get_object_or_404
@@ -10,6 +10,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.db.models import Q
 import json
+from django.template.loader import render_to_string
+from weasyprint import HTML
 
 class PresupuestoListView(generics.ListCreateAPIView):
     queryset = Presupuesto.objects.all()
@@ -193,4 +195,53 @@ def obtener_presupuesto(request, nro_presupuesto):
         return JsonResponse({'error': 'Presupuesto no encontrado'}, status=404)
     except Exception as e:
         logger.error("Error en obtener_presupuesto: %s", str(e))
+        return JsonResponse({'error': str(e)}, status=500)
+
+def generar_pdf_presupuesto(request, nro_presupuesto):
+    try:
+        # Crear un request dummy con el parámetro nro_presupuesto
+        dummy_request = HttpRequest()
+        dummy_request.GET = {'nro_presupuesto': nro_presupuesto}
+        
+        # Obtener datos del presupuesto usando la función auxiliar
+        presupuesto_response = obtener_presupuesto(dummy_request, nro_presupuesto)
+        
+        if presupuesto_response.status_code != 200:
+            return presupuesto_response  # Devolver el error si la respuesta no es exitosa
+        
+        presupuesto_data = json.loads(presupuesto_response.content)  # Convertir el contenido JSON en dict
+        
+        # Preparar el contexto para la plantilla del PDF
+        context = {
+            'nro_presupuesto': presupuesto_data['nro_presupuesto'],
+            'fecha_presupuesto': presupuesto_data['fecha_presupuesto'],
+            'contacto': presupuesto_data['contacto'],
+            'telefono2': presupuesto_data['telefono2'],
+            'email2': presupuesto_data['email2'],
+            'area_tematica': presupuesto_data['area_tematica'],
+            'subtotal': presupuesto_data['subtotal'],
+            'descuento': presupuesto_data['descuento'],
+            'arancel_presupuesto': presupuesto_data['arancel_presupuesto'],
+            'observaciones': presupuesto_data['observaciones'],
+            'nro_solicitante': presupuesto_data['nro_solicitante'],
+            'nombre_solicitante': presupuesto_data['nombre_solicitante'],
+            'telefono': presupuesto_data['telefono'],
+            'email': presupuesto_data['email'],
+            'detalles_presupuesto': presupuesto_data['detalles_presupuesto'],
+        }
+
+        # Renderizar la plantilla con los datos
+        html_string = render_to_string('template_pdf_presupuesto.html', context)
+
+        # Crear el objeto PDF
+        pdf_file = HTML(string=html_string).write_pdf()
+
+        # Preparar la respuesta HTTP para descargar el PDF
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="informe.pdf"'
+        
+        return response
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=404)
+    except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

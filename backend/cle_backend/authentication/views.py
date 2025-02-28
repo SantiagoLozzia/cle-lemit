@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import UserSerializer
+from .serializers import UserSerializer, MyTokenObtainPairSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +21,7 @@ class NombreYApellidoUser(APIView):
             "last_name": user.last_name
         })
     
-
-# Se puede usar la vista proporcionada por SimpleJWT directamente
 class MyTokenObtainPairView(TokenObtainPairView):
-    pass
+    serializer_class = MyTokenObtainPairSerializer
+    
+

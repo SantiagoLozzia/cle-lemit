@@ -195,18 +195,32 @@ class InformeArea(models.Model):
     nro_informeArea = models.AutoField(primary_key=True)
     fecha_informeArea = models.DateField()
     adjunto_informeArea = models.FileField(upload_to='informes_areas/')
+    registros_ensayo = models.FileField(upload_to='registros_ensayo/', null=True)
     completo = models.BooleanField(default=False)
     estado_informeArea = models.CharField(choices=ESTADO_INFORME_AREA_CHOICES, default='sin_informe')
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"InformeArea #{self.nro_informeArea} - OrdenServicio #{self.nro_ordenServicio.nro_ordenServicio}"
-    
+
+class InformeAreaParcial(models.Model):
+    informe_area = models.ForeignKey(
+        InformeArea,
+        related_name='informes_parciales',
+        on_delete=models.CASCADE  # Borra los informes parciales si se elimina el InformeArea
+    )
+    fecha_parcial = models.DateField(auto_now_add=True)
+    adjunto_parcial = models.FileField(upload_to='informes_parciales/')
+    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+
+
 class InformeServicio(models.Model):
     nro_informeServicio = models.AutoField(primary_key=True)
     fecha_informeServicio = models.DateField(default=date.today)
     adjunto_informeServicio = models.FileField(upload_to='informes_servicio/')
+    corregir = revision = models.BooleanField(default=False)
     revision = models.BooleanField(default=False)
+    correcciones = models.TextField(max_length=2500, null=True, blank=True)
     # fecha_revision = models.DateField(null=True, blank=True)
     firma_area = models.BooleanField(default=False)
     # fecha_firmaArea = models.DateField(null=True, blank=True)
@@ -214,6 +228,7 @@ class InformeServicio(models.Model):
     # fecha_firmaDireccion= models.DateField(null=True, blank=True)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    
 
     def __str__(self):
         return f"InformeServicio #{self.nro_informeServicio} - InformeArea #{self.nro_informeArea.nro_informeArea}"

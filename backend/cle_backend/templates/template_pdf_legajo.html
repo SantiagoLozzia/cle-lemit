@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        min-height: 100vh;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .header img {
+        width: 100%;
+        height: auto;
+      }
+      .content {
+        margin: 20px;
+        line-height: 1.6; /* Incrementa el espacio entre líneas */
+      }
+      .content p {
+        margin-bottom: 15px; /* Espacio entre párrafos */
+      }
+      .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+        background-color: white;
+      }
+      .footer img {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+      .main-title {
+        margin-bottom: 40px; 
+        text-align: center;
+        font-family: 'sans-serif', serif; /* Cambia la fuente solo para el <h1> */
+        font-size: 24px; /* Tamaño de la fuente */
+        font-weight: bold; /* Negrita */
+        color: black; /* Color del texto */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img src="file:///C:/Users/santi/cle-lemit/backend/cle_backend/static/img/membrete_lemit.jpeg" alt="Logo del Encabezado"/>
+    </div>
+
+    <div style="display: flex; align-items: center; border: 1px solid #000; padding: 10px; max-width: 800px; margin: 20px auto;">
+      <!-- Columna izquierda: Imagen -->
+      <div style="flex: 0 0 auto; margin-right: 20px; padding-right: 20px; border-right: 1px solid #000;">
+        <img src="file:///C:/Users/santi/cle-lemit/backend/cle_backend/static/img/logo-LEMIT_resolucion2-1.png" 
+             alt="Logo del Encabezado" 
+             style="height: 80px; display: block;" />
+      </div>
+      <!-- Columna derecha: Título -->
+      <div style="flex: 1; text-align: center; padding-left: 20px;">
+        <h1 class="main-title" style="margin: 0;">LEGAJO ELECTRONICO</h1>
+      </div>
+    </div>
+
+    <div class="content">
+      <p><strong>Legajo N° </strong> {{ nro_legajo }}/{{ fecha_legajo|date:"Y" }}</p>
+      <p><strong>Fecha:</strong> {{ fecha_legajo }}</p>
+      <p><strong>N° de Lab.:</strong> [ {{ rangos_laboratorios }} ]</p>
+      <p><strong>Solicitante:</strong> {{ nombre_solicitante }}</p>
+    </div>
+    <div class="footer">
+      <img src="file:///C:/Users/santi/cle-lemit/backend/cle_backend/static/img/pie_pagina_lemit.jpeg" alt="Logo del Pie de Página" />
+    </div>
+  </body>
+</html>

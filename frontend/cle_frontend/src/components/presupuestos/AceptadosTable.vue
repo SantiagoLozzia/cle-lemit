@@ -1,9 +1,5 @@
 <template>
     <div class="aceptados-container">
-      <div class="title-container">
-        <h2>Presupuestos Aceptados</h2>
-      </div>
-  
       <div class="table-container">
         <table class="table presupuestos-table">
           <thead>
@@ -58,6 +54,7 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-logo"></div>
+            <div><i class="bi bi-download" style="cursor: pointer;" @click="descargarPresupuestoPDF"></i></div>
             <button type="button" class="btn-close" @click="cerrarModalPresupuesto" aria-label="Close"></button>
           </div>
           <!-- Modal Body -->
@@ -184,6 +181,8 @@
 
         const mostrarModalPresupuesto = ref(false);
 
+        const nro_presupuesto_global = ref();
+
         const fetchPresupuestos = async () => {
             try {
             const response = await axios.get('http://localhost:8000/api/presupuestos/aceptados/');
@@ -218,6 +217,9 @@
         };
 
         const abrirPresupuesto = (nro_presupuesto) => {
+          nro_presupuesto_global.value = nro_presupuesto;
+          console.log('a vergaaaaa')
+          console.log('nro_presupuesto_global',nro_presupuesto_global)
           axios.get(`http://localhost:8000/api/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
               .then(response => {
                   // Obtener los datos del presupuesto de la respuesta
@@ -251,6 +253,28 @@
 
         const cerrarModalPresupuesto = () => {
           mostrarModalPresupuesto.value = false;
+        };
+
+        const descargarPresupuestoPDF = () => {
+            const nro_presupuesto = nro_presupuesto_global.value;
+            axios({
+                method: 'get',
+                url: `/api/presupuestos/generar_pdf_presupuesto/${nro_presupuesto}/`,
+                responseType: 'blob' // Indicamos que esperamos una respuesta de tipo archivo binario (PDF)
+            })
+            .then((response) => {
+                // Crear un enlace temporal para descargar el archivo
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'informe.pdf'); // Nombre del archivo a descargar
+                document.body.appendChild(link);
+                link.click();
+                link.remove(); // Eliminar el enlace temporal
+            })
+            .catch((error) => {
+                console.error('Error al descargar el PDF:', error);
+            });
         };
 
         const formatArancel = (arancel) => {
@@ -325,6 +349,8 @@
           formatArancel,
           mostrarModalPresupuesto,
           cerrarModalPresupuesto,
+          nro_presupuesto_global,
+          descargarPresupuestoPDF,
           mostrarMenu, 
           cambiarEstado, 
           cerrarMenu,

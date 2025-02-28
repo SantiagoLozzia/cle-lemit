@@ -7,112 +7,118 @@
     </div>
 
     <div>
-      <table class="table">
-        <thead>
+      <table class="table table-hover">
+        <thead class="text-center">
           <tr>
-            <th colspan="6" class="add-border-right">Solicitud de Servicio</th>
-            <th colspan="6" class="add-border-right">Legajo</th>
-            <th colspan="3" class="add-border-right">Recepcion</th>
-            <th colspan="3" class="add-border-right">Orden de Servicio</th>
-            <th colspan="3" class="add-border-right">Informe de Area</th>
-            <th colspan="4" class="add-border-right">Inter Area</th>
-            <th colspan="1" class="add-border-right">Informe Area</th>
-            <th colspan="1" class="add-border-right">Administracion</th>
-            <th colspan="1" class="add-border-right">Servicios Tecnologicos</th>
-            <th colspan="1" class="add-border-right">Responsable Area</th>
-            <th colspan="1" class="add-border-right">Direccion</th>
-            <th colspan="1">Archivo</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Solicitud de Servicio</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Legajo</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Recepcion</th>
+            <th colspan="3" class="add-border-right align-middle text-center">Orden de Servicio</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" colspan="4" class="add-border-right align-middle text-center">Inter Area</th>
+            <th colspan="5" class="add-border-right align-middle text-center">Informe de Area</th>
+            <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
+            <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
+            <th colspan="1" class="add-border-right align-middle text-center">Servicios Tecnologicos</th>
+            <th colspan="1" class="add-border-right align-middle text-center">Responsable Area</th>
+            <th colspan="1" class="add-border-right align-middle text-center">Direccion</th>
+            <th  v-if="isAdminOrTecnologicoOrDireccion" colspan="1" class="align-middle text-center">Archivo</th>
           </tr>
           <tr>
             <!-- Subcolumnas de Solicitud de Servicio -->
-            <th>N°</th>
-            <th>Fecha</th>
-            <th>Area Tematica</th>
-            <th>ST-01 Presupuesto</th>
-            <th>Data Servicio</th>
-            <th class="add-border-right">ST-02 Solicitud</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">N°</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Area Tematica</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">ST-01 Presupuesto</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Data Servicio</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-02 Solicitud</th>
             <!-- Subcolumnas de Legajo -->
-            <th>N°</th>
-            <th>Fecha</th>
-            <th>Legajo</th>
-            <th>Factura</th>
-            <th>Pago</th>
-            <th class="add-border-right">Plazo</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">N°</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Legajo</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Factura</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Pago</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Recepcion -->
-            <th>ST-03 Recepcion</th>
-            <th>Muestras</th>
-            <th class="add-border-right">Plazo</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">ST-03 Recepcion</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Muestras</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Orden de Servicio -->
-            <th>Fecha</th>
-            <th>ST-05 Orden</th>
-            <th class="add-border-right">Plazo</th>
-            <!-- Subcolumnas de Informe de Area -->
-            <th>Fecha</th>
-            <th>Solicitante</th>
-            <th class="add-border-right">Informe Area</th>
+            <th class="align-middle text-center">Fecha</th>
+            <th class="align-middle text-center">ST-05 Orden</th>
+            <th class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Inter Area -->
-            <th>Fecha</th>
-            <th>Solicitud</th>
-            <th>Inter-Area</th>
-            <th class="add-border-right">Informe</th>
-            <!-- Subcolumnas de Informe Area -->
-            <th class="add-border-right">Estado</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Solicitud</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Inter-Area</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Informe</th>
+            <!-- Subcolumnas de Informe de Area -->
+            <th class="align-middle text-center">Fecha</th>
+            <th class="align-middle text-center">Solicitante</th>
+            <th class="align-middle text-center">Informe Area</th>
+            <th class="align-middle text-center">Registros de Ensayo</th>
+            <th class="add-border-right align-middle text-center">Estado</th>
             <!-- Subcolumnas de Administracion -->
-            <th class="add-border-right">Formato</th>
+            <th class="add-border-right align-middle text-center">Formato</th>
             <!-- Subcolumnas de Servicios Tecnologicos -->
-            <th class="add-border-right">Revision</th>
+            <th class="add-border-right align-middle text-center">Revision</th>
             <!-- Subcolumnas de Responsable Area -->
-            <th class="add-border-right">Firma</th>
+            <th class="add-border-right align-middle text-center">Firma</th>
             <!-- Subcolumnas de Direccion -->
-            <th class="add-border-right">Firma</th>
+            <th class="add-border-right align-middle text-center">Firma</th>
             <!-- Subcolumnas de Archivo -->
-            <th class="add-border-right">Archivar</th>
+            <th  v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">Archivar</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody >
           <tr v-for="(fila, index) in filas" :key="index">
 
             <!-- Columna Solicitud de Servicio -->
 
-            <td>{{ fila.nro_dataServicio }}</td>
-            <td class="fecha-columna">{{ fila.fecha_dataServicio }}</td>
-            <td style="white-space: nowrap;">{{ fila.area_tematica }}</td>
-            <td>{{ fila.nro_presupuesto }}</td>
-            <td><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirDataServicio(fila.nro_dataServicio)"></i></td>
-            <td class="add-border-right">
-              <!-- Verificar si adjunto_solicitud está vacío -->
+            <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_dataServicio }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion" class="fecha-columna">{{ fila.fecha_dataServicio }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion" style="white-space: nowrap;">{{ fila.area_tematica }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_presupuesto }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion"><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirDataServicio(fila.nro_dataServicio)"></i></td>
+            <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
               <template v-if="fila.adjunto_solicitudServicio === null">
-                <!-- Si no hay adjunto, mostrar el botón de cargar archivo -->
-                <div class="custom-file">
+                <div v-if="isServiciosTecnologicos" class="custom-file">
                   <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoSolicitud-' + index">
                     <i class="bi bi-paperclip"></i>
                   </label>
                   <input :id="'fileInputAdjuntoSolicitud-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)">
                 </div>
+                <div v-else> 
+                      <i class="bi bi-stopwatch"></i>
+                </div>
               </template>
               <template v-else>
-                <i class="bi bi-file-earmark-text" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_solicitudServicio)"></i>
+                <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_solicitudServicio)"></i>
               </template>
             </td>
 
             <!-- Columna Legajo -->
 
-            <td>{{ fila.nro_legajo }}</td>
-            <td class="fecha-columna">{{ fila.fecha_legajo }}</td>
-            <td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_legajo }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion" class="fecha-columna">{{ fila.fecha_legajo }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="fila.dataServicio_completo && !fila.nro_legajo">
+                <div v-if="isAdministracion">
                   <i class="bi bi-plus-square"  style="cursor: pointer;" @click="obtenerRangoLab(fila.nro_circuito)"></i>
+                </div>
+                <div v-else>
+                      <i class="bi bi-stopwatch"></i>
+                </div>
               </template>
               <template v-else-if="fila.dataServicio_completo && fila.nro_legajo">
-                  <i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirLegajo(fila.nro_circuito)"></i>
+                  <i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirLegajo(fila)"></i>
               </template>
               <template v-else>
               </template>
             </td>
-            <td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="fila.nro_legajo && !fila.adjunto_factura">
                   <!-- Si nro_legajo está completo y adjunto_factura está vacío, mostrar el botón de cargar archivo -->
-                  <div class="custom-file">
+                  <div v-if="isAdministracion" class="custom-file">
                       <!-- El icono de Bootstrap es clicleable y activa el input de tipo file -->
                       <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoFactura-' + index">
                           <i class="bi bi-paperclip"></i>
@@ -120,54 +126,84 @@
                       <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
                       <input :id="'fileInputAdjuntoFactura-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito)">
                   </div>
+                  <div v-else>
+                      <i class="bi bi-stopwatch"></i>
+                  </div>
               </template>
               <template v-else-if="fila.nro_legajo && fila.adjunto_factura">
                   <!-- Si nro_legajo está completo y adjunto_factura está completo, mostrar el icono del archivo -->
-                  <i class="bi bi-file-earmark-text" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_factura)"></i>
+                  <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_factura)"></i>
               </template>
               <template v-else>
                   <!-- Si nro_legajo está vacío, entonces adjunto_factura también debe estar vacío -->
               </template>
             </td>
-            <td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
                 <div v-if="fila.pago !== undefined && fila.pago !== null">
-                    <!-- Mostrar el valor de fila.pago -->
-                    <span v-if="fila.pago === 0" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">0%</span>
-                    <span v-else-if="fila.pago === 50" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">50%</span>
-                    <span v-else-if="fila.pago === 100" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">100%</span>
+                  <div v-if="isAdministracion">
+                      <!-- Mostrar el valor de fila.pago -->
+                      <span v-if="fila.pago === 0" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">0%</span>
+                      <span v-else-if="fila.pago === 50" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">50%</span>
+                      <span v-else-if="fila.pago === 100" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">100%</span>
+                  </div>
+                  <div v-else>
+                      <span v-if="fila.pago === 0">0%</span>
+                      <span v-else-if="fila.pago === 50">50%</span>
+                      <span v-else-if="fila.pago === 100">100%</span>
+                  </div>
                 </div>
             </td>
-            <td class="add-border-right">
-              <span @click="abrirModalPlazoPago(fila)" style="cursor: pointer;">
-                {{ fila.plazo_pago }}
-              </span>
+            <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
+                <div v-if="isAdministracion">
+                  <span @click="abrirModalPlazoPago(fila)" style="cursor: pointer;">
+                    {{ fila.plazo_pago }}
+                  </span>
+                </div>
+                <div v-else>
+                  {{ fila.plazo_pago }}
+                </div>
             </td>
 
             <!-- Columna Recepcion -->
 
-            <td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="(fila.nros_remitos === null) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalRemito(fila)"></i>
+                <div v-if="isServiciosTecnologicos">
+                  <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalRemito(fila)"></i>
+                </div>
               </template>
               <template v-if="(fila.remitos !== null) && (fila.estado_recepcion == 'parcial' || fila.estado_recepcion == 'total')">
-                <span @click="abrirModalRemito(fila)" style="cursor: pointer;">
-                  {{ fila.nros_remitos }}
-                </span>
+                <div v-if="isServiciosTecnologicos">
+                  <span @click="abrirModalRemito(fila)" style="cursor: pointer;">
+                    {{ fila.nros_remitos }}
+                  </span>
+                </div>
+                <div v-else>
+                  <span>
+                    {{ fila.nros_remitos }}
+                  </span>
+                </div>
               </template>
             </td>
-            <td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
               <div>
                 <span v-if="(fila.pago == 50 ||fila.pago == 100) && (fila.estado_recepcion !== undefined && fila.estado_recepcion !== null)">
-                    <!-- Mostrar el valor de fila.estado_recepcion -->
-                    <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Sin Llegar</span>
-                    <span v-else-if="fila.estado_recepcion === 'parcial'" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Parcial</span>
-                    <span v-else-if="fila.estado_recepcion === 'total'"  @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Total</span>
+                    <div v-if="isServiciosTecnologicos">
+                      <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Sin Llegar</span>
+                      <span v-else-if="fila.estado_recepcion === 'parcial'" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Parcial</span>
+                      <span v-else-if="fila.estado_recepcion === 'total'"  @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Total</span>
+                    </div> 
+                    <div v-else>
+                      <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column">Sin Llegar</span>
+                      <span v-else-if="fila.estado_recepcion === 'parcial'">Parcial</span>
+                      <span v-else-if="fila.estado_recepcion === 'total'">Total</span>
+                    </div>
                 </span>
-                <span v-else @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">&nbsp;</span>
+                <span v-else-if="isServiciosTecnologicos" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">&nbsp;</span>
               </div>
             </td>
-            <td class="add-border-right">
-              <div>
+            <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
+              <div v-if="isServiciosTecnologicos">
                 <span v-if="fila.legajo_completo" @click="abrirModalPlazoMuestras(fila)" style="cursor: pointer;">
                   {{ fila.plazo_muestras }}
                 </span>
@@ -175,6 +211,14 @@
                   <!-- Este span estará vacío -->
                 </span>
               </div>
+              <div v-else>
+                <span v-if="fila.legajo_completo">
+                  {{ fila.plazo_muestras }}
+                </span>
+                <span v-else>
+                  <!-- Este span estará vacío -->
+                </span>
+              </div>  
             </td>
 
             <!-- Columna Orden de Servicio -->
@@ -190,8 +234,13 @@
               </template>
             </td>
             <td>
-              <template v-if="(fila.ordenServicio_completo  === '' || fila.ordenServicio_completo === false ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalCrearOrdenServicio(fila)"></i>
+              <template v-if="(fila.ordenServicio_completo === '' || fila.ordenServicio_completo === false) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+                  <div v-if="isServiciosTecnologicos">
+                      <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalCrearOrdenServicio(fila)"></i>
+                  </div>
+                  <div v-else>
+                      <i class="bi bi-stopwatch"></i>
+                  </div>
               </template>
               <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <i class="bi bi-clipboard2"  style="cursor: pointer;" @click="abrirOrdenServicio(fila)"></i>
@@ -199,12 +248,71 @@
             </td>
             <td class="add-border-right">
               <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor: pointer;">
-                  {{ fila.plazo_estimado }}
-                </span>
+                <div v-if="isServiciosTecnologicos">
+                  <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor: pointer;">
+                    {{ fila.plazo_estimado }}
+                  </span>
+                </div>
+                <div v-else>
+                  <span>
+                    {{ fila.plazo_estimado }}
+                  </span>
+                </div>
               </template>
               <template v-else>
                 
+              </template>
+            </td>
+
+            <!-- Columna Inter Area -->
+
+            <td v-if="isTecnologicoOrDireccionOrArea">
+              <template v-if="(fila.nro_solicitudInterarea !== '')">
+                <span class="no-wrap-column">
+                  <div style="display: flex; flex-direction: column;">
+                    {{ fila.fecha_solicitudInterarea }}
+                  </div>
+                </span>
+              </template>
+              <template v-else>
+              <!-- vacio -->
+              </template>
+            </td>
+            <td v-if="isTecnologicoOrDireccionOrArea">
+              <template v-if="(fila.ordenServicio_completo === '') || (fila.ordenServicio_completo === false)">
+                  <!-- vacio -->
+              </template>
+              <template v-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea === '')">
+                  <div v-if="isAdminOrTecnologicoOrDireccion">
+                    -
+                  </div>
+                  <div v-else style="display: flex; flex-direction: column;">
+                    <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalCrearSolicitudInterArea(fila)"></i> 
+                  </div>
+              </template>
+              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea !== '')">
+                <span>
+                  <i class="bi bi-clipboard2"   style="cursor: pointer;" @click="abrirSolicitudInterArea(fila)"></i>
+                </span>
+              </template>
+            </td>
+            <td v-if="isTecnologicoOrDireccionOrArea" style="white-space: nowrap;">
+              {{ fila.inter_areaTematica }}
+            </td>
+            <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
+              <template v-if="(fila.nro_solicitudInterarea !== '') && (fila.adjunto_informeInterarea === '')">
+                <div v-if="isAdminOrTecnologicoOrDireccion">
+                      <i class="bi bi-stopwatch"></i>
+                </div>
+                <div v-else class="custom-file">
+                  <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeInterarea-' + index">
+                    <i class="bi bi-paperclip"></i>
+                  </label>
+                  <input :id="'fileInputAdjuntoInformeInterarea-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeInterarea($event, fila)">
+                </div>
+              </template>
+              <template v-else-if="(fila.nro_solicitudInterarea !== '') && (fila.adjunto_informeInterarea !== '')">
+                <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeInterarea)"></i>
               </template>
             </td>
 
@@ -228,9 +336,12 @@
               
               </template>
             </td>
-            <td class="add-border-right">
+            <td>
               <template v-if="(fila.adjunto_informeArea === '') && (fila.ordenServicio_completo === true)">
-                  <div class="custom-file">
+                  <div v-if="isAdminOrTecnologicoOrDireccion">
+                      <i class="bi bi-stopwatch"></i>
+                  </div>
+                  <div v-else class="custom-file">
                       <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeArea-' + index">
                           <i class="bi bi-paperclip"></i>
                       </label>
@@ -239,110 +350,192 @@
                   </div>
               </template>
               <template v-else-if="fila.adjunto_informeArea !== ''">
-                <i class="bi bi-file-earmark-text" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeArea)"></i>
-              </template>
-            </td>
-
-            <!-- Columna Inter Area -->
-
-            <td>
-              <template v-if="(fila.nro_solicitudInterarea !== '')">
-                <span class="no-wrap-column">
-                  <div style="display: flex; flex-direction: column;">
-                    {{ fila.fecha_solicitudInterarea }}
-                  </div>
-                </span>
-              </template>
-              <template v-else>
-              <!-- vacio -->
-              </template>
-            </td>
-            <td>
-              <template v-if="(fila.ordenServicio_completo === '') || (fila.ordenServicio_completo === false)">
-                  <!-- vacio -->
-              </template>
-              <template v-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea === '')">
-                  <!-- Si ordenServicio_completo está completo, mostrar el icono para crear SolicitudInterarea -->
-                  <div style="display: flex; flex-direction: column;">
-                    <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalCrearSolicitudInterArea(fila)"></i> 
-                  </div>
-              </template>
-              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea !== '')">
-                <span>
-                  <i class="bi bi-clipboard2"   style="cursor: pointer;" @click="abrirSolicitudInterArea(fila)"></i>
-                </span>
-              </template>
-            </td>
-            <td style="white-space: nowrap;">{{ fila.inter_areaTematica }}</td>
-            <td class="add-border-right">
-              <template v-if="(fila.nro_solicitudInterarea !== '') && (fila.adjunto_informeInterarea === '')">
-                <div class="custom-file">
-                  <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeInterarea-' + index">
-                    <i class="bi bi-paperclip"></i>
-                  </label>
-                  <input :id="'fileInputAdjuntoInformeInterarea-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeInterarea($event, fila)">
+                <div v-if="fila.estado_informeArea === 'total'">
+                  <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeArea)"></i>
+                </div>
+                <div v-else>
+                  <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeArea)"></i>
+                  <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeArea-' + index">
+                          <i class="bi bi-paperclip"></i>
+                      </label>
+                      <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
+                      <input :id="'fileInputAdjuntoInformeArea-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeArea($event, fila)">
                 </div>
               </template>
-              <template v-else-if="(fila.nro_solicitudInterarea !== '') && (fila.adjunto_informeInterarea !== '')">
-                <i class="bi bi-file-earmark-text" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeInterarea)"></i>
+
+              <template v-if="(fila.informes_parciales  !== '' ) && (fila.informes_parciales !== 'null')">
+                {{ fila.informes_parciales }}
               </template>
+
             </td>
             
-            <!-- Columna Estado Informe Area -->
+            <!-- Registros de Ensayo -->
+            <td>
+              <template v-if="(fila.adjunto_informeArea !== '') || (fila.adjunto_informeArea !== null)">
+                <div v-if="fila.registros_ensayo" style="position: relative;">
+                  <!-- Icono principal -->
+                  <i class="bi bi-folder-check" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
+
+                  <!-- Opciones flotantes en semi-círculo -->
+                    <div v-if="filaSeleccionada === index" class="opciones-flotantes">
+                        <div class="opcion" style="--rotation: -30deg;">
+                          <i class="bi bi-eye" @click="abrirArchivo(fila.registros_ensayo)"></i>
+                        </div>
+
+                        <!-- Ícono que llama a cargarRegistrosEnsayo -->
+                        <div class="opcion" style="--rotation: 0deg;">
+                          <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
+                            <i class="bi bi-upload"></i>
+                          </label>
+                          <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
+                        </div>
+                    </div> 
+                </div> 
+                <div v-else>
+                  <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
+                          <i class="bi bi-folder-plus"></i>
+                      </label>
+                      <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
+                      <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
+                </div>
+              </template>
+            </td>
+
+            
 
             <td class="add-border-right">
               <template v-if="fila.estado_informeArea === 'sin_informe'">
                 <!-- Si el estado es 'sin_informe', muestra en blanco -->
               </template>
               <template v-else-if="fila.estado_informeArea === 'parcial'">
-                <span @click="cambiarEstadoInformeArea(fila)" style="cursor: pointer;">Parcial</span>
+                <div v-if="isAreaJefe || isAreaStandard">
+                  <span @click="cambiarEstadoInformeArea(fila)" style="cursor: pointer;">Parcial</span>
+                </div>
+                <div v-else>
+                  <span>Parcial</span>
+                </div>
               </template>
               <template v-else-if="fila.estado_informeArea === 'total'">
-                <span @click="cambiarEstadoInformeArea(fila)" style="cursor: pointer;">Total</span>
+                <div v-if="isAreaJefe || isAreaStandard">
+                  <span @click="cambiarEstadoInformeArea(fila)" style="cursor: pointer;">Total</span>
+                </div>
+                <div v-else>
+                  <span>Total</span>
+                </div>
               </template>
             </td>
 
             <!-- Columna Administracion - Formato -->
             <td class="add-border-right">
               <template v-if="(fila.estado_informeArea === 'parcial') || (fila.estado_informeArea === 'total')">
-                <template v-if="fila.adjunto_informeServicio === ''">
-                  <div class="custom-file">
-                    <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
-                      <i class="bi bi-paperclip"></i>
-                    </label>
-                    <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
-                  </div>
-                </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === false) && (fila.firma_area === false) && (fila.firma_direccion === false)">
-                  <i class="bi bi-filetype-pdf" @click="abrirArchivo(fila.adjunto_informeServicio)" style="cursor: pointer;"></i>
-                </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true || fila.firma_area === true || fila.firma_direccion === true)">
-                  <i class="bi bi-check-lg" style="color: green;"></i>
-                </template>
+                  <template v-if="(fila.adjunto_informeServicio === '') || (fila.adjunto_informeServicio === null) && (fila.corregir === false)">
+                      <div v-if="isAdministracion" class="custom-file">
+                        <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
+                          <i class="bi bi-paperclip"></i>
+                        </label>
+                        <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
+                      </div>
+                      <div v-else>
+                        <i class="bi bi-stopwatch"></i>
+                      </div>
+                  </template>
+                  <template v-if="(fila.adjunto_informeServicio !== '') && (fila.adjunto_informeServicio !== null ) && (fila.corregir === false)">
+                    <i class="bi bi-check-lg" style="color: green;"></i>
+                  </template>
+                  <template v-if="(fila.corregir === true)">
+
+
+                    <div v-if="isAdministracion" style="position: relative; justify-content: center; align-items: center;">
+
+                        <!-- Icono principal -->
+                        <i class="bi bi-filetype-pdf" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
+
+                        <!-- Opciones flotantes en semi-círculo -->
+                        <div v-if="filaSeleccionada === index" class="opciones-flotantes">
+                            <div class="opcion" style="--rotation: -30deg;">
+                              <i class="bi bi-eye" @click="abrirArchivo(fila.adjunto_informeServicio)"></i>
+                            </div>
+
+                            <!-- Ícono que llama a cargarAdjuntoInformeServicio -->
+                            <div class="opcion" style="--rotation: 0deg;">
+                              <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
+                                <i class="bi bi-upload"></i>
+                              </label>
+                              <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
+                            </div>
+                        </div> 
+                        <i class="bi bi-backspace-fill text-danger" @click="abrirModalCorreccionesInformeServicio(fila)" style="cursor: pointer; font-size: 0.8em;"></i>
+                      </div> 
+                      <div v-else>
+                        <i class="bi bi-stopwatch"></i>
+                      </div>
+                     
+                  </template>
               </template>
             </td>
+            
 
             <!-- Columna Servicios Tecnologicos - Revision -->
             <td class="add-border-right">
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === false) && (fila.firma_area === false) && (fila.firma_direccion === false)">
-                  <i class="bi bi-stopwatch" style="cursor: pointer;" @click="abrirModalRevision(fila)"></i>
-                </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === false) && (fila.firma_direccion === false)">
-                  <i class="bi bi-check-lg" style="color: green;"></i>                
-                </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true || fila.firma_direccion === true)">
-                  <i class="bi bi-check-lg" style="color: green;"></i>
-                </template>
+              <template v-if="(fila.adjunto_informeServicio !== '') && (fila.adjunto_informeServicio !== null ) && (fila.revision === false) && (fila.firma_area === false) && (fila.firma_direccion === false) && (fila.corregir === false)">
+                <div v-if="isServiciosTecnologicos" style="position: relative;">
+                  <!-- Icono principal -->
+                  <i class="bi bi-filetype-pdf" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
+
+                  <!-- Opciones flotantes en semi-círculo -->
+                  <div v-if="filaSeleccionada === index" class="opciones-flotantes">
+                    <div class="opcion" style="--rotation: -30deg;">
+                      <i class="bi bi-eye" @click="abrirArchivo(fila.adjunto_informeServicio)"></i>
+                    </div>
+
+                    <!-- Ícono que llama a cargarAdjuntoInformeServicio -->
+                    <div class="opcion" style="--rotation: 0deg;">
+                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
+                        <i class="bi bi-upload"></i>
+                      </label>
+                      <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
+                    </div>
+
+                    <div class="opcion" style="--rotation: 30deg;">
+                      <i class="bi bi-check-circle" @click="abrirModalRevision(fila)"></i>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <i class="bi bi-stopwatch"></i>
+                </div>
+              </template>
+              <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.corregir === false)">
+                <i class="bi bi-check-lg" style="color: green;"></i>
+              </template>
             </td>
 
             <!-- Columna Responsable Area - Firma -->
             <td class="add-border-right">
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === false) && (fila.firma_direccion === false)">
-                  <i class="bi bi-filetype-pdf" @click="abrirArchivo(fila.adjunto_informeServicio)" style="cursor: pointer;"></i>
-                  <i class="bi bi-stopwatch" style="cursor: pointer;" @click="abrirModalFirmaResponsableArea(fila)"></i>
-                </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === false) && (fila.firma_direccion === false)">
-                  <i class="bi bi-filetype-pdf" @click="abrirArchivo(fila.adjunto_informeServicio)" style="cursor: pointer;"></i>
+                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === false) && (fila.firma_direccion === false) && (fila.corregir === false)">
+                  <div v-if="isAreaJefe" style="position: relative;">
+                    <!-- Icono principal -->
+                    <i class="bi bi-filetype-pdf" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
+
+                    <!-- Opciones flotantes en semi-círculo -->
+                    <div v-if="filaSeleccionada === index" class="opciones-flotantes">
+                      <div class="opcion" style="--rotation: -30deg;">
+                        <i class="bi bi-eye" @click="abrirArchivo(fila.adjunto_informeServicio)"></i>
+                      </div>
+
+                      <!-- Ícono que llama a cargarAdjuntoInformeServicio -->
+                      <div class="opcion" style="--rotation: 0deg;">
+                        <i class="bi bi-exclamation-triangle" @click="abrirModalAdvertirCorrecciones(fila)"></i>
+                      </div>
+
+                      <div class="opcion" style="--rotation: 30deg;">
+                        <i class="bi bi-pen" @click="abrirModalFirmaResponsableArea(fila)"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <i class="bi bi-stopwatch"></i>
+                  </div>
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true)">
                   <i class="bi bi-check-lg" style="color: green;"></i>
@@ -355,8 +548,17 @@
               
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true) && (fila.firma_direccion === false)">
-                  <i class="bi bi-filetype-pdf" @click="abrirArchivo(fila.adjunto_informeServicio)" style="cursor: pointer;"></i>
-                  <i class="bi bi-stopwatch" style="cursor: pointer;" @click="abrirModalFirmaDireccion(fila)"></i>
+                  <div v-if="isDireccion">
+                    <i class="bi bi-filetype-pdf" @click="abrirArchivo(fila.adjunto_informeServicio)" style="cursor: pointer;"></i>
+                    <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicioFirmado-' + index">
+                      <i class="bi bi-paperclip"></i>
+                    </label>
+                    <input :id="'fileInputAdjuntoInformeServicioFirmado-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicioFirmado($event, fila)">
+                    <i class="bi bi-pen" style="cursor: pointer;" @click="abrirModalFirmaDireccion(fila)"></i>
+                  </div>
+                  <div v-else>
+                    <i class="bi bi-stopwatch"></i>
+                  </div>
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true) && (fila.firma_direccion === true)">
                   <i class="bi bi-check-lg" style="color: green;"></i>
@@ -364,7 +566,7 @@
             </td>
 
             <!-- Columna Archivo -->
-            <td>
+            <td  v-if="isAdminOrTecnologicoOrDireccion">
               <button @click="abrirModalArchivar(fila)" class="btn btn-link"><i class="bi bi-archive-fill"></i></button>
             </td>
             
@@ -478,6 +680,7 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-logo"></div>
+            <div><i class="bi bi-download" style="cursor: pointer;" @click="descargarLegajoPDF"></i></div>
             <button type="button" class="btn-close" @click="cerrarModalLegajo" aria-label="Close"></button>
           </div>
           <!-- Modal Body -->
@@ -979,6 +1182,41 @@
       </div>
     </div>
 
+    <!-- Modales Formato Adminsitracion -->
+    <div v-if="mostrarModalPDFpreliminar" class="pdf-modal">
+      <div class="pdf-modal-content">
+        <span @click="cerrarModalPDFpreliminar" class="pdf-close">&times;</span>
+        <iframe :src="urlPdf" width="100%" height="600px" frameborder="0" style="border: none;"></iframe>
+      </div>
+    </div>
+
+    <div class="modal" :class="{ 'show': mostrarModalCorreccionesInformeServicio }" id="mostrarModalCorreccionesInformeServicio">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Correcciones</h4>
+            <button type="button" class="btn-close" @click="cerrarModalCorreccionesInformeServicio"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <div class="form-group">
+              <p v-if="correcciones">{{ correcciones }}</p>
+              <p v-else>No hay correcciones disponibles.</p>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="corregirInformeServicio(); cerrarModalCorreccionesInformeServicio">Corregido</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalCorreccionesInformeServicio">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- Modales Revision -->
     <div class="modal" :class="{ 'show': mostrarModalRevision }" id="mostrarModalRevision">
       <div class="modal-dialog">
@@ -1006,6 +1244,40 @@
     </div>
 
     <!-- Modales Firma Responsable Area -->
+
+    <div class="modal" :class="{ 'show': mostrarModalAdvertirCorrecciones }" id="mostrarModalAdvertirCorrecciones">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Advertir Correcciones</h4>
+            <button type="button" class="btn-close" @click="cerrarModalAdvertirCorrecciones"></button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="correcciones">Ingrese observaciones o correcciones sobre el informe:</label>
+              <textarea 
+                id="correcciones" 
+                class="form-control" 
+                v-model="correccionesNuevas" 
+                rows="5" 
+                placeholder="Escriba aquí las correcciones..."
+                required>
+              </textarea>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="advertirCorrecciones(correccionesNuevas); cerrarModal">Advertir Correcciones</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalAdvertirCorrecciones">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal" :class="{ 'show': mostrarModalFirmaResponsableArea }" id="mostrarModalFirmaResponsableArea">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -1100,6 +1372,20 @@
       const numeroCircuitoGlobal = ref(null);
       const showSuccessAlert = ref(false);
       const showErrorAlert = ref(false);
+
+      // Determinar el rol del usuario
+      const userRole = sessionStorage.getItem('role');
+      // Determinar el area tematica del usuario
+      const userAreaTematica = sessionStorage.getItem('area_tematica');
+
+      // Función para verificar el rol y determinar qué columnas mostrar
+      const isAdminOrTecnologicoOrDireccion = ref(userRole === 'servicios_tecnologicos' || userRole === 'administracion' || userRole === 'direccion');
+      const isServiciosTecnologicos = ref(userRole === 'servicios_tecnologicos');
+      const isAdministracion = ref(userRole === 'administracion');
+      const isDireccion = ref(userRole === 'direccion');
+      const isAreaJefe = ref(userRole === 'area_jefe');
+      const isAreaStandard = ref(userRole === 'area_standard');
+      const isTecnologicoOrDireccionOrArea = ref(userRole === 'servicios_tecnologicos' || userRole === 'direccion' || userRole === 'area_jefe' || userRole === 'area_standard' );
 
       // Setup Data Servicio
       const mostrarModalDataServicio = ref(false);
@@ -1203,10 +1489,20 @@
       const mostrarModalCrearSolicitudInterArea = ref(null);
       const mostrarModalSolicitudInterArea = ref(false);
 
+      // Setup Formato Administracion
+      const mostrarModalPDFpreliminar = ref(false);
+      const urlPdf = ref('');
+      const mostrarModalCorreccionesInformeServicio = ref(false);
+      const correcciones = ref(null);
+
       // Setup Servicios Tecnologicos - Revision
       const mostrarModalRevision = ref(false);
+      const mostrarOpciones = ref(false); // Ref para controlar la visibilidad de las opciones
+      const filaSeleccionada = ref(null); // Ref para controlar la fila que muestra opciones
 
       // Setup Responsable del Area - Firma
+      const mostrarModalAdvertirCorrecciones = ref(false);
+      // const correccionesNuevas = ref('');
       const mostrarModalFirmaResponsableArea = ref(false);
 
       // Setup Direccion - Firma
@@ -1219,90 +1515,105 @@
       //methods
 
       const fetchData = () => {
-        axios.get('api/encurso/obtener_todoencurso/')
-          .then(response => {
-            const data = response.data;
-            // console.log('DATA:', data)
-            // console.log('NRO DATA SERVICIO', data.solicitudes[0].nro_dataServicio)
-            // Ordenar los datos por nro_dataServicio
-            const sortedSolicitudes = data.solicitudes.sort((a, b) => a.nro_dataServicio - b.nro_dataServicio);
-            
-            // Iterar sobre las solicitudes
-            sortedSolicitudes.forEach(solicitud => {
-              // Buscar los objetos correspondientes
-              const legajoCorrespondiente = data.legajos.find(legajo => legajo.nro_circuito === solicitud.nro_circuito);
-              const recepcionCorrespondiente = data.recepciones.find(recepciones => recepciones.nro_circuito === solicitud.nro_circuito);
-              const ordenCorrespondiente = data.ordenes_servicio.find(ordenes_servicio => ordenes_servicio.nro_circuito === solicitud.nro_circuito);
-              const informeAreaCorrespondiente = data.informes_area.find(informes_area => informes_area.nro_circuito === solicitud.nro_circuito);
-              const solicitudInterAreaCorrespondiente = data.solicitudes_inter_area.find(solicitudes_inter_area => solicitudes_inter_area.nro_circuito === solicitud.nro_circuito);
-              const InformeInterareaCorrespondiente = data.informes_inter_area.find(informes_inter_area => informes_inter_area.nro_circuito === solicitud.nro_circuito);
-              const InformeServicioCorrespondiente = data.informes_servicio.find(informes_servicio => informes_servicio.nro_circuito === solicitud.nro_circuito);
-              // console.log('Data antes de contruir la fila', data)
-              // Construir la fila de la tabla combinando datos de solicitudes, legajos, recepciones, etc.
-              const fila = {
-                // Solicitud
-                nro_dataServicio: solicitud.nro_dataServicio,
-                fecha_dataServicio: formatDate(solicitud.fecha_dataServicio),
-                area_tematica: formatAreaTematica(solicitud.area_tematica),
-                nro_presupuesto: solicitud.nro_presupuesto,
-                adjunto_solicitudServicio: solicitud.adjunto_solicitudServicio,
-                nro_circuito: solicitud.nro_circuito,
-                dataServicio_completo: solicitud.completo,
-                // Legajo
-                nro_legajo: legajoCorrespondiente ? legajoCorrespondiente.nro_legajo: '',
-                fecha_legajo: legajoCorrespondiente ? formatDate(legajoCorrespondiente.fecha_legajo): '',
-                adjunto_factura: legajoCorrespondiente ? legajoCorrespondiente.adjunto_factura: '',
-                pago: legajoCorrespondiente ? legajoCorrespondiente.pago: '',
-                plazo_pago: legajoCorrespondiente ? legajoCorrespondiente.plazo_pago: '',
-                legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo: '',
-                // Recepcion
-                nros_remitos: recepcionCorrespondiente ? recepcionCorrespondiente.nros_remitos: '',
-                estado_recepcion: recepcionCorrespondiente ? recepcionCorrespondiente.estado_recepcion: '',
-                plazo_muestras: recepcionCorrespondiente ? recepcionCorrespondiente.plazo_muestras: '',
-                // Orden de Servicio
-                nro_ordenServicio: ordenCorrespondiente ? ordenCorrespondiente.nro_ordenServicio: '',
-                fecha_ordenServicio: ordenCorrespondiente ? formatDate(ordenCorrespondiente.fecha_ordenServicio): '',
-                plazo_estimado: solicitud.plazo_estimado,
-                ordenServicio_completo: ordenCorrespondiente ? ordenCorrespondiente.completo: '',
-                // Informe Area
-                fecha_informeArea: informeAreaCorrespondiente ? formatDate(informeAreaCorrespondiente.fecha_informeArea): '',
-                nombre_solicitante: solicitud.nombre_solicitante,
-                estado_informeArea: informeAreaCorrespondiente ? informeAreaCorrespondiente.estado_informeArea: '',
-                adjunto_informeArea: informeAreaCorrespondiente ? informeAreaCorrespondiente.adjunto_informeArea: '',
-                // Solicitud Inter Area
-                nro_solicitudInterarea: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea: '',
-                fecha_solicitudInterarea: solicitudInterAreaCorrespondiente ? formatDate(solicitudInterAreaCorrespondiente.fecha_solicitudInterarea): '',
-                inter_areaTematica: solicitudInterAreaCorrespondiente ? formatAreaTematica(solicitudInterAreaCorrespondiente.inter_areaTematica): '',
-                muestras_solicitudIa: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.muestras_solicitudIa: '',
-                num_labs: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.num_labs: '',
-                observaciones: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.observaciones: '',
-                // Informe Inter Area
-                nro_informeInterarea : InformeInterareaCorrespondiente ? InformeInterareaCorrespondiente.nro_informeInterarea: '',
-                fecha_informeInterarea : InformeInterareaCorrespondiente ? formatDate(InformeInterareaCorrespondiente.fecha_informeInterarea): '',
-                adjunto_informeInterarea : InformeInterareaCorrespondiente ? InformeInterareaCorrespondiente.adjunto_informeInterarea: '',
-                // Informe Servicio
-                nro_informeServicio :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.nro_informeServicio: '',
-                fecha_informeServicio :InformeServicioCorrespondiente ? formatDate(InformeServicioCorrespondiente.fecha_informeServicio): '',
-                adjunto_informeServicio :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.adjunto_informeServicio: '',
-                revision :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.revision: '',
-                // fecha_revision :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.fecha_revision: '',
-                firma_area :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.firma_area: '',
-                // fecha_firmaArea :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.fecha_firmaArea: '',
-                firma_direccion :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.firma_direccion: '',
-                // fecha_firmaDireccion :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.fecha_firmaDireccion: '',
-                informeServicio_completo :InformeServicioCorrespondiente ? InformeServicioCorrespondiente.completo: '',
-              };
-                console.log('fechaaaaaaaa:', fila.fecha_ordenServicio)
-                console.log('data prueba', fila)
+          axios.get('api/encurso/obtener_todoencurso/')
+            .then(response => {
+              const data = response.data;
 
+              // Obtener el área temática del usuario
+              const userAreaTematica = formatAreaTematica(sessionStorage.getItem('area_tematica')); 
 
-              filas.value.push(fila);
+              // Ordenar los datos por nro_dataServicio
+              const sortedSolicitudes = data.solicitudes.sort((a, b) => a.nro_dataServicio - b.nro_dataServicio);
+
+              // Filtrar y construir las filas de la tabla
+              const filteredFilas = sortedSolicitudes.reduce((acc, solicitud) => {
+                // Buscar los objetos correspondientes
+                const legajoCorrespondiente = data.legajos.find(legajo => legajo.nro_circuito === solicitud.nro_circuito);
+                const recepcionCorrespondiente = data.recepciones.find(recepciones => recepciones.nro_circuito === solicitud.nro_circuito);
+                const ordenCorrespondiente = data.ordenes_servicio.find(ordenes_servicio => ordenes_servicio.nro_circuito === solicitud.nro_circuito);
+                const informeAreaCorrespondiente = data.informes_area.find(informes_area => informes_area.nro_circuito === solicitud.nro_circuito);
+                const solicitudInterAreaCorrespondiente = data.solicitudes_inter_area.find(solicitudes_inter_area => solicitudes_inter_area.nro_circuito === solicitud.nro_circuito);
+                const InformeInterareaCorrespondiente = data.informes_inter_area.find(informes_inter_area => informes_inter_area.nro_circuito === solicitud.nro_circuito);
+                const InformeServicioCorrespondiente = data.informes_servicio.find(informes_servicio => informes_servicio.nro_circuito === solicitud.nro_circuito);
+
+                // Construir la fila de la tabla combinando datos de solicitudes, legajos, recepciones, etc.
+                const fila = {
+                  // Solicitud
+                  nro_dataServicio: solicitud.nro_dataServicio,
+                  fecha_dataServicio: formatDate(solicitud.fecha_dataServicio),
+                  area_tematica: formatAreaTematica(solicitud.area_tematica),
+                  nro_presupuesto: solicitud.nro_presupuesto,
+                  adjunto_solicitudServicio: solicitud.adjunto_solicitudServicio,
+                  nro_circuito: solicitud.nro_circuito,
+                  dataServicio_completo: solicitud.completo,
+                  // Legajo
+                  nro_legajo: legajoCorrespondiente ? legajoCorrespondiente.nro_legajo : '',
+                  fecha_legajo: legajoCorrespondiente ? formatDate(legajoCorrespondiente.fecha_legajo) : '',
+                  adjunto_factura: legajoCorrespondiente ? legajoCorrespondiente.adjunto_factura : '',
+                  pago: legajoCorrespondiente ? legajoCorrespondiente.pago : '',
+                  plazo_pago: legajoCorrespondiente ? legajoCorrespondiente.plazo_pago : '',
+                  legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo : '',
+                  // Recepcion
+                  nros_remitos: recepcionCorrespondiente ? recepcionCorrespondiente.nros_remitos : '',
+                  estado_recepcion: recepcionCorrespondiente ? recepcionCorrespondiente.estado_recepcion : '',
+                  plazo_muestras: recepcionCorrespondiente ? recepcionCorrespondiente.plazo_muestras : '',
+                  // Orden de Servicio
+                  nro_ordenServicio: ordenCorrespondiente ? ordenCorrespondiente.nro_ordenServicio : '',
+                  fecha_ordenServicio: ordenCorrespondiente ? formatDate(ordenCorrespondiente.fecha_ordenServicio) : '',
+                  plazo_estimado: solicitud.plazo_estimado,
+                  ordenServicio_completo: ordenCorrespondiente ? ordenCorrespondiente.completo : '',
+                  // Informe Area
+                  fecha_informeArea: informeAreaCorrespondiente ? formatDate(informeAreaCorrespondiente.fecha_informeArea) : '',
+                  nombre_solicitante: solicitud.nombre_solicitante,
+                  estado_informeArea: informeAreaCorrespondiente ? informeAreaCorrespondiente.estado_informeArea : '',
+                  adjunto_informeArea: informeAreaCorrespondiente ? informeAreaCorrespondiente.adjunto_informeArea : '',
+                  registros_ensayo: informeAreaCorrespondiente ? informeAreaCorrespondiente.registros_ensayo : '',
+                  // Informes Parciales
+                  informesParciales: informeAreaCorrespondiente ? informeAreaCorrespondiente.informes_parciales : [],
+                  // Solicitud Inter Area
+                  nro_solicitudInterarea: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
+                  fecha_solicitudInterarea: solicitudInterAreaCorrespondiente ? formatDate(solicitudInterAreaCorrespondiente.fecha_solicitudInterarea) : '',
+                  inter_areaTematica: solicitudInterAreaCorrespondiente ? formatAreaTematica(solicitudInterAreaCorrespondiente.inter_areaTematica) : '',
+                  muestras_solicitudIa: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.muestras_solicitudIa : '',
+                  num_labs: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.num_labs : '',
+                  observaciones: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.observaciones : '',
+                  // Informe Inter Area
+                  nro_informeInterarea: InformeInterareaCorrespondiente ? InformeInterareaCorrespondiente.nro_informeInterarea : '',
+                  fecha_informeInterarea: InformeInterareaCorrespondiente ? formatDate(InformeInterareaCorrespondiente.fecha_informeInterarea) : '',
+                  adjunto_informeInterarea: InformeInterareaCorrespondiente ? InformeInterareaCorrespondiente.adjunto_informeInterarea : '',
+                  // Informe Servicio
+                  nro_informeServicio: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.nro_informeServicio : '',
+                  fecha_informeServicio: InformeServicioCorrespondiente ? formatDate(InformeServicioCorrespondiente.fecha_informeServicio) : '',
+                  adjunto_informeServicio: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.adjunto_informeServicio : '',
+                  corregir: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.corregir : '',
+                  correcciones: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.correcciones : '',
+                  revision: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.revision : '',
+                  firma_area: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.firma_area : '',
+                  firma_direccion: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.firma_direccion : '',
+                  informeServicio_completo: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.completo : '',
+                };
+
+                // Filtrar las filas según el área temática del usuario, excepto si es servicios_tecnologicos, administracion, o direccion
+                if (userAreaTematica === 'Servicios Tecnologicos' || 
+                    userAreaTematica === 'Administracion' || 
+                    userAreaTematica === 'Direccion' || 
+                    (fila.area_tematica === userAreaTematica && fila.nro_ordenServicio) ||
+                    (fila.inter_areaTematica === userAreaTematica)) { 
+                  acc.push(fila);
+                }
+                return acc;
+              }, []);
+
+              // Actualizar el estado con las filas filtradas
+              filas.value = filteredFilas;
+              console.log('Area del usuario', userAreaTematica)
+              // console.log('AREA DE LA FILA', area_tematica)
+            })
+            .catch(error => {
+              console.error('Error al obtener datos:', error);
             });
-          })
-          .catch(error => {
-            console.error('Error al obtener datos:', error);
-          });
       };
+
 
       // Función para formatear el campo fecha
       const formatDate = (dateString) => {
@@ -1313,6 +1624,13 @@
       // Función para formatear el campo area_tematica
       const formatAreaTematica = (areaTematica) => {
         return areaTematica.replace(/_/g, ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+      };
+
+      // Función para desformatear el campo area_tematica
+      const desformatearAreaTematica = (areaTematica) => {
+        return areaTematica
+          .toLowerCase() // Convierte todo a minúsculas
+          .replace(/ /g, '_'); // Reemplaza los espacios por guiones bajos
       };
 
       // Llamamos a fetchData cuando el componente se monta
@@ -1452,7 +1770,9 @@
       };
 
       // Legajo - Abrir
-      const abrirLegajo = (nro_circuito) => {
+      const abrirLegajo = (fila) => {
+          numeroCircuitoGlobal.value = fila.nro_circuito;
+          const nro_circuito = numeroCircuitoGlobal.value;
           axios.get(`api/encurso/obtener_legajo/${nro_circuito}/`)
               .then(response => {
                   // Obtener los datos del legajo de la respuesta
@@ -1477,6 +1797,28 @@
                   console.error('Error al obtener los datos del legajo:', error);
                   // Manejar el error, mostrar un mensaje al usuario, etc.
               });
+      };
+
+      const descargarLegajoPDF = () => {
+          const nro_circuito = numeroCircuitoGlobal.value;
+          axios({
+              method: 'get',
+              url: `/api/encurso/generar_pdf_legajo/${nro_circuito}/`, // Ajusta la URL a tu endpoint en el backend
+              responseType: 'blob' // Indicamos que esperamos una respuesta de tipo archivo binario (PDF)
+          })
+          .then((response) => {
+              // Crear un enlace temporal para descargar el archivo
+              const url = window.URL.createObjectURL(new Blob([response.data]));
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'informe.pdf'); // Nombre del archivo a descargar
+              document.body.appendChild(link);
+              link.click();
+              link.remove(); // Eliminar el enlace temporal
+          })
+          .catch((error) => {
+              console.error('Error al descargar el PDF:', error);
+          });
       };
 
       const cerrarModalLegajo = () => {
@@ -1606,8 +1948,21 @@
 
       // Para abrir venntana para adjuntar cualquier archivo
       const abrirArchivo = (adjunto) => {
+        console.log('valor de adjunto:', adjunto)
         const urlCompleta = 'http://localhost:8000' + adjunto;
         window.open(urlCompleta, '_blank');
+      };
+
+      const abrirVistaPreliminar = (adjunto) => {
+        console.log('pdf preliminar', adjunto)
+        // Construir la URL completa
+        urlPdf.value = 'http://localhost:8000' + adjunto;
+        console.log('urlPDF', urlPdf)
+        mostrarModalPDFpreliminar.value = true;
+      };
+
+      const cerrarModalPDFpreliminar = () => {
+        mostrarModalPDFpreliminar.value = false;
       };
 
       const formatArancel = (arancel) => {
@@ -1834,7 +2189,7 @@
                   // Asignar los datos de la orden de servicio a variables en el contexto del componente
                   nroOS.value = nro_ordenServicio;
                   fechaOS.value = fecha_ordenServicio; 
-                  areaOS.value = area_tematica;
+                  areaOS.value = formatAreaTematica(area_tematica);
                   legajoOS.value = nro_legajo;
                   rangosOS.value= rangos_laboratorios;
                   plazoOS.value= plazo_estimado;
@@ -1925,6 +2280,24 @@
         } catch (error) {
           console.error('Error al guardar el archivo:', error);
         }
+      };
+
+      // Informe Area - Registros Ensayos
+      const cargarRegistrosEnsayo = async (event, fila) => {
+        const nro_circuito = fila.nro_circuito;
+        const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
+        const formData = new FormData();
+        formData.append('archivo', archivoSeleccionado);
+        formData.append('nroCircuito', nro_circuito); // Agregar el número de circuito
+
+        // Realizar una petición POST al servidor para guardar el archivo
+        axios.post('api/encurso/guardar_registros_ensayo/', formData)
+              .then(response => {
+                  console.log('Archivo guardado exitosamente:', response.data);
+              })
+              .catch(error => {
+                  console.error('Error al guardar el archivo:', error);
+              });
       };
 
       // Informe Area - Estado (Se llama cuando se adjunte informe area)
@@ -2038,7 +2411,9 @@
             });
           });
 
-          console.log('nueva solicitud interarae envianda al backend',nuevaSolicitudInterarea)
+          nuevaSolicitudInterarea.value.areaTematica_origen = desformatearAreaTematica(nuevaSolicitudInterarea.value.areaTematica_origen);
+          
+          console.log('nueva solicitud interarea envianda al backend',nuevaSolicitudInterarea)
 
           // Enviar datos al backend usando Axios
           axios.post('http://localhost:8000/api/encurso/crear_solicitud_interarea/', nuevaSolicitudInterarea.value)
@@ -2158,49 +2533,164 @@
         };
       
       // Administracion - Formato
-        const cargarAdjuntoInformeServicio = (event, fila) => {
-          const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
-          const formData = new FormData();
+      const cargarAdjuntoInformeServicio = (event, fila) => {
+        const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
+        const formData = new FormData();
 
-          formData.append('archivo', archivoSeleccionado);
-          formData.append('nro_circuito', fila.nro_circuito); 
+        formData.append('archivo', archivoSeleccionado);
+        formData.append('nro_circuito', fila.nro_circuito); 
 
-          // Realizar una petición POST al servidor para guardar el archivo
-          axios.post('api/encurso/guardar_adjuntoinformeservicio/', formData)
-              .then(response => {
-                  console.log('Archivo guardado exitosamente:', response.data);
-              })
-              .catch(error => {
-                  console.error('Error al guardar el archivo:', error);
-              });
-        };
+        // Realizar una petición POST al servidor para guardar o reemplazar el archivo
+        axios.post('api/encurso/guardar_adjuntoinformeservicio/', formData)
+          .then(response => {
+            console.log('Archivo guardado exitosamente:', response.data);
+            
+            // Actualizar la referencia al nuevo archivo en la fila después de guardar
+            fila.adjunto_informeServicio = response.data.nuevo_adjunto_url; // Suponiendo que el backend devuelve la URL del nuevo archivo
+          })
+          .catch(error => {
+            console.error('Error al guardar el archivo:', error);
+          });
+      };
+
+      const abrirModalCorreccionesInformeServicio = (fila) => {
+        numeroCircuitoGlobal.value = fila.nro_circuito;
+        mostrarModalCorreccionesInformeServicio.value = true;
+
+        // Realiza la solicitud al backend usando Axios
+        axios.get(`/api/encurso/obtener_correcciones/${numeroCircuitoGlobal.value}/`)
+          .then((response) => {
+            // Asigna la respuesta a correcciones.value
+            correcciones.value = response.data.correcciones; // Asegúrate de que la respuesta tenga esta estructura
+          })
+          .catch((error) => {
+            console.error("Error al obtener las correcciones:", error);
+            // En caso de error, puedes asignar un valor predeterminado o manejarlo como prefieras
+            correcciones.value = "Error al obtener correcciones.";
+          });
+      };
+
+      const cerrarModalCorreccionesInformeServicio = () => {
+        mostrarModalCorreccionesInformeServicio.value = false;
+      };
+
+      const corregirInformeServicio = async () => {
+        const nro_circuito = numeroCircuitoGlobal.value;
+        // console.log('nro circuito', nro_circuito)
+        // console.log('correcciones', correcciones.value)
+        try {
+          const response = await axios.put(`/api/encurso/corregir_informe_servicio/${nro_circuito}/`);
+            
+          // Verificar si la actualización fue exitosa
+          if (response.status === 200) {
+            console.log('Revisiones corregidas correctamente:', nro_circuito);
+            mostrarModalCorreccionesInformeServicio.value = false;  // Cerrar el modal
+            showSuccessAlert.value = true;
+            
+            setTimeout(() => {
+                  showSuccessAlert.value = false;
+                }, 3000);
+
+          } else {
+            mostrarModalCorreccionesInformeServicio.value = false;
+            console.error('Error al actualizar Revisiones:', response.statusText);
+            showErrorAlert.value = true;
+            setTimeout(() => {
+            showErrorAlert.value = false;
+          }, 5000);
+          }
+        } catch (error) {
+          mostrarModalCorreccionesInformeServicio.value = false;
+          console.error('Error al actualizar Revisiones:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => {
+            showErrorAlert.value = false;
+          }, 5000);
+        }
+      };
+
         
       // Servicios Tecnologicos - Revision
-        const abrirModalRevision = (fila) => {
-          numeroCircuitoGlobal.value = fila.nro_circuito;
-          mostrarModalRevision.value = true;
-        };
+      const abrirModalRevision = (fila) => {
+        numeroCircuitoGlobal.value = fila.nro_circuito;
+        mostrarModalRevision.value = true;
+      };
 
-        const cerrarModalRevision = () => {
-          mostrarModalRevision.value = false;
-        };
+      const cerrarModalRevision = () => {
+        mostrarModalRevision.value = false;
+      };
 
-        const confirmarRevision = async () => {
-          const nroCircuito = numeroCircuitoGlobal.value;
-          try {
-              const response = await axios.put(
-                  `http://localhost:8000/api/encurso/confirmar_revision/${nroCircuito}/`
-              );
-              console.log('Revisión confirmada correctamente:', response.data);
-              // Manejar la respuesta como sea necesario
-          } catch (error) {
-              console.error('Error al confirmar revisión:', error);
-              // Manejar errores
-          }
-        };
+      const confirmarRevision = async () => {
+            const nroCircuito = numeroCircuitoGlobal.value;
+            try {
+                const response = await axios.put(
+                    `http://localhost:8000/api/encurso/confirmar_revision/${nroCircuito}/`
+                );
+                console.log('Revisión confirmada correctamente:', response.data);
+                mostrarModalRevision.value = false;
+                showSuccessAlert.value = true;
+                setTimeout(() => {
+                    showSuccessAlert.value = false;
+                }, 3000);
 
+            } catch (error) {
+                console.error('Error al confirmar revisión:', error);
+                // Manejar errores
+                mostrarModalRevision.value = false;
+                showErrorAlert.value = true; 
+                setTimeout(() => {
+                    showErrorAlert.value = false;
+                }, 5000);
+            }
+      };
+
+
+      const toggleOpciones = (index) => {
+        if (filaSeleccionada.value === index) {
+          filaSeleccionada.value = null; // Ocultar si ya está seleccionada
+        } else {
+          filaSeleccionada.value = index; // Mostrar opciones para la fila seleccionada
+          console.log('Fila seleccionada:', filaSeleccionada.value);
+        }
+      };
 
       // Responsable del Area - Firma
+
+      const abrirModalAdvertirCorrecciones = (fila) => {
+          numeroCircuitoGlobal.value = fila.nro_circuito;
+          mostrarModalAdvertirCorrecciones.value = true;
+      }
+
+      const cerrarModalAdvertirCorrecciones = () => {
+          mostrarModalAdvertirCorrecciones.value = false;
+      };
+
+      const advertirCorrecciones = async (correccionesNuevas) => {
+        const nroCircuito = numeroCircuitoGlobal.value;
+        try {
+            const response = await axios.put(
+                `http://localhost:8000/api/encurso/advertir_correcciones/${nroCircuito}/`, {
+                correcciones: correccionesNuevas
+            }
+            );
+            console.log('Correcciones advertidas correctamente:', response.data);
+            console.log(correccionesNuevas)
+            mostrarModalAdvertirCorrecciones.value = false;
+            showSuccessAlert.value = true;
+              setTimeout(() => {
+                  showSuccessAlert.value = false;
+              }, 3000);
+
+        } catch (error) {
+            console.error('Error al advertir correcciones:', error);
+            mostrarModalAdvertirCorrecciones.value = false;
+            showErrorAlert.value = true; 
+              setTimeout(() => {
+                  showErrorAlert.value = false;
+              }, 5000);
+        }
+      };
+
         const abrirModalFirmaResponsableArea = (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
           mostrarModalFirmaResponsableArea.value = true;
@@ -2218,11 +2708,18 @@
               );
               console.log('Firma Responsable Area confirmada correctamente:', response.data);
               mostrarModalFirmaResponsableArea.value = false;
-              // Manejar la respuesta como sea necesario
+              showSuccessAlert.value = true;
+                setTimeout(() => {
+                    showSuccessAlert.value = false;
+                }, 3000);
+
           } catch (error) {
               console.error('Error al confirmar Firma Responsable Area:', error);
               mostrarModalFirmaResponsableArea.value = false;
-              // Manejar errores
+              showErrorAlert.value = true; 
+                setTimeout(() => {
+                    showErrorAlert.value = false;
+                }, 5000);
           }
         };
 
@@ -2236,6 +2733,33 @@
           mostrarModalFirmaDireccion.value = false;
         };
 
+        const cargarAdjuntoInformeServicioFirmado = (event, fila) => {
+          const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
+          const formData = new FormData();
+
+          formData.append('archivo', archivoSeleccionado);
+          formData.append('nro_circuito', fila.nro_circuito); 
+
+          // Realizar una petición POST al servidor para guardar o reemplazar el archivo
+          axios.post('api/encurso/guardar_adjuntoinformeserviciofirmado/', formData)
+            .then(response => {
+              console.log('Archivo guardado exitosamente:', response.data);
+              showSuccessAlert.value = true;
+                setTimeout(() => {
+                    showSuccessAlert.value = false;
+                }, 3000);
+              // Actualizar la referencia al nuevo archivo en la fila después de guardar
+              fila.adjunto_informeServicio = response.data.nuevo_adjunto_url; // Suponiendo que el backend devuelve la URL del nuevo archivo
+            })
+            .catch(error => {
+              console.error('Error al guardar el archivo:', error);
+              showErrorAlert.value = true; 
+                setTimeout(() => {
+                    showErrorAlert.value = false;
+                }, 5000);
+            });
+        };
+
         const confirmarFirmaDireccion = async () => {
           const nroCircuito = numeroCircuitoGlobal.value;
           try {
@@ -2244,11 +2768,18 @@
               );
               console.log('Firma Dirección confirmada correctamente:', response.data);
               mostrarModalFirmaDireccion.value = false;
-              // Manejar la respuesta como sea necesario
+              showSuccessAlert.value = true;
+                setTimeout(() => {
+                    showSuccessAlert.value = false;
+                }, 3000);
+
           } catch (error) {
               console.error('Error al confirmar Firma Dirección:', error);
               mostrarModalFirmaDireccion.value = false;
-              // Manejar errores
+              showErrorAlert.value = true; 
+                setTimeout(() => {
+                    showErrorAlert.value = false;
+                }, 5000);
           }
         };
 
@@ -2296,10 +2827,22 @@
         validarNumeroEntero,
         formatDate,
         formatArancel,
+        desformatearAreaTematica,
         showSuccessAlert,
         showErrorAlert,
         abrirArchivo,
+        abrirVistaPreliminar,
+        mostrarModalPDFpreliminar,
+        cerrarModalPDFpreliminar,
         triggerFileInput,
+        isAdminOrTecnologicoOrDireccion,
+        isServiciosTecnologicos,
+        isAdministracion,
+        isDireccion,
+        isAreaJefe,
+        isAreaStandard,
+        isTecnologicoOrDireccionOrArea,
+        userAreaTematica,
         // Solicitud de Servicio
         abrirDataServicio,
         nroDataServicio,
@@ -2326,6 +2869,7 @@
         añoLegajo,
         mostrarModalCrearLegajo,
         mostrarModalLegajo,
+        descargarLegajoPDF,
         cargarAdjuntoFactura,
         mostrarModalPagoLegajo,
         mostrarModalPlazoPago,
@@ -2382,6 +2926,7 @@
         cerrarModalEstadoInformeArea,
         mostrarModalEstadoInformeArea,
         guardarEstadoInformeArea,
+        cargarRegistrosEnsayo,
         // Inter Area
         serviciosDisponibles,
         serviciosSeleccionados,
@@ -2410,12 +2955,24 @@
         cargarAdjuntoInformeInterarea,
         // Administracion - Formato
         cargarAdjuntoInformeServicio,
+        abrirModalCorreccionesInformeServicio,
+        cerrarModalCorreccionesInformeServicio,
+        mostrarModalCorreccionesInformeServicio,
+        correcciones,
+        corregirInformeServicio,
         // Servicios Tecnologicos - Revision
         abrirModalRevision,
         cerrarModalRevision,
         mostrarModalRevision,
         confirmarRevision,
+        mostrarOpciones,
+        filaSeleccionada,
+        toggleOpciones,
         // Responsable del Area - Firma 
+        abrirModalAdvertirCorrecciones,
+        cerrarModalAdvertirCorrecciones,
+        mostrarModalAdvertirCorrecciones,
+        advertirCorrecciones,
         abrirModalFirmaResponsableArea,
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
@@ -2424,6 +2981,7 @@
         abrirModalFirmaDireccion,
         cerrarModalFirmaDireccion,
         mostrarModalFirmaDireccion,
+        cargarAdjuntoInformeServicioFirmado,
         confirmarFirmaDireccion,
         // Archivar
         abrirModalArchivar,
@@ -2437,25 +2995,9 @@
   
 <style scoped>
 
-  .table th,
-  .table td {
-      padding: 15px;
-      vertical-align: middle;
-  }
-
   /* Agrega un borde vertical a la derecha de las subcolumnas específicas */
   .add-border-right {
-      border-right: 1px solid gainsboro; /* Establece el borde derecho */
-  }
-
-  .fecha-columna {
-        white-space: nowrap; /* Evita que el contenido de la columna se divida en múltiples líneas */
-        overflow: hidden; /* Oculta el contenido excedente */
-        text-overflow: ellipsis; /* Agrega puntos suspensivos (...) al final del texto que no se muestra */
-  }
-
-  .bi {
-        font-size: 24px; /* Aquí puedes ajustar el tamaño según tu preferencia */
+    border-right: 1px solid gainsboro; /* Establece el borde derecho */
   }
 
   .radio-options input[type="radio"] {
@@ -2467,45 +3009,9 @@
     font-size: 10px;
   }
 
-  /* .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-  } */
-  
-  /* .modal.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  } */
-
-  .menu {
-    position: absolute;
-    z-index: 1;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    padding: 5px;
-    margin-top: -50px;
-    border-radius: 5px;
-  }
-  .menu select {
-    width: auto;
-    padding: 6px 25px;
-    font-size: 14px;
-  }
-  
   .btn-group {
-    display: inline-block; /* Para mostrar los botones en línea */
+    display: inline-block; 
   }
-
-  /* .modal-footer {
-  display: flex;
-  justify-content: space-between;
-  } */
 
   .radio-options {
     text-align: left;
@@ -2513,20 +3019,12 @@
 
   .radio-options input[type="radio"] {
     display: inline-block;
-    margin-right: 10px; /* Aumenta el espacio entre las opciones */
+    margin-right: 10px; 
   }
 
   .radio-options label {
-    font-size: 12px; /* Ajusta el tamaño de la letra */
+    font-size: 12px; 
   }
-
-  /* .modal-content {
-    text-align: center;
-  } */
-
-  /* .modal-footer .btn { */
-    /* width: 45%; Establece el ancho de los botones */
-  /* } */
 
   .no-wrap-column {
     white-space: nowrap;
@@ -2543,5 +3041,75 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  /* Estilos específicos para el modal PDF */
+  .pdf-modal {
+    display: block; 
+    position: fixed; 
+    z-index: 1050; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.5); 
+  }
+
+  .pdf-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; 
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; 
+    max-width: 1000px;
+  }
+
+  .pdf-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .pdf-close:hover,
+  .pdf-close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .opciones-flotantes {
+    position: absolute;
+    top: -30px; /* Ajusta según el espacio que quieras arriba */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+  }
+
+  .opcion {
+    position: absolute;
+    width: 40px;  /* Tamaño del ícono */
+    height: 40px; /* Tamaño del ícono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #026290; /* Color de fondo */
+    border-radius: 50%;  /* Hace que sea un círculo */
+    color: white;  /* Color del ícono */
+    transform: rotate(var(--rotation)) translate(60px) rotate(calc(-1 * var(--rotation))); /* Semi círculo */
+    transition: transform 0.3s ease;
+  }
+
+  .opcion i {
+    font-size: 20px; /* Ajusta el tamaño del ícono */
+    cursor: pointer;
+  }
+
+  .opcion:hover {
+    transform: rotate(var(--rotation)) translate(70px) rotate(calc(-1 * var(--rotation))); /* Aumenta la distancia cuando haces hover */
+  }
+
+
 </style>
   
