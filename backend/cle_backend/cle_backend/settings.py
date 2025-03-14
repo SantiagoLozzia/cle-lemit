@@ -15,7 +15,11 @@ import os
 from datetime import timedelta
 
 
+<<<<<<< HEAD
 # Base directory of the project
+=======
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+>>>>>>> inicializacion-pc-lemit
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -28,7 +32,11 @@ SECRET_KEY = 'django-insecure-_i8)8l-gu_vvki9p!081t1un+ch5lncck)xx#6yob*f=4t72o9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+<<<<<<< HEAD
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8080']
+=======
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8080', 'cle-lemit.local',]
+>>>>>>> inicializacion-pc-lemit
 
 
 # Application definition
@@ -67,10 +75,14 @@ ROOT_URLCONF = 'cle_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+<<<<<<< HEAD
         'DIRS': [
             BASE_DIR / 'templates', 
             BASE_DIR / 'aranceles' / 'templates'
         ],
+=======
+        'DIRS': [BASE_DIR / 'aranceles' / 'templates'],
+>>>>>>> inicializacion-pc-lemit
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -100,7 +112,11 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
+<<<<<<< HEAD
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
+=======
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+>>>>>>> inicializacion-pc-lemit
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -124,7 +140,11 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'cle_database',
         'USER': 'postgres',
+<<<<<<< HEAD
         'PASSWORD': '5uperpostgre5',
+=======
+        'PASSWORD': '5uperposgre5',
+>>>>>>> inicializacion-pc-lemit
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -132,7 +152,10 @@ DATABASES = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+<<<<<<< HEAD
 MEDIA_URL = '/media/'
+=======
+>>>>>>> inicializacion-pc-lemit
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -168,6 +191,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+<<<<<<< HEAD
 STATIC_URL = '/static/'
 
 # Ruta donde Django buscará los archivos estáticos durante el desarrollo
@@ -178,6 +202,9 @@ STATICFILES_DIRS = [
 # Ruta donde Django recopilará los archivos estáticos cuando se ejecute 'collectstatic'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Ruta para archivos estáticos recolectados
 
+=======
+STATIC_URL = 'static/'
+>>>>>>> inicializacion-pc-lemit
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -206,6 +233,10 @@ LOGGING = {
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8080',
+<<<<<<< HEAD
+=======
+    'http://cle-lemit.local',
+>>>>>>> inicializacion-pc-lemit
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -213,6 +244,11 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8080',
     'https://localhost:8080',
+<<<<<<< HEAD
+=======
+    'http://cle-lemit.local',
+
+>>>>>>> inicializacion-pc-lemit
 ]
 
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
