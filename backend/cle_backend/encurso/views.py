@@ -1,22 +1,33 @@
-from django.shortcuts import render
-from .serializers import *
-from database.models import *
+import json
+import logging
+
+from django.db import transaction
+from django.db.models import F
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, render  # noqa: F401
+from django.template.loader import render_to_string
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from django.db.models import F
-from django.db import transaction
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponse, HttpRequest
-from django.views import View 
-from django.utils import timezone
-from django.middleware.csrf import get_token
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-import json
-from django.template.loader import render_to_string
 from weasyprint import HTML
-from rest_framework.decorators import api_view
+
+from cle_backend.permissions import (
+    IsAdministracion,
+    IsAdministracionOrDireccion,
+    IsDireccion,
+    IsAreaJefe,
+    IsAreaUser,
+    IsServiciosTecnologicos,
+    user_can_access_circuit,
+    validate_upload_file,
+)
+from database.models import *
+from .serializers import *
+
+logger = logging.getLogger(__name__)
 
 # Cargar la Tabla
 class ObtenerTodoEnCurso(APIView):
@@ -186,14 +197,19 @@ def obtener_dataServicio(request, nro_dataServicio):
         return JsonResponse(response_data, status=200)
     except DataServicio.DoesNotExist:
         return JsonResponse({'error': 'El DataServicio no existe'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-    
+    except Exception:
+        logger.exception("Error en obtener_dataServicio")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
+
 class GuardarAdjuntoSolicitud(APIView):
     def post(self, request):
         nro_dataServicio = request.data.get('nroDataServicio')
-        data_servicio = DataServicio.objects.get(nro_dataServicio=nro_dataServicio)
         adjunto = request.FILES.get('archivo')
+        try:
+            validate_upload_file(adjunto)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        data_servicio = DataServicio.objects.get(nro_dataServicio=nro_dataServicio)
         data_servicio.adjunto_solicitudServicio = adjunto
         data_servicio.completo = True
         data_servicio.save()
@@ -293,15 +309,20 @@ def obtener_legajo(request, nro_circuito):
         return JsonResponse({'error': 'El Solicitante no existe'}, status=404)
     except Legajo.DoesNotExist:
         return JsonResponse({'error': 'El Legajo no existe'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception:
+        logger.exception("Error en obtener_legajo")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
 
 class GuardarAdjuntoFactura(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
     def post(self, request):
         try:
             nro_legajo = request.data.get('nroLegajo')
             adjunto = request.FILES.get('archivo')
             nro_circuito = request.data.get('nroCircuito')
+
+            validate_upload_file(adjunto)
 
             # Buscar la recepcion existente por nro_circuito
             recepcion_existente = Recepcion.objects.filter(nro_circuito_id=nro_circuito).first()
@@ -321,8 +342,11 @@ class GuardarAdjuntoFactura(APIView):
             serializer = GuardarAdjuntoFacturaSerializer(legajo)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Error en GuardarAdjuntoFactura")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GuardarPagoLegajo(APIView):
     def put(self, request, nro_circuito, *args, **kwargs):
@@ -397,8 +421,9 @@ def generar_pdf_legajo(request, nro_circuito):
         return response
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception:
+        logger.exception("Error en generar_pdf_legajo")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
 
 
 # Remito
@@ -476,9 +501,9 @@ class CrearOrdenServicio(APIView):
             return JsonResponse({'mensaje': 'Orden de servicio creada exitosamente', 'nro_circuito': nro_circuito}, status=201)
         except Circuito.DoesNotExist:
             return JsonResponse({'mensaje': 'Circuito no encontrado', 'nro_circuito': nro_circuito}, status=404)
-        except Exception as e:
-            print(f"Error: {e}")  # Depuración
-            return JsonResponse({'mensaje': 'Error al crear la orden de servicio', 'error': str(e)}, status=400)
+        except Exception:
+            logger.exception("Error en CrearOrdenServicio")
+            return JsonResponse({'mensaje': 'Error al crear la orden de servicio.'}, status=400)
 
 def obtener_ordenServicio(request, nro_circuito):
     try:
@@ -535,8 +560,9 @@ def obtener_ordenServicio(request, nro_circuito):
         return JsonResponse({'error': 'El Solicitante no existe'}, status=404)
     except Legajo.DoesNotExist:
         return JsonResponse({'error': 'El Legajo no existe'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception:
+        logger.exception("Error en obtener_ordenServicio")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
 
 class CambiarPlazoEstimado(APIView):
     def put(self, request, nro_circuito, *args, **kwargs):
@@ -559,11 +585,14 @@ class CambiarPlazoEstimado(APIView):
             # Serializar la respuesta
             serializer = CambiarPlazoEstimadoSerializer(data_servicio)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Error en CambiarPlazoEstimado")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Informe de Area    
+# Informe de Area
 class GuardarAdjuntoInformeArea(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
     def post(self, request):
         try:
             # Obtener el archivo y el nro_circuito del request
@@ -573,6 +602,11 @@ class GuardarAdjuntoInformeArea(APIView):
 
             if not adjunto or not nro_circuito:
                 return Response({'error': 'Archivo y nro_circuito son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+            validate_upload_file(adjunto)
+
+            if not user_can_access_circuit(request.user, nro_circuito):
+                return Response({'error': 'No tiene permisos para este circuito.'}, status=status.HTTP_403_FORBIDDEN)
 
             # Crear una instancia de InformeArea
             informe_area = InformeArea(
@@ -588,29 +622,42 @@ class GuardarAdjuntoInformeArea(APIView):
             serializer = InformeAreaEnCursoSerializer(informe_area)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Error en GuardarAdjuntoInformeArea")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GuardarRegistrosEnsayo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
     def post(self, request):
         nroCircuito = request.data.get('nroCircuito')
-        
+
         if not nroCircuito:
             return Response({"error": "nro_circuito is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user_can_access_circuit(request.user, nroCircuito):
+            return Response({'error': 'No tiene permisos para este circuito.'}, status=status.HTTP_403_FORBIDDEN)
 
         try:
             circuito = Circuito.objects.get(nro_circuito=nroCircuito)
         except Circuito.DoesNotExist:
-            return Response({"error": "Circuito not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Circuito no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             informe_area = InformeArea.objects.get(nro_circuito=circuito)
         except InformeArea.DoesNotExist:
-            return Response({"error": "InformeArea not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "InformeArea no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
         adjunto = request.FILES.get('archivo')
         if not adjunto:
-            return Response({"error": "Archivo is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Archivo es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_upload_file(adjunto)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         informe_area.registros_ensayo = adjunto
         informe_area.save()
@@ -647,9 +694,10 @@ def obtener_servicios(request, nro_circuito):
         return JsonResponse({'error': 'El DataServicio no existe'}, status=404)
     except Presupuesto.DoesNotExist:
         return JsonResponse({'error': 'El Presupuesto no existe'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-    
+    except Exception:
+        logger.exception("Error en obtener_servicios")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
+
 class CrearSolicitudInterarea(APIView):
     def post(self, request):
         # Obtener los datos de la solicitud desde el request
@@ -682,8 +730,9 @@ class CrearSolicitudInterarea(APIView):
                         )
                     
                 return Response({'message': 'Solicitud Interarea creada correctamente'}, status=status.HTTP_201_CREATED)
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception:
+                logger.exception("Error en CrearSolicitudInterarea")
+                return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -715,17 +764,24 @@ def obtener_solicitudInterarea(request, nro_circuito):
         return JsonResponse({'error': 'Solicitud Interarea no encontrada'}, status=404)
 
 class GuardarAdjuntoInformeInterarea(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
     def post(self, request):
         # Obtener datos del request
         archivo = request.FILES.get('archivo')
         nro_solicitudInterarea = request.data.get('nro_solicitudInterarea')
         nro_circuito = request.data.get('nro_circuito')
-        
+
+        try:
+            validate_upload_file(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             # Buscar instancias de SolicitudInterarea y Circuito
             solicitud_interarea = SolicitudInterarea.objects.get(pk=nro_solicitudInterarea)
             circuito = Circuito.objects.get(pk=nro_circuito)
-            
+
             # Crear instancia de InformeInterarea
             informe_interarea = InformeInterarea(
                 fecha_informeInterarea=timezone.now().date(),
@@ -734,29 +790,37 @@ class GuardarAdjuntoInformeInterarea(APIView):
                 nro_circuito=circuito
             )
             informe_interarea.save()
-            
+
             # Serializar la instancia creada
             serializer = InformeInterareaSerializer(informe_interarea)
-            
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
+
         except SolicitudInterarea.DoesNotExist:
             return Response({'error': 'Solicitud Interarea no encontrada'}, status=status.HTTP_404_NOT_FOUND)
         except Circuito.DoesNotExist:
             return Response({'error': 'Circuito no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Error en GuardarAdjuntoInformeInterarea")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
 # Adminsitracion
 class GuardarAdjuntoInformeServicio(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
     def post(self, request):
         # Obtener el archivo y el nro_circuito del request
         archivo = request.FILES.get('archivo')
         nro_circuito = request.data.get('nro_circuito')
-        
+
         if not archivo or not nro_circuito:
             return Response({'error': 'Archivo y nro_circuito son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        try:
+            validate_upload_file(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             # Verificar si el circuito existe
             circuito_instance = Circuito.objects.get(nro_circuito=nro_circuito)
@@ -846,67 +910,58 @@ class AdvertirCorrecciones(APIView):
             # Serializar la respuesta
             serializer = AdvertirCorreccionesSerializer(data_informe_servicio)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+        except Exception:
+            logger.exception("Error en AdvertirCorrecciones")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
+
 class CorregirInformeServicio(APIView):
     def put(self, request, nro_circuito, *args, **kwargs):
 
         # Obtener la instancia de Circuito
         circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
-        
+
         # Obtener la instancia de InformeServicio utilizando la instancia de Circuito
         informe_servicio = get_object_or_404(InformeServicio, nro_circuito=circuito)
-        
+
         try:
             # Actualizar el campo "corregir"
             informe_servicio.corregir = False
             informe_servicio.save()
-            
+
             # Serializar la respuesta
             serializer = CorregirInformeServicioSerializer(informe_servicio)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            logger.exception("Error en CorregirInformeServicio")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Revision Servicios Tecnologicos
-# @method_decorator(csrf_exempt, name='dispatch')
-class ConfirmarRevision(View):
-    def put(self, request, nro_circuito, *args, **kwargs):
-        try:
-            informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
-            informe_servicio.revision = True
-            informe_servicio.save()
-            return JsonResponse({'message': 'Revisión confirmada correctamente.'})
-        except InformeServicio.DoesNotExist:
-            return JsonResponse({'error': 'InformeServicio no encontrado'}, status=404)
-    
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+class ConfirmarRevision(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
 
-    def post(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    def put(self, request, nro_circuito, *args, **kwargs):
+        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
+        informe_servicio.revision = True
+        informe_servicio.save()
+        return JsonResponse({'message': 'Revisión confirmada correctamente.'})
 
 # Firma Responsable Area
-class ConfirmarFirmaResponsableArea(View):
-    def put(self, request, nro_circuito, *args, **kwargs):
-        try:
-            informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
-            informe_servicio.firma_area = True
-            informe_servicio.save()
-            return JsonResponse({'message': 'Firma Responsable Area confirmada correctamente.'})
-        except InformeServicio.DoesNotExist:
-            return JsonResponse({'error': 'InformeServicio no encontrado'}, status=404)
-    
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+class ConfirmarFirmaResponsableArea(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
 
-    def post(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    def put(self, request, nro_circuito, *args, **kwargs):
+        if not user_can_access_circuit(request.user, nro_circuito):
+            return JsonResponse({'error': 'No tiene permisos para firmar este circuito.'}, status=403)
+        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
+        informe_servicio.firma_area = True
+        informe_servicio.save()
+        return JsonResponse({'message': 'Firma Responsable Area confirmada correctamente.'})
 
 # Direccion
 class GuardarAdjuntoInformeServicioFirmado(APIView):
+    permission_classes = [IsAuthenticated, IsDireccion]
+
     def post(self, request):
         # Obtener el archivo y el nro_circuito del request
         archivo = request.FILES.get('archivo')
@@ -914,6 +969,11 @@ class GuardarAdjuntoInformeServicioFirmado(APIView):
 
         if not archivo or not nro_circuito:
             return Response({'error': 'Archivo y nro_circuito son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_upload_file(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             # Verificar si el circuito existe
@@ -936,44 +996,27 @@ class GuardarAdjuntoInformeServicioFirmado(APIView):
         except Circuito.DoesNotExist:
             return Response({'error': 'Circuito no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
         
-class ConfirmarFirmaDireccion(View):
+class ConfirmarFirmaDireccion(APIView):
+    permission_classes = [IsAuthenticated, IsDireccion]
+
     def put(self, request, nro_circuito, *args, **kwargs):
-        try:
-            informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
-            informe_servicio.firma_direccion = True
-            informe_servicio.save()
-            return JsonResponse({'message': 'Firma Dirección confirmada correctamente.'})
-        except InformeServicio.DoesNotExist:
-            return JsonResponse({'error': 'InformeServicio no encontrado'}, status=404)
-    
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
+        informe_servicio.firma_direccion = True
+        informe_servicio.save()
+        return JsonResponse({'message': 'Firma Dirección confirmada correctamente.'})
 
-    def post(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-class ArchivarCircuito(View):
+class ArchivarCircuito(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracionOrDireccion]
+
     def put(self, request, nro_circuito, *args, **kwargs):
-        try:
-            # Buscar la instancia de DataServicio usando nro_circuito
-            data_servicio = get_object_or_404(DataServicio, nro_circuito=nro_circuito)
-            data_servicio.finalizado = True
-            data_servicio.save()
+        data_servicio = get_object_or_404(DataServicio, nro_circuito=nro_circuito)
+        data_servicio.finalizado = True
+        data_servicio.save()
 
-            # Buscar la instancia de Circuito usando nro_circuito
-            circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
-            circuito.finalizado = True
-            circuito.save()
+        circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
+        circuito.finalizado = True
+        circuito.save()
 
-            return JsonResponse({'message': 'Archivado correctamente.'})
-        except DataServicio.DoesNotExist:
-            return JsonResponse({'error': 'Data Servicio no encontrado'}, status=404)
-        except Circuito.DoesNotExist:
-            return JsonResponse({'error': 'Circuito no encontrado'}, status=404)
-    
-    def get(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
-
-    def post(self, request, *args, **kwargs):
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        return JsonResponse({'message': 'Archivado correctamente.'})
     

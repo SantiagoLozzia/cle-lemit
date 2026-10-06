@@ -1,17 +1,21 @@
-from rest_framework import generics
+import json
+import logging
+
+from django.db.models import Q
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_http_methods
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from weasyprint import HTML
+
 from database.models import Presupuesto, Solicitante, Servicio, Modulo
 from .serializers import *
-from django.http import JsonResponse, HttpResponse, HttpRequest
-from rest_framework.decorators import api_view, permission_classes, api_view
-from django.views.decorators.http import require_http_methods
-from django.shortcuts import get_object_or_404
-from rest_framework.permissions import AllowAny
-from rest_framework import status
-from rest_framework.response import Response
-from django.db.models import Q
-import json
-from django.template.loader import render_to_string
-from weasyprint import HTML
+
+logger = logging.getLogger(__name__)
 
 class PresupuestoListView(generics.ListCreateAPIView):
     queryset = Presupuesto.objects.all()
@@ -74,6 +78,13 @@ def presupuestos_aceptados(request):
 
 @api_view(['PUT'])
 def actualizar_estado_presupuesto(request, nro_presupuesto):
+    rol = getattr(getattr(request.user, 'userprofile', None), 'rol', None)
+    if rol not in ('administracion', 'direccion', 'servicios_tecnologicos'):
+        return JsonResponse(
+            {'mensaje': 'No tiene permisos para actualizar el estado del presupuesto.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     try:
         presupuesto = Presupuesto.objects.get(nro_presupuesto=nro_presupuesto)
         nuevo_estado = request.data.get('estado_presupuesto')
@@ -89,8 +100,9 @@ def actualizar_estado_presupuesto(request, nro_presupuesto):
     except Presupuesto.DoesNotExist:
         return JsonResponse({'mensaje': 'El presupuesto no existe'}, status=status.HTTP_404_NOT_FOUND)
 
-    except Exception as e:
-        return JsonResponse({'mensaje': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception:
+        logger.exception("Error en actualizar_estado_presupuesto")
+        return JsonResponse({'mensaje': 'Error interno del servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def buscar_solicitantes(request):
     term = request.GET.get('q', '')
@@ -105,8 +117,9 @@ def seleccionar_solicitante(request, nro_solicitante):
         solicitante = get_object_or_404(Solicitante, nro_solicitante=nro_solicitante)
         serializer = SeleccionarSolicitanteSerializer(solicitante, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        logger.exception("Error en seleccionar_solicitante")
+        return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
 def buscar_servicios(request):
     term = request.GET.get('q', '')
@@ -121,8 +134,9 @@ def seleccionar_servicio(request, nro_servicio):
         servicio = get_object_or_404(Servicio, nro_servicio=nro_servicio)
         serializer = SeleccionarServicioSerializer(servicio, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        logger.exception("Error en seleccionar_servicio")
+        return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # @api_view(['GET'])
@@ -133,9 +147,6 @@ def seleccionar_servicio(request, nro_servicio):
 #     except Exception as e:
 #         return JsonResponse({'error': str(e)}, status=500)
 
-
-# Configurar el logger
-logger = logging.getLogger(__name__)
 
 def obtener_presupuesto(request, nro_presupuesto):
     try:
@@ -193,9 +204,9 @@ def obtener_presupuesto(request, nro_presupuesto):
         return JsonResponse(response_data, status=200)
     except Presupuesto.DoesNotExist:
         return JsonResponse({'error': 'Presupuesto no encontrado'}, status=404)
-    except Exception as e:
-        logger.error("Error en obtener_presupuesto: %s", str(e))
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception:
+        logger.exception("Error en obtener_presupuesto")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
 
 def generar_pdf_presupuesto(request, nro_presupuesto):
     try:
@@ -243,5 +254,6 @@ def generar_pdf_presupuesto(request, nro_presupuesto):
         return response
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except Exception:
+        logger.exception("Error en generar_pdf_presupuesto")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)

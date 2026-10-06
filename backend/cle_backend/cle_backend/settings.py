@@ -200,19 +200,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Configuración de registro
+_LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'WARNING').upper()
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
         'console': {
-            'level': 'DEBUG',  # Cambia el nivel a DEBUG para ver mensajes de depuración
+            'level': _LOG_LEVEL,
             'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # Cambia el nivel a DEBUG para ver mensajes de depuración
+            'level': _LOG_LEVEL,
             'propagate': True,
         },
     },

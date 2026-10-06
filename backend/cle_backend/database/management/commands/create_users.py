@@ -1,12 +1,54 @@
-from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User, Group
+import json
+import os
+
+from django.contrib.auth.models import Group, User
+from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError
+
 from database.models import UserProfile
 
+
 class Command(BaseCommand):
-    help = 'Create initial users and assign them to groups'
+    help = (
+        'Crea usuarios iniciales y los asigna a grupos. '
+        'Los datos se leen de USERS_DATA_FILE (variable de entorno) que apunta a un '
+        'archivo JSON con la estructura descrita en users_data.example.json.'
+    )
 
     def handle(self, *args, **options):
+        users_data_path = os.environ.get('USERS_DATA_FILE', '').strip()
+        if not users_data_path:
+            raise CommandError(
+                'La variable de entorno USERS_DATA_FILE no está configurada. '
+                'Debe apuntar a un archivo JSON con los datos de usuarios. '
+                'Consulte users_data.example.json para el formato esperado.'
+            )
+
+        try:
+            with open(users_data_path, 'r', encoding='utf-8') as f:
+                raw = json.load(f)
+        except FileNotFoundError:
+            raise CommandError(f'Archivo no encontrado: {users_data_path}')
+        except json.JSONDecodeError as exc:
+            raise CommandError(f'Error al parsear {users_data_path}: {exc}')
+
+        try:
+            users_data = [
+                (
+                    entry['username'],
+                    entry['first_name'],
+                    entry['last_name'],
+                    entry['area_tematica'],
+                    entry['rol'],
+                )
+                for entry in raw
+            ]
+        except (KeyError, TypeError) as exc:
+            raise CommandError(
+                f'Formato inválido en {users_data_path}. '
+                f'Consulte users_data.example.json. Error: {exc}'
+            )
+
         # Obtener los grupos
         try:
             servicios_tecnologicos_group = Group.objects.get(name='servicios_tecnologicos')
@@ -18,34 +60,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'Error: {e}'))
             return
 
-        users_data = [
-            # Datos de Usuarios
-            ('juan.dimaio', 'Juan', 'Di Maio', 'servicios_tecnologicos', 'servicios_tecnologicos'),
-            ('jorge.coacci', 'Jorge', 'Coacci', 'servicios_tecnologicos', 'servicios_tecnologicos'),
-            ('melisa.siruela', 'Melisa', 'Siruela', 'administracion', 'administracion'),
-            ('julieta.schiappacasse', 'Julieta', 'Schiappacasse', 'administracion', 'administracion'),
-            ('natalia.desimone', 'Natalia', 'Desimone', 'administracion', 'administracion'),
-            ('fabian.iloro', 'Fabian', 'Iloro', 'direccion', 'direccion'),
-            ('dario.falcone', 'Dario', 'Falcone', 'durabilidad', 'area_jefe'),
-            ('lautaro.iloro', 'Lautaro', 'Iloro', 'durabilidad', 'area_standard'),
-            ('gustavo.veloso', 'Gustavo', 'Veloso', 'ensayos_mecanicos', 'area_jefe'),
-            ('lucas.gonzalez', 'Lucas', 'Gonzalez', 'ensayos_mecanicos', 'area_standard'),
-            ('alejandro.ribot', 'Alejandro', 'Ribot', 'geologia', 'area_jefe'),
-            ('marcos.panei', 'Marcos', 'Panei', 'geologia', 'area_standard'),
-            ('claudio.zega', 'Claudio', 'Zega', 'hormigones', 'area_jefe'),
-            ('guillermo.herrera', 'Guillermo', 'Herrera', 'hormigones', 'area_standard'),
-            ('ricardo.gregorutti', 'Ricardo', 'Gregorutti', 'metalurgia', 'area_jefe'),
-            ('jorge.grau', 'Jorge', 'Grau', 'metalurgia', 'area_standard'),
-            ('mariana.lopez', 'Mariana', 'Lopez', 'patrimonio', 'area_jefe'),
-            ('maria.di_maio', 'Maria', 'Di Maio', 'patrimonio', 'area_standard'),
-            ('silvia.zicarelli', 'Silvia', 'Zicarelli', 'quimica', 'area_jefe'),
-            ('claudio.veloso', 'Claudio', 'Veloso', 'tecnologia_vial', 'area_jefe'),
-            ('celeste.torrijos', 'Celeste', 'Torrijos', 'estudios_especiales', 'area_jefe')
-        ]
-
         for username, first_name, last_name, area_tematica, rol in users_data:
             try:
-                # Verificar si el usuario ya existe
                 user, created = User.objects.get_or_create(
                     username=username,
                     defaults={'first_name': first_name, 'last_name': last_name}
@@ -56,37 +72,36 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f'Usuario creado: {username}'))
                 else:
                     self.stdout.write(self.style.WARNING(f'Usuario ya existe: {username}'))
-                
-                # Crear o actualizar el perfil del usuario
+
                 UserProfile.objects.update_or_create(
                     user=user,
                     defaults={'area_tematica': area_tematica, 'rol': rol}
                 )
-                
+
             except IntegrityError as e:
                 self.stdout.write(self.style.ERROR(f'Error de integridad para el usuario {username}: {e}'))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'Error inesperado para el usuario {username}: {e}'))
 
-        # Asignar Usuarios a los grupos
-        user_groups = {
-            'servicios_tecnologicos': [ 'juan.dimaio', 'jorge.coacci' ],
-            'administracion': [ 'melisa.siruela', 'julieta.schiappacasse', 'natalia.desimone' ],
-            'direccion': [ 'fabian.iloro' ],
-            'area_jefe': [ 'dario.falcone', 'gustavo.veloso', 'alejandro.ribot', 'claudio.zega', 'ricardo.gregorutti', 'mariana.lopez', 'silvia.zicarelli', 'claudio.veloso', 'celeste.torrijos' ],
-            'area_standard': [ 'lautaro.iloro', 'lucas.gonzalez', 'marcos.panei', 'guillermo.herrera', 'jorge.grau', 'maria.di_maio' ],
+        # Asignar usuarios a grupos según el rol
+        rol_to_group = {
+            'servicios_tecnologicos': servicios_tecnologicos_group,
+            'administracion': administracion_group,
+            'direccion': direccion_group,
+            'area_jefe': area_jefe_group,
+            'area_standard': area_standard_group,
         }
 
-        for area, usernames in user_groups.items():
+        for username, _, _, _, rol in users_data:
+            group = rol_to_group.get(rol)
+            if not group:
+                self.stdout.write(self.style.WARNING(f'Rol desconocido "{rol}" para {username}, no se asignó grupo.'))
+                continue
             try:
-                group = Group.objects.get(name=area)
-                for username in usernames:
-                    user = User.objects.get(username=username)
-                    user.groups.add(group)
-                    self.stdout.write(self.style.SUCCESS(f'Usuario {username} asignado al grupo {area}'))
-            except Group.DoesNotExist:
-                self.stdout.write(self.style.ERROR(f'Grupo no encontrado: {area}'))
+                user = User.objects.get(username=username)
+                user.groups.add(group)
+                self.stdout.write(self.style.SUCCESS(f'Usuario {username} asignado al grupo {rol}'))
             except User.DoesNotExist:
                 self.stdout.write(self.style.ERROR(f'Usuario no encontrado para asignación: {username}'))
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'Error inesperado al asignar usuario {username} al grupo {area}: {e}'))
+                self.stdout.write(self.style.ERROR(f'Error al asignar {username} al grupo {rol}: {e}'))

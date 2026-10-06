@@ -1,0 +1,16 @@
+[
+  {
+    "username": "nombre.apellido",
+    "first_name": "Nombre",
+    "last_name": "Apellido",
+    "area_tematica": "servicios_tecnologicos",
+    "rol": "servicios_tecnologicos"
+  },
+  {
+    "username": "otro.usuario",
+    "first_name": "Otro",
+    "last_name": "Usuario",
+    "area_tematica": "hormigones",
+    "rol": "area_jefe"
+  }
+]
