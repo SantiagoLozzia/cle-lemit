@@ -13,7 +13,7 @@ module.exports = {
         ws: true,
         changeOrigin: true,
       },
-      '^/ws': {
+      '^/ws/mi_canal/': {
         target: 'http://192.168.100.10:8000',
         ws: true,
         changeOrigin: true,
