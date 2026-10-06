@@ -73,7 +73,7 @@
   </template>
   
   <script>
-    import axios from 'axios';
+    import api from '@/api.js';
     import { ref } from 'vue';
     // eslint-disable-next-line no-unused-vars
     // import vSelect from 'vue-select';
@@ -140,7 +140,7 @@
             return;
           }
           console.log('nuevo presupuesto',nuevoDataServicio)
-          axios.post('http://localhost:8000/api/encurso/crear_dataServicio/', nuevoDataServicio.value)
+          api.post('/encurso/crear_dataServicio/', nuevoDataServicio.value)
             .then(response => {
               console.log(response.data);
               cerrarModal();
@@ -176,7 +176,7 @@
           };
   
           const buscarSugerencias = () => {
-              axios.get('http://localhost:8000/api/encurso/buscar_presupuestos/')
+              api.get('/encurso/buscar_presupuestos/')
                 .then(response => {
                   sugerencias.value = response.data;
                   console.log('sugerencias',sugerencias.value);
@@ -189,7 +189,7 @@
   
           const presupuestoSeleccionado = () => {
             console.log("selectedPresupuesto:", selectedPresupuesto.value);
-            axios.get(`http://localhost:8000/api/encurso/presupuesto_seleccionado/${selectedPresupuesto.value}/`)
+            api.get(`/encurso/presupuesto_seleccionado/${selectedPresupuesto.value}/`)
               .then(response => {
                 console.log("Respuesta del servidor:", response.data);
                 // Actualizar los campos del formulario con los detalles del solicitante

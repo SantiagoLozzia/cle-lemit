@@ -8,8 +8,8 @@ router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     # Ruta para obtener el token JWT
-    path('authentication/', MyTokenObtainPairView.as_view(), name='token-obtain-pair'),
-    path('authentication/user_info/', NombreYApellidoUser.as_view(), name='nombre-y-apellido-user'),
+    path('', MyTokenObtainPairView.as_view(), name='token-obtain-pair'),
+    path('user_info/', NombreYApellidoUser.as_view(), name='nombre-y-apellido-user'),
 
     # Rutas para los usuarios gestionados por el enrutador
     path('users/', include(router.urls)),

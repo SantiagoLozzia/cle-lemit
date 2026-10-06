@@ -56,7 +56,7 @@
 
 <script>
 import { ref } from 'vue';
-import axios from 'axios';
+import api from '@/api.js'; 
 
 export default {
   setup() {
@@ -104,7 +104,7 @@ export default {
         return;
       }
 
-      axios.post(`http://localhost:8000/api/aranceles/`, nuevoServicio.value)
+      api.post('/aranceles/', nuevoServicio.value)
         .then(response => {
           console.log(response.data);
           cerrarModal();

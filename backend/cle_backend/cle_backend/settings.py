@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-_i8)8l-gu_vvki9p!081t1un+ch5lncck)xx#6yob*f=4t72o9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8080', 'cle-lemit.local',]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8080', 'cle-lemit.local', '192.168.100.*', '192.168.100.10']
 
 
 # Application definition
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'encurso',
     'authentication',
     'rest_framework_simplejwt',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +123,7 @@ DATABASES = {
         'NAME': 'cle_database',
         'USER': 'postgres',
         'PASSWORD': '5uperposgre5',
-        'HOST': 'localhost',
+        'HOST': '192.168.100.10',
         'PORT': '5432',
     }
 }
@@ -193,7 +194,10 @@ LOGGING = {
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8080',
+    'http://localhost:8000',
     'http://cle-lemit.local',
+    'http://localhost',
+    'http://192.168.100.10',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -201,9 +205,22 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8080',
     'https://localhost:8080',
+    'http://localhost:8000',
+    'https://localhost:8000',
     'http://cle-lemit.local',
+    'http://192.168.100.10',
 ]
 
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 APPEND_SLASH = False
+ASGI_APPLICATION = 'cle_backend.routing.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}

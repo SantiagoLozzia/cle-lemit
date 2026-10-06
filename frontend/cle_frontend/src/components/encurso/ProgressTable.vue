@@ -1360,7 +1360,7 @@
   
 <script>
   import { onMounted, ref} from 'vue';
-  import axios from 'axios';
+  import api from '@/api.js';
 
   export default {  
     components: {
@@ -1515,7 +1515,7 @@
       //methods
 
       const fetchData = () => {
-          axios.get('api/encurso/obtener_todoencurso/')
+          api.get('/encurso/obtener_todoencurso/')
             .then(response => {
               const data = response.data;
 
@@ -1646,7 +1646,7 @@
 
       // DS - Data Servicio
       const abrirDataServicio = (nro_dataServicio) => {
-          axios.get(`api/encurso/obtener_dataservicio/${nro_dataServicio}/`)
+          api.get(`/encurso/obtener_dataservicio/${nro_dataServicio}/`)
               .then(response => {
                   // Obtener los datos del data servicio de la respuesta
                   const { nro_dataServicio, fecha_dataServicio, obra, cant_numLabs, plazo_estimado, muestras, nro_presupuesto, area_tematica, nombre_solicitante, arancel_presupuesto, observaciones } = response.data;
@@ -1692,7 +1692,7 @@
           formData.append('nroDataServicio', nroDataServicio); // Agregar el número de servicio
 
           // Realizar una petición POST al servidor para guardar el archivo
-          axios.post('api/encurso/guardar_adjuntosolicitudservicio/', formData)
+          api.post('/encurso/guardar_adjuntosolicitudservicio/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
               })
@@ -1706,7 +1706,7 @@
       // Legajo - Crear
       const obtenerRangoLab = (nro_circuito) => {
         // Realizar la llamada a la API para obtener el rango de laboratorios
-        axios.get(`/api/encurso/obtener_rangoLab/${nro_circuito}/`)
+        api.get(`/encurso/obtener_rangoLab/${nro_circuito}/`)
             .then(response => {
                 // Si la llamada es exitosa, obtén el rango de laboratorios del cuerpo de la respuesta
                 const rangoLab = response.data.rangoLab;
@@ -1734,7 +1734,7 @@
 
       const crearLegajo = () => {
         // console.log('Datos del nuevo legajo:', nuevoLegajo.value);
-        axios.post('api/encurso/crear_legajo/', nuevoLegajo.value)
+        api.post('/encurso/crear_legajo/', nuevoLegajo.value)
         .then(response => {
           console.log(response)
           cerrarModalCrearLegajo();
@@ -1773,7 +1773,7 @@
       const abrirLegajo = (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
           const nro_circuito = numeroCircuitoGlobal.value;
-          axios.get(`api/encurso/obtener_legajo/${nro_circuito}/`)
+          api.get(`/encurso/obtener_legajo/${nro_circuito}/`)
               .then(response => {
                   // Obtener los datos del legajo de la respuesta
                   const { nro_legajo, fecha_legajo, rangos_laboratorios, nombre_solicitante } = response.data;
@@ -1801,9 +1801,9 @@
 
       const descargarLegajoPDF = () => {
           const nro_circuito = numeroCircuitoGlobal.value;
-          axios({
+          api({
               method: 'get',
-              url: `/api/encurso/generar_pdf_legajo/${nro_circuito}/`, // Ajusta la URL a tu endpoint en el backend
+              url: `//encurso/generar_pdf_legajo/${nro_circuito}/`, // Ajusta la URL a tu endpoint en el backend
               responseType: 'blob' // Indicamos que esperamos una respuesta de tipo archivo binario (PDF)
           })
           .then((response) => {
@@ -1841,7 +1841,7 @@
           formData.append('nroCircuito', nroCircuito); // Agregar el número de circuito para crear instancia de Recepcion
 
           // Realizar una petición POST al servidor para guardar el archivo
-          axios.post('api/encurso/guardar_adjuntofactura/', formData)
+          api.post('/encurso/guardar_adjuntofactura/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
               })
@@ -1868,7 +1868,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el pago del legajo en la base de datos
-          const response = await axios.put(`/api/encurso/guardar_pago_legajo/${nro_circuito}/`, {
+          const response = await api.put(`//encurso/guardar_pago_legajo/${nro_circuito}/`, {
             pago: pagoLegajoNuevo
           });
 
@@ -1914,7 +1914,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el plazo de muestras en la base de datos
-          const response = await axios.put(`/api/encurso/cambiar_plazo_pago/${nro_circuito}/`, {
+          const response = await api.put(`//encurso/cambiar_plazo_pago/${nro_circuito}/`, {
             plazo_pago: plazoPagoNuevo
           });
 
@@ -1949,14 +1949,16 @@
       // Para abrir venntana para adjuntar cualquier archivo
       const abrirArchivo = (adjunto) => {
         console.log('valor de adjunto:', adjunto)
-        const urlCompleta = 'http://localhost:8000' + adjunto;
+        const baseURL = process.env.VUE_APP_BACKEND_URL;
+        const urlCompleta = baseURL + adjunto;
         window.open(urlCompleta, '_blank');
       };
 
       const abrirVistaPreliminar = (adjunto) => {
         console.log('pdf preliminar', adjunto)
         // Construir la URL completa
-        urlPdf.value = 'http://localhost:8000' + adjunto;
+        const baseURL = process.env.VUE_APP_BACKEND_URL;
+        urlPdf.value = baseURL + adjunto;
         console.log('urlPDF', urlPdf)
         mostrarModalPDFpreliminar.value = true;
       };
@@ -1997,7 +1999,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el numero de remito en la base de datos
-          const response = await axios.put(`/api/encurso/cambiar_remito/${nro_circuito}/`, {
+          const response = await api.put(`//encurso/cambiar_remito/${nro_circuito}/`, {
             nros_remitos: remitoNuevo
           });
 
@@ -2050,7 +2052,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el estado de la recepción de muestras en la base de datos
-          const response = await axios.put(`/api/encurso/guardar_estado_recepcion/${nro_circuito}/`, {
+          const response = await api.put(`/guardar_estado_recepcion/${nro_circuito}/`, {
             estado_recepcion: estadoMuestrasNuevo
           });
 
@@ -2101,7 +2103,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el plazo de muestras en la base de datos
-          const response = await axios.put(`/api/encurso/cambiar_plazo_muestras/${nro_circuito}/`, {
+          const response = await api.put(`/encurso/cambiar_plazo_muestras/${nro_circuito}/`, {
             plazo_muestras: plazoMuestrasNuevo
           });
 
@@ -2161,7 +2163,7 @@
           const nro_circuito = numeroCircuitoGlobal.value;
           console.log('numero circuito en crear orden circuito:', nro_circuito)
           try {
-              const response = await axios.post(`http://localhost:8000/api/encurso/crear_ordenservicio/${nro_circuito}/`);
+              const response = await api.post(`/encurso/crear_ordenservicio/${nro_circuito}/`);
               console.log('Orden de servicio creada exitosamente:', response.data);
               mostrarModalCrearOrdenServicio.value = false;
               showSuccessAlert.value = true;
@@ -2181,7 +2183,7 @@
       // OS - Abrir Orden de Servicio
       const abrirOrdenServicio = (fila) => {
           const nro_circuito = fila.nro_circuito;
-          axios.get(`api/encurso/obtener_orden_servicio/${nro_circuito}/`)
+          api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`)
               .then(response => {
                   // Obtener los datos de la orden de servicio de la respuesta
                   const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, plazo_estimado, nombre_solicitante,servicio_solicitado, muestras, observaciones } = response.data;
@@ -2223,10 +2225,10 @@
 
       const cambiarPlazoOrdenServicio = async (plazoEstimadoNuevo) => {
         const nro_circuito = numeroCircuitoGlobal.value;
-        axios.defaults.withCredentials = true;
+        api.defaults.withCredentials = true;
         try {
             // Realizar la petición para actualizar el plazo de orden de servicio en la base de datos
-            const response = await axios.put(`http://localhost:8000/api/encurso/cambiar_plazo_estimado/${nro_circuito}/`, {
+            const response = await api.put(`/encurso/cambiar_plazo_estimado/${nro_circuito}/`, {
                 plazo_estimado: plazoEstimadoNuevo
             }, {
                 withCredentials: true 
@@ -2275,7 +2277,7 @@
           formData.append('estadoInformeAreaNuevo', estadoInformeAreaNuevo); // Agregar el estado del informe
 
           // Realizar una petición POST al servidor para guardar el archivo
-          const response = await axios.post('api/encurso/guardar_adjunto_informearea/', formData);
+          const response = await api.post('/encurso/guardar_adjunto_informearea/', formData);
           console.log('Archivo guardado exitosamente:', response.data);
         } catch (error) {
           console.error('Error al guardar el archivo:', error);
@@ -2291,7 +2293,7 @@
         formData.append('nroCircuito', nro_circuito); // Agregar el número de circuito
 
         // Realizar una petición POST al servidor para guardar el archivo
-        axios.post('api/encurso/guardar_registros_ensayo/', formData)
+        api.post('/encurso/guardar_registros_ensayo/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
               })
@@ -2325,7 +2327,7 @@
 
       const obtenerServicios = async (nro_circuito) => {
         try {
-          const response = await axios.get(`http://localhost:8000/api/encurso/obtener_servicios/${nro_circuito}/`);
+          const response = await api.get(`/encurso/obtener_servicios/${nro_circuito}/`);
           serviciosDisponibles.value = response.data;
           console.log('servicios disponibles dentro de obtenerServicios', serviciosDisponibles);
         } catch (error) {
@@ -2415,8 +2417,8 @@
           
           console.log('nueva solicitud interarea envianda al backend',nuevaSolicitudInterarea)
 
-          // Enviar datos al backend usando Axios
-          axios.post('http://localhost:8000/api/encurso/crear_solicitud_interarea/', nuevaSolicitudInterarea.value)
+          // Enviar datos al backend usando api
+          api.post('/encurso/crear_solicitud_interarea/', nuevaSolicitudInterarea.value)
             .then(response => {
               console.log(response.data);
               cerrarModalCrearSolicitudInterArea();
@@ -2485,7 +2487,7 @@
       // Inter Area - Abrir Solicitud Inter Area
       const abrirSolicitudInterArea = (fila) => {
           const nro_circuito = fila.nro_circuito;
-          axios.get(`api/encurso/obtener_solicitud_interarea/${nro_circuito}/`)
+          api.get(`/encurso/obtener_solicitud_interarea/${nro_circuito}/`)
               .then(response => {
                   // Obtener los datos de la solicitud inter area de la respuesta
                   const { nro_solicitudInterarea, fecha_solicitudInterarea, areaTematica_origen, inter_areaTematica, muestras_solicitudIa, num_labs, observaciones, servicio_solicitado  } = response.data;
@@ -2523,7 +2525,7 @@
           formData.append('nro_circuito', fila.nro_circuito); 
 
           // Realizar una petición POST al servidor para guardar el archivo
-          axios.post('api/encurso/guardar_adjuntoinformeinterarea/', formData)
+          api.post('/encurso/guardar_adjuntoinformeinterarea/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
               })
@@ -2541,7 +2543,7 @@
         formData.append('nro_circuito', fila.nro_circuito); 
 
         // Realizar una petición POST al servidor para guardar o reemplazar el archivo
-        axios.post('api/encurso/guardar_adjuntoinformeservicio/', formData)
+        api.post('/encurso/guardar_adjuntoinformeservicio/', formData)
           .then(response => {
             console.log('Archivo guardado exitosamente:', response.data);
             
@@ -2557,8 +2559,8 @@
         numeroCircuitoGlobal.value = fila.nro_circuito;
         mostrarModalCorreccionesInformeServicio.value = true;
 
-        // Realiza la solicitud al backend usando Axios
-        axios.get(`/api/encurso/obtener_correcciones/${numeroCircuitoGlobal.value}/`)
+        // Realiza la solicitud al backend usando api
+        api.get(`/encurso/obtener_correcciones/${numeroCircuitoGlobal.value}/`)
           .then((response) => {
             // Asigna la respuesta a correcciones.value
             correcciones.value = response.data.correcciones; // Asegúrate de que la respuesta tenga esta estructura
@@ -2579,7 +2581,7 @@
         // console.log('nro circuito', nro_circuito)
         // console.log('correcciones', correcciones.value)
         try {
-          const response = await axios.put(`/api/encurso/corregir_informe_servicio/${nro_circuito}/`);
+          const response = await api.put(`//encurso/corregir_informe_servicio/${nro_circuito}/`);
             
           // Verificar si la actualización fue exitosa
           if (response.status === 200) {
@@ -2623,8 +2625,8 @@
       const confirmarRevision = async () => {
             const nroCircuito = numeroCircuitoGlobal.value;
             try {
-                const response = await axios.put(
-                    `http://localhost:8000/api/encurso/confirmar_revision/${nroCircuito}/`
+                const response = await api.put(
+                    `/encurso/confirmar_revision/${nroCircuito}/`
                 );
                 console.log('Revisión confirmada correctamente:', response.data);
                 mostrarModalRevision.value = false;
@@ -2668,8 +2670,8 @@
       const advertirCorrecciones = async (correccionesNuevas) => {
         const nroCircuito = numeroCircuitoGlobal.value;
         try {
-            const response = await axios.put(
-                `http://localhost:8000/api/encurso/advertir_correcciones/${nroCircuito}/`, {
+            const response = await api.put(
+                `/encurso/advertir_correcciones/${nroCircuito}/`, {
                 correcciones: correccionesNuevas
             }
             );
@@ -2703,8 +2705,8 @@
         const confirmarFirmaResponsableArea = async () => {
           const nroCircuito = numeroCircuitoGlobal.value;
           try {
-              const response = await axios.put(
-                  `http://localhost:8000/api/encurso/confirmar_firma_responsable_area/${nroCircuito}/`
+              const response = await api.put(
+                  `/encurso/confirmar_firma_responsable_area/${nroCircuito}/`
               );
               console.log('Firma Responsable Area confirmada correctamente:', response.data);
               mostrarModalFirmaResponsableArea.value = false;
@@ -2741,7 +2743,7 @@
           formData.append('nro_circuito', fila.nro_circuito); 
 
           // Realizar una petición POST al servidor para guardar o reemplazar el archivo
-          axios.post('api/encurso/guardar_adjuntoinformeserviciofirmado/', formData)
+          api.post('/encurso/guardar_adjuntoinformeserviciofirmado/', formData)
             .then(response => {
               console.log('Archivo guardado exitosamente:', response.data);
               showSuccessAlert.value = true;
@@ -2763,8 +2765,8 @@
         const confirmarFirmaDireccion = async () => {
           const nroCircuito = numeroCircuitoGlobal.value;
           try {
-              const response = await axios.put(
-                  `http://localhost:8000/api/encurso/confirmar_firma_direccion/${nroCircuito}/`
+              const response = await api.put(
+                  `/encurso/confirmar_firma_direccion/${nroCircuito}/`
               );
               console.log('Firma Dirección confirmada correctamente:', response.data);
               mostrarModalFirmaDireccion.value = false;
@@ -2796,8 +2798,8 @@
         const enviarArchivar = async () => {
           const nroCircuito = numeroCircuitoGlobal.value;
           try {
-              const response = await axios.put(
-                  `http://localhost:8000/api/encurso/archivar_circuito/${nroCircuito}/`
+              const response = await api.put(
+                  `/encurso/archivar_circuito/${nroCircuito}/`
               );
               console.log('Archivado correctamente:', response.data);
               mostrarModalArchivar.value = false;

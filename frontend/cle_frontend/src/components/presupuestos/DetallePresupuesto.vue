@@ -100,7 +100,7 @@
 
 <script>
 import { ref, watch, getCurrentInstance, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api.js';
 import { debounce } from 'lodash';
 
 export default {
@@ -123,7 +123,7 @@ export default {
 
         const obtenerModulo = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/api/aranceles/obtener_modulo/');
+                const response = await api.get('/aranceles/obtener_modulo/');
                 moduloValor.value = response.data.valor;
                 console.log('valor modulo', moduloValor.value);
             } catch (error) {
@@ -135,7 +135,7 @@ export default {
             const term = event.target.value;
             console.log('Term de búsqueda:', term);
             if (term && term.trim() !== '') {
-                axios.get('http://localhost:8000/api/presupuestos/buscar_servicios/', {
+                api.get('/presupuestos/buscar_servicios/', {
                     params: { q: term }
                 })
                 .then(response => {
@@ -161,7 +161,7 @@ export default {
             console.log('Servicio seleccionado:', servicioSeleccionado);
 
             if (servicioSeleccionado) {
-                axios.get(`http://localhost:8000/api/presupuestos/seleccionar_servicio/${servicioSeleccionado}/`)
+                api.get(`/presupuestos/seleccionar_servicio/${servicioSeleccionado}/`)
                     .then(response => {
                         fila.nro_servicio = response.data.nro_servicio;
                         fila.servicio = response.data.servicio;
@@ -184,17 +184,24 @@ export default {
         // Watcher para recalcular el subtotal y emitir los cambios
         watch(filas, (nuevasFilas) => {
             nuevasFilas.forEach(fila => {
-                if (!isNaN(fila.cant) && !isNaN(fila.precioUnitario)) {
-                    fila.subtotal = fila.cant * fila.precioUnitario;
-                    console.log('>>>calculando subtotal', fila.subtotal)
+                if (!isNaN(fila.cant) && !isNaN(fila.precioUnitario) && fila.nro_servicio) {
+                fila.subtotal = fila.cant * fila.precioUnitario;
+                console.log('>>>calculando subtotal para fila', fila);
                 } else {
-                    fila.subtotal = null;
+                fila.subtotal = null;
+                console.log('>>>subtotal no calculado para fila', fila);
                 }   
             });
-            detallePresupuesto.value = [...nuevasFilas];
-            console.log('Emitiendo detallePresupuesto:', detallePresupuesto.value);
-            emit('detalle-Presupuesto', detallePresupuesto.value); 
-        }, { deep: true });
+            // Crear un array con solo los campos necesarios para el backend
+            const detallesParaBackend = nuevasFilas.map(fila => ({
+                nro_servicio: fila.nro_servicio,
+                cant: fila.cant,
+                subtotal: fila.subtotal
+            }));
+            detallePresupuesto.value = detallesParaBackend;
+            console.log('Emitiendo detallePresupuesto:', JSON.stringify(detallePresupuesto.value, null, 2));
+            emit('detallePresupuesto', detallePresupuesto);
+            }, { deep: true });
 
         watch(filas, (nuevasFilas) => {
                 const total = nuevasFilas.reduce((acc, fila) => acc + fila.subtotal, 0);

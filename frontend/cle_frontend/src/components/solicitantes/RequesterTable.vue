@@ -43,7 +43,7 @@
   <script>
   
     import { ref, onMounted } from 'vue';
-    import axios from 'axios';
+    import api from '@/api.js';
   
     export default {
       setup() {
@@ -52,7 +52,7 @@
   
         const fetchSolicitantes = async () => {
           try {
-            const response = await axios.get(`http://localhost:8000/api/solicitantes/todos/`);
+            const response = await api.get(`/solicitantes/todos/`);
             
             solicitantes.value = response.data;
           } 

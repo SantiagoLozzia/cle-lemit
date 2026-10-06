@@ -15,8 +15,8 @@ import CanceladosView from '@/views/SubmenuPresupuestos/CanceladosView.vue';
 
 // Función para verificar si el usuario está autenticado
 function isAuthenticated() {
-  // Comprueba si el token JWT está en el localStorage
-  return !!localStorage.getItem('token');
+  // Comprueba si el token JWT está en el sessionStorage
+  return !!sessionStorage.getItem('token');
 }
 
 // Define las rutas

@@ -3,7 +3,7 @@
     <div class="logo-container">
       <img alt="Logo" :src="logoPath" class="logo">
     </div>
-    <div class="user-info">
+    <div class="user-info" v-if="userLoaded">
       <span>{{ fullName }}</span>
       <i class="bi bi-box-arrow-in-right logout-icon" @click="logout"></i>
     </div>
@@ -11,13 +11,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watchEffect } from 'vue';
 import axios from 'axios';
-import logo from '@/assets/logo_L.png';
+import api from '@/api.js';
+import logo from '@/assets/tico.jpeg';
 
 export default {
   setup() {
     const logoPath = ref(logo);
+    const userLoaded = ref(false);
     const firstName = ref('');
     const lastName = ref('');
 
@@ -28,28 +30,29 @@ export default {
     const fetchUserInfo = async () => {
       try {
         const token = sessionStorage.getItem('token');
-         // Verificar que estamos obteniendo el token correctamente
         console.log('Token from sessionStorage:', token);
 
-        if (token) {
-          const response = await axios.get('http://localhost:8000/api/authentication/user_info/', {
+        if (token && token !== 'null' && token !== 'undefined') {
+          const response = await api.get('/auth/user_info/', {
             headers: {
               Authorization: `Bearer ${token}`
             }
           });
-          
-          // Verificar la respuesta del backend
+
           console.log('User Info Response:', response.data);
 
           firstName.value = response.data.first_name;
           lastName.value = response.data.last_name;
 
-          // Verificar que firstName y lastName se están configurando correctamente
           console.log('First Name:', firstName.value);
           console.log('Last Name:', lastName.value);
+        } else {
+          console.warn('Token inválido o no encontrado');
         }
       } catch (error) {
         console.error('Error fetching user info:', error);
+      } finally {
+        userLoaded.value = true;
       }
     };
 
@@ -57,17 +60,27 @@ export default {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('username');
       axios.defaults.headers.common['Authorization'] = '';
-      window.location.href = '/login'; // Redirige a la página de login
+      window.location.href = '/login';
     };
 
     onMounted(() => {
+      // Primer intento de carga
       fetchUserInfo();
+    });
+
+    // Observa si aparece el token más tarde (por ejemplo, después de login)
+    watchEffect(() => {
+      const token = sessionStorage.getItem('token');
+      if (!userLoaded.value && token && token !== 'null' && token !== 'undefined') {
+        fetchUserInfo();
+      }
     });
 
     return {
       logoPath,
       fullName,
-      logout
+      logout,
+      userLoaded
     };
   }
 };

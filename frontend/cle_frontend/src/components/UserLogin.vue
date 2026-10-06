@@ -12,7 +12,10 @@
             <label for="password" class="form-label">Contraseña</label>
             <input v-model="password" type="password" id="password" class="form-control" placeholder="Ingrese su contraseña" required />
           </div>
-          <button type="submit" class="btn btn-primary w-100">Acceder</button>
+          <button type="submit" class="btn btn-primary w-100" :disabled="isLoading">
+            <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Acceder
+          </button>
           <p v-if="errorMessage" class="text-danger text-center mt-3">{{ errorMessage }}</p>
         </form>
       </div>
@@ -22,53 +25,64 @@
 
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
+import { useRouter } from 'vue-router';
+import api from '@/api.js'; // Importa la instancia de Axios
+
+const router = useRouter();
 
 const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
+const isLoading = ref(false);
 
 async function login() {
+  isLoading.value = true;
   try {
-    const response = await axios.post('http://localhost:8000/api/authentication/', {
+    const response = await api.post('/auth/', {
       username: username.value,
       password: password.value
     });
 
-    // Verificar que recibimos el token correctamente
     console.log('Login Response:', response.data);
 
-    // Guardar el token y el nombre de usuario en sessionStorage
-    sessionStorage.setItem('token', response.data.access);
-    sessionStorage.setItem('username', username.value);
+    if (response.data && response.data.access) {
+      // Guardar el token y la información del usuario en sessionStorage
+      sessionStorage.setItem('token', response.data.access);
+      sessionStorage.setItem('username', username.value);
+      sessionStorage.setItem('role', response.data.role);
+      sessionStorage.setItem('area_tematica', response.data.area_tematica);
+      sessionStorage.setItem('first_name', response.data.first_name);
+      sessionStorage.setItem('last_name', response.data.last_name);
 
-    // Guardar la información adicional del perfil del usuario
-    sessionStorage.setItem('role', response.data.role);
-    sessionStorage.setItem('area_tematica', response.data.area_tematica);
-    sessionStorage.setItem('first_name', response.data.first_name);
-    sessionStorage.setItem('last_name', response.data.last_name);
+      console.log('Token stored in sessionStorage:', sessionStorage.getItem('token'));
+      console.log('Role stored in sessionStorage:', sessionStorage.getItem('role'));
 
-    console.log('Token stored in sessionStorage:', sessionStorage.getItem('token'));
-    console.log('Role stored in sessionStorage:', sessionStorage.getItem('role'));
+      // Configurar Axios para incluir el token en futuras solicitudes
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
 
-    // Configurar Axios para incluir el token en futuras solicitudes
-    axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-
-    // Redirigir al usuario a la página principal o a la página que estaba intentando acceder
-    window.location.href = '/';
+      console.log('Redirigiendo a la página principal');
+      router.push('/')
+        .then(() => console.log('Redirección exitosa'))
+        .catch(err => console.error('Error al redirigir:', err));
+    } else {
+      errorMessage.value = 'No se recibió el token';
+    }
   } catch (error) {
     console.error('Login error:', error);
-    errorMessage.value = 'Invalid username or password';
+    if (error.response && error.response.data) {
+      errorMessage.value = error.response.data.detail || 'Error desconocido';
+    } else {
+      errorMessage.value = 'No se pudo conectar con el servidor';
+    }
+  } finally {
+    isLoading.value = false;
   }
 }
-
-
 </script>
 
 <style scoped>
-/* Contenedor de fondo con imagen */
 .login-background {
-  background-image: url('@/assets/fabian.jpg');
+  background-image: url('@/assets/fondolemittrucho.jpg');
   background-size: cover;
   background-position: center;
   height: 100vh;
@@ -77,10 +91,9 @@ async function login() {
   align-items: center;
 }
 
-/* Contenedor del login */
 .login-container {
   max-width: 400px;
-  background-color: rgba(255, 255, 255, 0.9); /* Fondo semi-transparente */
+  background-color: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }

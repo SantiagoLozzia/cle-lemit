@@ -141,7 +141,7 @@
 </template>
 
 <script>
-  import axios from 'axios';
+  import api from '@/api.js';
   import { ref, watch } from 'vue';
   import { debounce } from 'lodash';
   import DetallePresupuesto from './DetallePresupuesto.vue';
@@ -271,7 +271,7 @@
         console.log('nuevo presupuesto enviando al backend',nuevoPresupuesto)
         // return
         //Enviar datos al backend usando Axios
-        axios.post('http://localhost:8000/api/presupuestos/', nuevoPresupuesto.value)
+        api.post('/presupuestos/', nuevoPresupuesto.value)
           .then(response => {
             console.log(response.data);
             cerrarModal();
@@ -317,7 +317,7 @@
 
         // Verificar si el término de búsqueda no está vacío
         if (term.trim() !== '') {
-          axios.get('http://localhost:8000/api/presupuestos/buscar_solicitantes/', {
+          api.get('/presupuestos/buscar_solicitantes/', {
             params: {
               q: term
             }
@@ -345,7 +345,7 @@
           console.log('Solicitante seleccionado:', sugerencia.nro_solicitante);
 
           // Realizar una solicitud al backend para obtener los detalles del solicitante seleccionado
-          axios.get(`http://localhost:8000/api/presupuestos/seleccionar_solicitante/${sugerencia.nro_solicitante}/`)
+          api.get(`/presupuestos/seleccionar_solicitante/${sugerencia.nro_solicitante}/`)
             .then(response => {
               console.log('Detalles del solicitante recibidos:', response.data);
 

@@ -76,7 +76,7 @@
 
 <script>
   import { ref } from 'vue'; 
-  import axios from 'axios';
+  import api from '@/api.js';
 
   export default {
     setup() {
@@ -123,7 +123,7 @@
         }
 
         // Enviar datos al backend
-        axios.post('api/solicitantes/', nuevoSolicitante.value)
+        api.post('/solicitantes/', nuevoSolicitante.value)
           .then(response => {
             console.log(response.data);
             cerrarModal();

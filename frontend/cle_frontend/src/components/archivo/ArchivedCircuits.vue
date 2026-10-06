@@ -27,7 +27,7 @@
   <script>
   
     import { ref, onMounted } from 'vue';
-    import axios from 'axios';
+    import api from '@/api.js'; 
   
     export default {
       setup() {
@@ -38,7 +38,7 @@
   
         const fetchFinalizados = async () => {
           try {
-            const response = await axios.get(`http://localhost:8000/api/archivo/finalizados/`);
+            const response = await api.get(`/archivo/finalizados/`);
             
             finalizados.value = response.data; // Actualizamos archivados.value
           } 

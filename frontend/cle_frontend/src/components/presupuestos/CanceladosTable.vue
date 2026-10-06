@@ -154,7 +154,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import api from '@/api.js';
 
 export default {
   setup() {
@@ -180,7 +180,7 @@ export default {
 
       const fetchPresupuestos = async () => {
           try {
-          const response = await axios.get('http://localhost:8000/api/presupuestos/cancelados/');
+          const response = await api.get('/presupuestos/cancelados/');
           // Formatear los datos antes de asignarlos a presupuestos.value
           presupuestos.value = response.data.map(presupuesto => ({
               ...presupuesto,
@@ -212,7 +212,7 @@ export default {
       };
 
       const abrirPresupuesto = (nro_presupuesto) => {
-        axios.get(`http://localhost:8000/api/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
+        api.get(`/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
             .then(response => {
                 // Obtener los datos del presupuesto de la respuesta
                 const { nro_presupuesto, fecha_presupuesto, contacto, telefono, telefono2, email, email2, area_tematica, subtotal, descuento, arancel_presupuesto, observaciones, nro_solicitante, nombre_solicitante, detalles_presupuesto  } = response.data;
@@ -278,7 +278,7 @@ export default {
       const cambiarEstado = async (presupuesto) => {
             try {
                 // Realizar la petición para actualizar el estado del presupuesto en la base de datos
-                const response = await axios.put(`http://localhost:8000/api/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
+                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
                 estado_presupuesto: presupuesto.nuevoEstado
                 });
         

@@ -157,7 +157,7 @@
   
   <script>
   import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+  import api from '@/api.js';
   
   export default {
     setup() {
@@ -185,7 +185,7 @@
 
         const fetchPresupuestos = async () => {
             try {
-            const response = await axios.get('http://localhost:8000/api/presupuestos/aceptados/');
+            const response = await api.get('/presupuestos/aceptados/');
             // Formatear los datos antes de asignarlos a presupuestos.value
             presupuestos.value = response.data.map(presupuesto => ({
                 ...presupuesto,
@@ -220,7 +220,7 @@
           nro_presupuesto_global.value = nro_presupuesto;
           console.log('a vergaaaaa')
           console.log('nro_presupuesto_global',nro_presupuesto_global)
-          axios.get(`http://localhost:8000/api/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
+          api.get(`/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
               .then(response => {
                   // Obtener los datos del presupuesto de la respuesta
                   const { nro_presupuesto, fecha_presupuesto, contacto, telefono, telefono2, email, email2, area_tematica, subtotal, descuento, arancel_presupuesto, observaciones, nro_solicitante, nombre_solicitante, detalles_presupuesto  } = response.data;
@@ -257,9 +257,9 @@
 
         const descargarPresupuestoPDF = () => {
             const nro_presupuesto = nro_presupuesto_global.value;
-            axios({
+            api({
                 method: 'get',
-                url: `/api/presupuestos/generar_pdf_presupuesto/${nro_presupuesto}/`,
+                url: `/presupuestos/generar_pdf_presupuesto/${nro_presupuesto}/`,
                 responseType: 'blob' // Indicamos que esperamos una respuesta de tipo archivo binario (PDF)
             })
             .then((response) => {
@@ -308,7 +308,7 @@
         const cambiarEstado = async (presupuesto) => {
             try {
                 // Realizar la petición para actualizar el estado del presupuesto en la base de datos
-                const response = await axios.put(`http://localhost:8000/api/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
+                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
                 estado_presupuesto: presupuesto.nuevoEstado
                 });
         
