@@ -22,9 +22,6 @@ class PresupuestoSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         detalles_presupuesto_data = validated_data.pop('detalles_presupuesto', [])
         
-        logger.debug("Validated Data: %s", validated_data)
-        logger.debug("Detalles Presupuesto Data: %s", detalles_presupuesto_data)
-        
         try:
             presupuesto = Presupuesto.objects.create(**validated_data)
         except Exception as e:
