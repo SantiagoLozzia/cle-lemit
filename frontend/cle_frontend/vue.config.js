@@ -13,6 +13,11 @@ module.exports = {
         ws: true,
         changeOrigin: true,
       },
+      '^/ws': {
+        target: 'http://192.168.100.10:8000',
+        ws: true,
+        changeOrigin: true,
+      },
     },
     allowedHosts: ['cle-lemit.local'],
   },

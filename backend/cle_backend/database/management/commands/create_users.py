@@ -48,9 +48,11 @@ class Command(BaseCommand):
                 # Verificar si el usuario ya existe
                 user, created = User.objects.get_or_create(
                     username=username,
-                    defaults={'first_name': first_name, 'last_name': last_name, 'password': 'securepassword'}
+                    defaults={'first_name': first_name, 'last_name': last_name}
                 )
                 if created:
+                    user.set_unusable_password()
+                    user.save(update_fields=['password'])
                     self.stdout.write(self.style.SUCCESS(f'Usuario creado: {username}'))
                 else:
                     self.stdout.write(self.style.WARNING(f'Usuario ya existe: {username}'))

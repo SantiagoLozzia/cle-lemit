@@ -17,6 +17,7 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import api from '@/api.js';
 import UpdateModule     from '../components/aranceles/UpdateModule.vue';
 import ArancelesTable   from '../components/aranceles/ArancelesTable.vue';
 import NewService       from '../components/aranceles/NewService.vue';
@@ -32,17 +33,20 @@ export default {
     /* --- 1) Carga inicial vía HTTP --- */
     const fetchAranceles = async () => {
       try {
-        const res = await fetch(`${process.env.VUE_APP_API_BASE_URL}/api/aranceles/todos/`);
-        if (!res.ok) throw new Error('Error cargando aranceles');
-        arancelesData.value = await res.json();
+        const response = await api.get('/aranceles/todos/');
+        arancelesData.value = response.data;
       } catch (err) {
-        console.error('Fetch error:', err);
+        console.error('Fetch error:', err.message);
       }
     };
 
     /* --- 2) WebSocket para cambios en tiempo real --- */
     const initSocket = () => {
-      const socket = new WebSocket(`ws://192.168.100.10/ws/mi_canal/`);
+      const token = sessionStorage.getItem('token');
+      if (!token) return;
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const socket = new WebSocket(`${protocol}//${window.location.host}/ws/mi_canal/`, ['jwt', token]);
 
       socket.onopen = () => {
         console.log('✅ Conexión WebSocket establecida');

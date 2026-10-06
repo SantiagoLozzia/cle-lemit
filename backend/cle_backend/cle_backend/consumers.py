@@ -1,6 +1,16 @@
 # cle_backend/consumers.py
 import json
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+
+@database_sync_to_async
+def get_user_from_token(raw_token):
+    authentication = JWTAuthentication()
+    token = authentication.get_validated_token(raw_token.encode('ascii'))
+    return authentication.get_user(token)
 
 class MiConsumer(AsyncWebsocketConsumer):
     """
@@ -11,10 +21,21 @@ class MiConsumer(AsyncWebsocketConsumer):
 
     # ──────────────────────────── Conexión ────────────────────────────
     async def connect(self):
+        subprotocols = self.scope.get('subprotocols', [])
+        if len(subprotocols) != 2 or subprotocols[0] != 'jwt':
+            await self.close(code=4401)
+            return
+
+        try:
+            self.scope['user'] = await get_user_from_token(subprotocols[1])
+        except (AuthenticationFailed, UnicodeEncodeError):
+            await self.close(code=4401)
+            return
+
         # 1) Añade al usuario al grupo
         await self.channel_layer.group_add("aranceles", self.channel_name)
         # 2) Acepta la conexión
-        await self.accept()
+        await self.accept(subprotocol='jwt')
         # 3) Mensaje inicial
         await self.send_json({"message": "Conexión WebSocket establecida"})
 

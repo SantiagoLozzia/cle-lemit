@@ -43,8 +43,6 @@ async function login() {
       password: password.value
     });
 
-    console.log('Login Response:', response.data);
-
     if (response.data && response.data.access) {
       // Guardar el token y la información del usuario en sessionStorage
       sessionStorage.setItem('token', response.data.access);
@@ -53,9 +51,6 @@ async function login() {
       sessionStorage.setItem('area_tematica', response.data.area_tematica);
       sessionStorage.setItem('first_name', response.data.first_name);
       sessionStorage.setItem('last_name', response.data.last_name);
-
-      console.log('Token stored in sessionStorage:', sessionStorage.getItem('token'));
-      console.log('Role stored in sessionStorage:', sessionStorage.getItem('role'));
 
       // Configurar Axios para incluir el token en futuras solicitudes
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
@@ -68,7 +63,7 @@ async function login() {
       errorMessage.value = 'No se recibió el token';
     }
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error:', error.message);
     if (error.response && error.response.data) {
       errorMessage.value = error.response.data.detail || 'Error desconocido';
     } else {

@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,12 +24,35 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_i8)8l-gu_vvki9p!081t1un+ch5lncck)xx#6yob*f=4t72o9'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '').strip()
+if not SECRET_KEY:
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY must be configured.')
+if len(SECRET_KEY) < 50:
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY must contain at least 50 characters.')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() in {'1', 'true', 'yes'}
+HTTPS_ONLY = os.environ.get('DJANGO_HTTPS_ONLY', str(not DEBUG)).lower() in {'1', 'true', 'yes'}
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8080', 'cle-lemit.local', '192.168.100.*', '192.168.100.10']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if host.strip()
+]
+SESSION_COOKIE_SECURE = HTTPS_ONLY
+CSRF_COOKIE_SECURE = HTTPS_ONLY
+SECURE_SSL_REDIRECT = HTTPS_ONLY
+SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '31536000' if HTTPS_ONLY else '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = HTTPS_ONLY
+SECURE_HSTS_PRELOAD = HTTPS_ONLY
+SECURE_PROXY_SSL_HEADER = (
+    ('HTTP_X_FORWARDED_PROTO', 'https')
+    if os.environ.get('DJANGO_TRUST_PROXY_SSL_HEADER', '').lower() in {'1', 'true', 'yes'}
+    else None
+)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
 
 
 # Application definition
@@ -61,6 +85,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'cle_backend.middleware.APIJWTAuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = 'cle_backend.urls'
@@ -89,10 +114,11 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 
     'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
         'rest_framework.renderers.JSONRenderer',
     ],
 }
@@ -121,10 +147,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'cle_database',
-        'USER': 'postgres',
-        'PASSWORD': '5uperposgre5',
-        'HOST': '192.168.100.10',
-        'PORT': '5432',
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -193,22 +219,23 @@ LOGGING = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8080',
-    'http://localhost:8000',
-    'http://cle-lemit.local',
-    'http://localhost',
-    'http://192.168.100.10',
+    origin.strip()
+    for origin in os.environ.get(
+        'DJANGO_CORS_ALLOWED_ORIGINS',
+        'http://localhost:8080,http://localhost:8000,http://localhost',
+    ).split(',')
+    if origin.strip()
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8080',
-    'https://localhost:8080',
-    'http://localhost:8000',
-    'https://localhost:8000',
-    'http://cle-lemit.local',
-    'http://192.168.100.10',
+    origin.strip()
+    for origin in os.environ.get(
+        'DJANGO_CSRF_TRUSTED_ORIGINS',
+        'http://localhost:8080,http://localhost:8000',
+    ).split(',')
+    if origin.strip()
 ]
 
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']

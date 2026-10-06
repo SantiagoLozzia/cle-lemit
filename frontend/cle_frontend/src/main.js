@@ -7,6 +7,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import 'bootstrap';
 import "bootstrap/dist/js/bootstrap.bundle.min.js";  // Importación de Popper.js
 import axios from 'axios';
+import api from './api';
 
 // Función para obtener el token CSRF de las cookies
 function getCookie(name) {
@@ -29,11 +30,16 @@ axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
 axios.defaults.headers.common['X-CSRFToken'] = getCookie('csrftoken');
 axios.defaults.withCredentials = true;
+api.defaults.xsrfCookieName = 'csrftoken';
+api.defaults.xsrfHeaderName = 'X-CSRFToken';
+api.defaults.headers.common['X-CSRFToken'] = getCookie('csrftoken');
+api.defaults.withCredentials = true;
 
 // Configurar Axios para incluir el token JWT en el encabezado de autorización
 const token = sessionStorage.getItem('token');
 if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 }
 
 const app = createApp(App);

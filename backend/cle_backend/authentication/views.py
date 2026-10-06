@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().select_related('userprofile')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
 class NombreYApellidoUser(APIView):
     permission_classes = [IsAuthenticated]

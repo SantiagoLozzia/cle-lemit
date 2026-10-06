@@ -12,7 +12,6 @@
 
 <script>
 import { ref, computed, onMounted, watchEffect } from 'vue';
-import axios from 'axios';
 import api from '@/api.js';
 import logo from '@/assets/tico.jpeg';
 
@@ -30,7 +29,6 @@ export default {
     const fetchUserInfo = async () => {
       try {
         const token = sessionStorage.getItem('token');
-        console.log('Token from sessionStorage:', token);
 
         if (token && token !== 'null' && token !== 'undefined') {
           const response = await api.get('/auth/user_info/', {
@@ -38,8 +36,6 @@ export default {
               Authorization: `Bearer ${token}`
             }
           });
-
-          console.log('User Info Response:', response.data);
 
           firstName.value = response.data.first_name;
           lastName.value = response.data.last_name;
@@ -50,7 +46,7 @@ export default {
           console.warn('Token inválido o no encontrado');
         }
       } catch (error) {
-        console.error('Error fetching user info:', error);
+        console.error('Error fetching user info:', error.message);
       } finally {
         userLoaded.value = true;
       }
@@ -59,7 +55,7 @@ export default {
     const logout = () => {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('username');
-      axios.defaults.headers.common['Authorization'] = '';
+      delete api.defaults.headers.common['Authorization'];
       window.location.href = '/login';
     };
 
