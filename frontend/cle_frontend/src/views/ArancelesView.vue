@@ -94,5 +94,6 @@ export default {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  padding: 12px 0;
 }
 </style>
