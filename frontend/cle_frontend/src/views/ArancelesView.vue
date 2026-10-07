@@ -91,9 +91,9 @@ export default {
 
 .actions-bar {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
   padding: 12px 0;
 }
 </style>
