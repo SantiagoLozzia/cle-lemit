@@ -59,7 +59,8 @@ import { ref } from 'vue';
 import api from '@/api.js'; 
 
 export default {
-  setup() {
+  emits: ['arancel-creado'],
+  setup(props, { emit }) {
     const nuevoServicio = ref({
       servicio: '',
       norma: '',
@@ -108,6 +109,7 @@ export default {
         .then(response => {
           console.log(response.data);
           cerrarModal();
+          emit('arancel-creado');
 
           nuevoServicio.value = {
             servicio: '',

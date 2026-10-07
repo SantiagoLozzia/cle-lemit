@@ -2,7 +2,7 @@
   <div class="aranceles-view">
     <div class="actions-bar">
       <UpdateModule />
-      <NewService />
+      <NewService @arancel-creado="fetchAranceles" />
     </div>
     <ArancelesTable :data="arancelesData" />
   </div>
