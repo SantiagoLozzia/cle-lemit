@@ -147,8 +147,8 @@ body {
 }
 
 .modal-logo {
-  width: 1000px; 
-  height: 80px; 
+  width: 100%;
+  height: 80px;
   background-image: url('@/assets/membrete_lemit.jpeg');
                     /* url('@/assets/logo_cic_modal.png'),  */
                     /* url('@/assets/logo_ministerio_modal.png'), */
@@ -190,8 +190,8 @@ body {
 }
 
 .modal-footer-a4 .footer-image {
-  width: 1000px; 
-  height: 80px; 
+  width: 100%;
+  height: 80px;
   background-image: url('@/assets/pie_pagina_lemit.jpeg'); /* Ruta a la imagen */
   background-size: contain; /* Asegura que la imagen se ajuste dentro del contenedor */
   background-repeat: no-repeat; /* Evita que la imagen se repita */

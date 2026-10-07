@@ -1,94 +1,79 @@
 <template>
   <div>
-    <!-- Modal -->
-    <div class="modal fade" id="actualizarModulo" tabindex="-1" aria-labelledby="actualizarModuloLabel" aria-hidden="true">
+    <button class="btn btn-primary custom-shadow-btn" @click="abrirModal">Actualizar Módulo</button>
+
+    <div class="modal" :class="{ 'show': mostrarModal }" id="modalActualizarModulo">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="actualizarModuloLabel">Actualizar Módulo</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title">Actualizar Módulo</h5>
+            <button type="button" class="btn-close" @click="cerrarModal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
-              {{ error }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <div v-if="success" class="alert alert-success alert-dismissible fade show" role="alert">
-              {{ success }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-
-            <div class="form-group">
-              <label for="nuevoModulo" class="form-label">Valor Actual</label>
+            <div v-if="error" class="alert alert-danger">{{ error }}</div>
+            <div v-if="success" class="alert alert-success">{{ success }}</div>
+            <div class="mb-3">
+              <label for="nuevoModulo" class="form-label">Nuevo valor del módulo</label>
               <input v-model.number="nuevoModulo" id="nuevoModulo" type="number" class="form-control" />
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModal">Cerrar</button>
             <button type="button" class="btn btn-primary" @click="actualizarModulo">Actualizar</button>
           </div>
         </div>
       </div>
     </div>
-
-    <button class="btn btn-primary" @click="abrirActualizarModulo">Actualizar Módulo</button>
   </div>
 </template>
 
 <script>
-import { ref } from "vue";
-import api from '@/api.js'; 
+import { ref } from 'vue';
+import api from '@/api.js';
 
 export default {
   setup() {
-    const nuevoModulo = ref(null); // Variable para el valor del módulo
-    const mostrarModalActualizarModulo = ref(false); // Para mostrar/ocultar el modal
-    const error = ref(""); // Mensaje de error
-    const success = ref(""); // Mensaje de éxito
+    const nuevoModulo = ref(null);
+    const mostrarModal = ref(false);
+    const error = ref('');
+    const success = ref('');
 
-    // Función para abrir el modal
-    const abrirActualizarModulo = () => {
-      mostrarModalActualizarModulo.value = true;
+    const abrirModal = () => {
+      nuevoModulo.value = null;
+      error.value = '';
+      success.value = '';
+      mostrarModal.value = true;
     };
 
-    // Función para actualizar el módulo
+    const cerrarModal = () => {
+      mostrarModal.value = false;
+    };
+
     const actualizarModulo = async () => {
       try {
         const response = await api.post('/aranceles/actualizar_modulo/', {
           nuevo_valor: nuevoModulo.value,
         });
         if (response.data.success) {
-          success.value = "El módulo se actualizó correctamente.";
-          error.value = "";
+          success.value = 'El módulo se actualizó correctamente.';
+          error.value = '';
         } else {
-          success.value = "";
-          error.value = "Hubo un error al actualizar el módulo.";
+          error.value = 'Hubo un error al actualizar el módulo.';
+          success.value = '';
         }
         setTimeout(() => {
-          success.value = "";
-          error.value = "";
-        }, 3000);
+          success.value = '';
+          error.value = '';
+          cerrarModal();
+        }, 2000);
       } catch (err) {
-        error.value = "Hubo un error al contactar al servidor.";
-        success.value = "";
-        setTimeout(() => {
-          error.value = "";
-        }, 3000);
+        error.value = 'Hubo un error al contactar al servidor.';
+        success.value = '';
+        setTimeout(() => { error.value = ''; }, 3000);
       }
     };
 
-    return {
-      nuevoModulo,
-      mostrarModalActualizarModulo,
-      error,
-      success,
-      abrirActualizarModulo,
-      actualizarModulo,
-    };
+    return { nuevoModulo, mostrarModal, error, success, abrirModal, cerrarModal, actualizarModulo };
   },
 };
 </script>
-
-<style scoped>
-/* Puedes añadir estilos aquí si es necesario */
-</style>
