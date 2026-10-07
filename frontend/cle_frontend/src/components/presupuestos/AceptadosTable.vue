@@ -315,8 +315,7 @@
                 // Verificar si la actualización fue exitosa
                 if (response.status === 200) {
                 console.log('Estado del presupuesto actualizado correctamente:', presupuesto.nuevoEstado);
-                // Recargar la página para reflejar los cambios actualizados
-                location.reload();
+                fetchPresupuestos();
                 } else {
                 console.error('Error al actualizar el estado del presupuesto:', response.statusText);
                 }

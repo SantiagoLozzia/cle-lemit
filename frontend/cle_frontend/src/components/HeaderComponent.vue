@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, watchEffect } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import api from '@/api.js';
 import logo from '@/assets/logo_L.png';
 
@@ -26,50 +26,28 @@ export default {
       return firstName.value || lastName.value ? `${firstName.value} ${lastName.value}` : 'Invitado';
     });
 
-    const fetchUserInfo = async () => {
-      try {
-        const token = sessionStorage.getItem('token');
-
-        if (token && token !== 'null' && token !== 'undefined') {
-          const response = await api.get('/auth/user_info/', {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-
-          firstName.value = response.data.first_name;
-          lastName.value = response.data.last_name;
-
-          console.log('First Name:', firstName.value);
-          console.log('Last Name:', lastName.value);
-        } else {
-          console.warn('Token inválido o no encontrado');
-        }
-      } catch (error) {
-        console.error('Error fetching user info:', error.message);
-      } finally {
-        userLoaded.value = true;
-      }
+    const loadUserFromSession = () => {
+      firstName.value = sessionStorage.getItem('first_name') || '';
+      lastName.value = sessionStorage.getItem('last_name') || '';
+      userLoaded.value = true;
     };
 
     const logout = () => {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('username');
+      sessionStorage.removeItem('first_name');
+      sessionStorage.removeItem('last_name');
       delete api.defaults.headers.common['Authorization'];
       window.location.href = '/login';
     };
 
     onMounted(() => {
-      // Primer intento de carga
-      fetchUserInfo();
+      loadUserFromSession();
+      window.addEventListener('auth-changed', loadUserFromSession);
     });
 
-    // Observa si aparece el token más tarde (por ejemplo, después de login)
-    watchEffect(() => {
-      const token = sessionStorage.getItem('token');
-      if (!userLoaded.value && token && token !== 'null' && token !== 'undefined') {
-        fetchUserInfo();
-      }
+    onUnmounted(() => {
+      window.removeEventListener('auth-changed', loadUserFromSession);
     });
 
     return {

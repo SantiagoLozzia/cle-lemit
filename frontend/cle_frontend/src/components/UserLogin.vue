@@ -55,6 +55,9 @@ async function login() {
       // Configurar Axios para incluir el token en futuras solicitudes
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
 
+      // Notificar al header que el usuario cambió
+      window.dispatchEvent(new CustomEvent('auth-changed'));
+
       console.log('Redirigiendo a la página principal');
       router.push('/')
         .then(() => console.log('Redirección exitosa'))
