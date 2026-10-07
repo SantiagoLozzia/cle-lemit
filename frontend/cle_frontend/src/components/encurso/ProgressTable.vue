@@ -641,6 +641,10 @@
               </div>
             </form>
           </div>
+          <!-- Modal Footer -->
+          <div class="modal-footer-a4">
+            <div class="footer-image"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -904,6 +908,7 @@
       <div class="modal-dialog-a4">
         <div class="modal-content">
           <div class="modal-header">
+            <div class="modal-logo"></div>
             <h1 class="modal-title fs-5 fw-bold">Orden de Servicio N°{{ nroOS }}</h1>
             <button type="button" class="btn-close" @click="cerrarModalOrdenServicio" aria-label="Close"></button>
           </div>
@@ -969,6 +974,10 @@
               </div>
 
             </form>
+          </div>
+          <!-- Modal Footer -->
+          <div class="modal-footer-a4">
+            <div class="footer-image"></div>
           </div>
         </div>
       </div>
@@ -1044,6 +1053,7 @@
       <div class="modal-dialog-a4">
         <div class="modal-content">
           <div class="modal-header">
+            <div class="modal-logo"></div>
             <h1 class="modal-title fs-5 fw-bold">Crear Solicitud Inter Area</h1>
             <button type="button" class="btn-close" @click="cerrarModalCrearSolicitudInterArea" aria-label="Close"></button>
           </div>
@@ -1107,12 +1117,12 @@
               </div>
             </form>
 
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-              <button type="button" class="btn btn-primary" @click="crearSolicitudInterArea(fila); cerrarModalCrearSolicitudInterArea">Crear</button>
-              <button type="button" class="btn btn-secondary" @click="cerrarModalCrearSolicitudInterArea">Cancelar</button>
-            </div>
-            
+          </div>
+          <!-- Modal Footer -->
+          <div class="modal-footer-a4">
+            <div class="footer-image"></div>
+            <button type="button" class="btn btn-primary" @click="crearSolicitudInterArea(fila); cerrarModalCrearSolicitudInterArea">Crear</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalCrearSolicitudInterArea">Cancelar</button>
           </div>
         </div>
       </div>
@@ -1122,6 +1132,7 @@
       <div class="modal-dialog-a4">
         <div class="modal-content">
           <div class="modal-header">
+            <div class="modal-logo"></div>
             <h1 class="modal-title fs-5 fw-bold">Solicitud Inter Area N°{{ nroSolicitudInterArea }}</h1>
             <button type="button" class="btn-close" @click="cerrarModalSolicitudInterArea" aria-label="Close"></button>
           </div>
@@ -1177,6 +1188,10 @@
               </div>
 
             </form>
+          </div>
+          <!-- Modal Footer -->
+          <div class="modal-footer-a4">
+            <div class="footer-image"></div>
           </div>
         </div>
       </div>

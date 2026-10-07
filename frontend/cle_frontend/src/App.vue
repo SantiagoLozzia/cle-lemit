@@ -207,6 +207,10 @@ body {
   width: 45%; /* Establece el ancho de los botones */
 }
 
+.modal-dialog-a4 .modal-content {
+  width: 100%;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

@@ -9,6 +9,7 @@
         <div class="modal-dialog-a4">
           <div class="modal-content">
             <div class="modal-header">
+              <div class="modal-logo"></div>
               <h1 class="modal-title fs-5 fw-bold">Nuevo Presupuesto</h1>
               <button type="button" class="btn-close" @click="cerrarModal" aria-label="Close"></button>
             </div>
@@ -121,9 +122,12 @@
                   <label for="observaciones" class="form-label text-left">Observaciones:</label>
                   <input v-model="nuevoPresupuesto.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                 </div>
-  
-                <button @click="crearPresupuesto()" type="button" class="btn btn-primary w-100">Guardar</button>
               </form>
+            </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer-a4">
+              <div class="footer-image"></div>
+              <button @click="crearPresupuesto()" type="button" class="btn btn-primary">Guardar</button>
             </div>
           </div>
         </div>
@@ -495,10 +499,6 @@
     /* Estilos opcionales para el botón, ajusta el tamaño y el espaciado según sea necesario */
   /* } */
   
-  #modalPresupuesto .modal-dialog {
-    max-width: 1500px !important; 
-  }
-  
   .form-select {
     font-size: 16px;
     padding: 6px;
@@ -528,12 +528,5 @@
     text-align: left !important;
   }
 
-  .modal-dialog-a4 {
-    width: 300mm !important; 
-    /* max-width: 100%; 
-    height: 297mm; 
-    max-height: 100%; 
-    margin: auto;  */
-  }
 </style>
   
