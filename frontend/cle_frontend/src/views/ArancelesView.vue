@@ -96,4 +96,8 @@ export default {
   gap: 8px;
   padding: 12px 0;
 }
+
+.actions-bar :deep(.btn) {
+  min-width: 160px;
+}
 </style>

@@ -136,42 +136,16 @@ body {
 }
 
 .modal-header {
-  padding: 16px 20px;
-}
-
-/* Modales regulares (no A4): header con color primario */
-.modal-dialog .modal-header {
-  background-color: #026290;
-  color: white;
-  border-bottom: none;
-  border-radius: 4px 4px 0 0;
-}
-
-.modal-dialog .modal-header .modal-title,
-.modal-dialog .modal-header h1,
-.modal-dialog .modal-header h4,
-.modal-dialog .modal-header h5 {
-  color: white;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  font-size: 0.95rem;
-}
-
-.modal-dialog .modal-header .btn-close {
-  filter: brightness(0) invert(1);
-  opacity: 0.85;
-}
-
-/* Modales A4 (documentos/formularios): header blanco con borde inferior */
-.modal-dialog-a4 .modal-header {
   background-color: white;
   color: #026290;
+  padding: 16px 20px;
   border-bottom: 3px solid #026290;
 }
 
-.modal-dialog-a4 .modal-header .modal-title,
-.modal-dialog-a4 .modal-header h1 {
+.modal-header .modal-title,
+.modal-header h1,
+.modal-header h4,
+.modal-header h5 {
   color: #026290;
   font-weight: 700;
   letter-spacing: 0.3px;

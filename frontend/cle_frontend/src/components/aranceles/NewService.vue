@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="button-container">
-      <button class="btn btn-primary float-start ms-2 mt-2 custom-shadow-btn" @click="mostrarFormulario">+ Servicio</button>
+      <button class="btn btn-primary custom-shadow-btn" @click="mostrarFormulario">+ Servicio</button>
     </div>
 
     <div class="modal" :class="{ 'show': mostrarModal }" id="modalService">
