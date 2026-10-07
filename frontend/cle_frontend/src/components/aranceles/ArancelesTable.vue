@@ -2,10 +2,17 @@
   <div class="aranceles-container">
     <div class="table-container">
       <table class="table aranceles-table">
+        <colgroup>
+          <col class="col-nro">
+          <col class="col-servicio">
+          <col class="col-norma">
+          <col class="col-valor">
+          <col class="col-area">
+        </colgroup>
         <thead>
           <tr>
             <th class="add-border-right">Nro</th>
-            <th class="add-border-right">Servicio</th>
+            <th class="add-border-right text-start">Servicio</th>
             <th class="add-border-right">Norma</th>
             <th class="add-border-right">Valor</th>
             <th class="add-border-right">Area Tematica</th>
@@ -62,8 +69,21 @@ export default {
 
 .aranceles-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
+
+.aranceles-table td,
+.aranceles-table th {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.col-nro     { width: 70px; }
+.col-norma   { width: 160px; }
+.col-valor   { width: 90px; }
+.col-area    { width: 22%; }
+/* col-servicio toma el espacio restante */
 
 .add-border-right {
   border-right: 1px solid gainsboro;
