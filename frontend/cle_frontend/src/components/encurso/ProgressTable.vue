@@ -3014,6 +3014,14 @@
     border-right: 1px solid gainsboro; /* Establece el borde derecho */
   }
 
+  .table tbody tr:nth-child(even) {
+    background-color: #f0f6fa;
+  }
+
+  .table tbody tr:hover {
+    background-color: #daeaf3;
+  }
+
   .radio-options input[type="radio"] {
     display: inline-block;
     margin-right: 5px;
