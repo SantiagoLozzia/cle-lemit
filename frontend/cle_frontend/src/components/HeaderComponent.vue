@@ -13,7 +13,7 @@
 <script>
 import { ref, computed, onMounted, watchEffect } from 'vue';
 import api from '@/api.js';
-import logo from '@/assets/tico.jpeg';
+import logo from '@/assets/logo_L.png';
 
 export default {
   setup() {
