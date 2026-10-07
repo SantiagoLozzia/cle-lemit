@@ -166,11 +166,10 @@ body {
 }
 
 .modal-dialog-a4 {
-  width: 210mm; /* Ancho de una hoja A4 */
-  max-width: 100%; 
-  height: 297mm; /* Alto de una hoja A4 */
-  max-height: 100%; 
-  margin: auto; /* Centrará el modal en la pantalla */
+  width: 210mm;
+  max-width: 100%;
+  max-height: 90vh;
+  margin: auto;
 }
 
 .modal-content {
@@ -209,6 +208,26 @@ body {
 
 .modal-dialog-a4 .modal-content {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal-dialog-a4 .modal-body {
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media print {
+  .modal-dialog-a4 {
+    max-height: none;
+  }
+  .modal-dialog-a4 .modal-content {
+    max-height: none;
+  }
+  .modal-dialog-a4 .modal-body {
+    overflow-y: visible;
+  }
 }
 
 #app {
