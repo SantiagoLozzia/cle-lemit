@@ -49,4 +49,8 @@ export default {
   max-width: 100%;
   padding: 0;
 }
+
+.table-container {
+  overflow-x: auto;
+}
 </style>
