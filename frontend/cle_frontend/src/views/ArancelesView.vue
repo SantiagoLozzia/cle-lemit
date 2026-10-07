@@ -1,17 +1,10 @@
 <template>
-  <div class="container">
-    <div class="button-module">
-      <UpdateModule :data="moduloData" />
+  <div class="aranceles-view">
+    <div class="actions-bar">
+      <UpdateModule />
+      <NewService />
     </div>
-
-    <div class="button-new-service">
-      <NewService :data="servicioData" />
-    </div>
-
-    <div class="table-container">
-      <!-- La tabla recibirá la lista reactiva -->
-      <ArancelesTable :data="arancelesData" />
-    </div>
+    <ArancelesTable :data="arancelesData" />
   </div>
 </template>
 
@@ -89,16 +82,17 @@ export default {
 </script>
 
 <style scoped>
-.container {
+.aranceles-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
-  padding: 0;
-  margin: 0;
 }
 
-.button-new-service {
-  margin-left: 0;
+.actions-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 </style>

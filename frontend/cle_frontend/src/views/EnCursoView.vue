@@ -44,7 +44,9 @@ export default {
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Controla el espacio entre los elementos */
+  gap: 20px;
   margin-left: 0;
+  max-width: 100%;
+  padding: 0;
 }
 </style>
