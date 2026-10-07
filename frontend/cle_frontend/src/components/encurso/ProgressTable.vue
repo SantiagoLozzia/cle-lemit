@@ -1053,7 +1053,6 @@
       <div class="modal-dialog-a4">
         <div class="modal-content">
           <div class="modal-header">
-            <div class="modal-logo"></div>
             <h1 class="modal-title fs-5 fw-bold">Crear Solicitud Inter Area</h1>
             <button type="button" class="btn-close" @click="cerrarModalCrearSolicitudInterArea" aria-label="Close"></button>
           </div>
@@ -1118,9 +1117,7 @@
             </form>
 
           </div>
-          <!-- Modal Footer -->
-          <div class="modal-footer-a4">
-            <div class="footer-image"></div>
+          <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="crearSolicitudInterArea(fila); cerrarModalCrearSolicitudInterArea">Crear</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalCrearSolicitudInterArea">Cancelar</button>
           </div>

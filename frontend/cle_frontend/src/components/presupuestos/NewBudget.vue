@@ -9,7 +9,6 @@
         <div class="modal-dialog-a4">
           <div class="modal-content">
             <div class="modal-header">
-              <div class="modal-logo"></div>
               <h1 class="modal-title fs-5 fw-bold">Nuevo Presupuesto</h1>
               <button type="button" class="btn-close" @click="cerrarModal" aria-label="Close"></button>
             </div>
@@ -124,10 +123,8 @@
                 </div>
               </form>
             </div>
-            <!-- Modal Footer -->
-            <div class="modal-footer-a4">
-              <div class="footer-image"></div>
-              <button @click="crearPresupuesto()" type="button" class="btn btn-primary">Guardar</button>
+            <div class="modal-footer">
+              <button @click="crearPresupuesto()" type="button" class="btn btn-primary w-100">Guardar</button>
             </div>
           </div>
         </div>
