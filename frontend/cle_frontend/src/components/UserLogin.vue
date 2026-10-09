@@ -80,7 +80,7 @@ async function login() {
 
 <style scoped>
 .login-background {
-  background-image: url('@/assets/fondolemittrucho.jpg');
+  background-image: url('@/assets/edificio.jpg');
   background-size: cover;
   background-position: center;
   height: 100vh;
