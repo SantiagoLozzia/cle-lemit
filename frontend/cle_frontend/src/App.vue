@@ -1,16 +1,18 @@
 <template>
   <div>
-    <HeaderComponent class="header-fixed" />
-    <HorizontalMenu :user-permissions="userPermissions" class="menu-fixed" />
-    <div class="content-wrapper">
+    <template v-if="!isLoginPage">
+      <HeaderComponent class="header-fixed" />
+      <HorizontalMenu :user-permissions="userPermissions" class="menu-fixed" />
+    </template>
+    <div :class="isLoginPage ? '' : 'content-wrapper'">
       <router-view></router-view>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import HeaderComponent from './components/HeaderComponent.vue';
 import HorizontalMenu from './components/HorizontalMenu.vue';
 // import VueGoodTablePlugin from 'vue-good-table';
@@ -30,6 +32,8 @@ export default {
     });
 
     const router = useRouter();
+    const route = useRoute();
+    const isLoginPage = computed(() => route.path === '/userlogin');
 
     // Función para verificar la expiración del token
     const checkTokenExpiry = () => {
@@ -53,6 +57,7 @@ export default {
 
     return {
       userPermissions,
+      isLoginPage,
     };
   },
 };
