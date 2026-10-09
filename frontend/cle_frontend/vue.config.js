@@ -9,12 +9,12 @@ module.exports = {
     port: 8080,
     proxy: {
       '^/api': {
-        target: 'http://192.168.100.10:8000',
+        target: 'http://localhost:8000',
         ws: true,
         changeOrigin: true,
       },
       '^/ws/mi_canal/': {
-        target: 'http://192.168.100.10:8000',
+        target: 'http://localhost:8000',
         ws: true,
         changeOrigin: true,
       },
