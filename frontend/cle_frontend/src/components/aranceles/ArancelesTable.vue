@@ -1,12 +1,14 @@
 <template>
   <div class="aranceles-container">
     <div class="table-container">
-      <div class="filter-bar mb-2 d-flex align-items-center gap-2">
+      <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
         <select v-model="filterArea" class="form-select form-select-sm w-auto">
           <option value="">Todas las áreas</option>
           <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
         </select>
-        <button v-if="filterArea" @click="clearFilter" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+        <input v-model="filterServicio" type="text" placeholder="Buscar servicio..." class="form-control form-control-sm w-auto" style="min-width:180px">
+        <input v-model="filterNorma" type="text" placeholder="Buscar norma..." class="form-control form-control-sm w-auto" style="min-width:140px">
+        <button v-if="filterArea || filterServicio || filterNorma" @click="clearFilter" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
       </div>
       <table class="table aranceles-table">
         <colgroup>
@@ -71,11 +73,16 @@ export default {
     };
 
     const filterArea = ref('');
+    const filterServicio = ref('');
+    const filterNorma = ref('');
     const uniqueAreas = AREAS_TEMATICAS;
-    const filteredData = computed(() =>
-      !filterArea.value ? props.data : props.data.filter(a => formatAreaTematica(a.area_tematica) === filterArea.value)
-    );
-    const clearFilter = () => { filterArea.value = ''; };
+    const filteredData = computed(() => props.data.filter(a => {
+      const areaOk = !filterArea.value || formatAreaTematica(a.area_tematica) === filterArea.value;
+      const servicioOk = !filterServicio.value || a.servicio.toLowerCase().includes(filterServicio.value.toLowerCase());
+      const normaOk = !filterNorma.value || (a.norma && a.norma.toLowerCase().includes(filterNorma.value.toLowerCase()));
+      return areaOk && servicioOk && normaOk;
+    }));
+    const clearFilter = () => { filterArea.value = ''; filterServicio.value = ''; filterNorma.value = ''; };
 
     const formatAreaTematica = (areaTematica) => {
       return areaTematica.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
@@ -85,7 +92,7 @@ export default {
 
     return {
       sortKey, sortDir, sortedData, setSort,
-      filterArea, uniqueAreas, clearFilter,
+      filterArea, filterServicio, filterNorma, uniqueAreas, clearFilter,
       formatAreaTematica
     };
   }
