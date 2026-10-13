@@ -7,6 +7,21 @@
     </div>
 
     <div>
+      <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
+        <select v-model="filterArea" class="form-select form-select-sm w-auto">
+          <option value="">Todas las áreas</option>
+          <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
+        </select>
+        <div class="d-flex align-items-center gap-1">
+          <small class="text-muted">Desde</small>
+          <input type="date" v-model="filterDesde" class="form-control form-control-sm w-auto">
+        </div>
+        <div class="d-flex align-items-center gap-1">
+          <small class="text-muted">Hasta</small>
+          <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
+        </div>
+        <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+      </div>
       <table class="table table-hover">
         <thead class="text-center">
           <tr>
@@ -32,12 +47,12 @@
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Data Servicio</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-02 Solicitud</th>
             <!-- Subcolumnas de Legajo -->
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">N°</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('nro_legajo')">N° <span class="sort-icon">{{ sortKey === 'nro_legajo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Legajo</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Factura</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Pago</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center sortable" @click="setSort('plazo_pago')">Plazo <span class="sort-icon">{{ sortKey === 'plazo_pago' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <!-- Subcolumnas de Recepcion -->
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">ST-03 Recepcion</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Muestras</th>
@@ -1385,10 +1400,10 @@
       const sortKey = ref('');
       const sortDir = ref('asc');
       const sortedFilas = computed(() => {
-        if (!sortKey.value) return filas.value;
-        return [...filas.value].sort((a, b) => {
-          const valA = sortKey.value === 'nro_dataServicio' ? Number(a[sortKey.value]) : a[sortKey.value];
-          const valB = sortKey.value === 'nro_dataServicio' ? Number(b[sortKey.value]) : b[sortKey.value];
+        if (!sortKey.value) return filteredFilas.value;
+        return [...filteredFilas.value].sort((a, b) => {
+          const valA = ['nro_dataServicio','nro_legajo','plazo_pago'].includes(sortKey.value) ? Number(a[sortKey.value]) : a[sortKey.value];
+          const valB = ['nro_dataServicio','nro_legajo','plazo_pago'].includes(sortKey.value) ? Number(b[sortKey.value]) : b[sortKey.value];
           if (valA < valB) return sortDir.value === 'asc' ? -1 : 1;
           if (valA > valB) return sortDir.value === 'asc' ? 1 : -1;
           return 0;
@@ -1398,6 +1413,23 @@
         if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
         else { sortKey.value = key; sortDir.value = 'asc'; }
       };
+
+      const filterArea = ref('');
+      const filterDesde = ref('');
+      const filterHasta = ref('');
+
+      const uniqueAreas = computed(() =>
+        [...new Set(filas.value.map(f => f.area_tematica))].filter(Boolean).sort()
+      );
+
+      const filteredFilas = computed(() => filas.value.filter(f => {
+        const areaOk = !filterArea.value || f.area_tematica === filterArea.value;
+        const desdeOk = !filterDesde.value || f.fecha_dataServicio >= filterDesde.value;
+        const hastaOk = !filterHasta.value || f.fecha_dataServicio <= filterHasta.value;
+        return areaOk && desdeOk && hastaOk;
+      }));
+
+      const clearFilters = () => { filterArea.value = ''; filterDesde.value = ''; filterHasta.value = ''; };
       const numeroCircuitoGlobal = ref(null);
       const showSuccessAlert = ref(false);
       const showErrorAlert = ref(false);
@@ -2856,6 +2888,7 @@
         // General
         filas,
         sortKey, sortDir, sortedFilas, setSort,
+        filterArea, filterDesde, filterHasta, uniqueAreas, clearFilters,
         validarNumeroEntero,
         formatDate,
         formatArancel,

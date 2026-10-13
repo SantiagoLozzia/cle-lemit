@@ -1,5 +1,20 @@
 <template>
   <div>
+    <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
+      <select v-model="filterArea" class="form-select form-select-sm w-auto">
+        <option value="">Todas las áreas</option>
+        <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
+      </select>
+      <div class="d-flex align-items-center gap-1">
+        <small class="text-muted">Desde</small>
+        <input type="date" v-model="filterDesde" class="form-control form-control-sm w-auto">
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <small class="text-muted">Hasta</small>
+        <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
+      </div>
+      <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+    </div>
     <table class="table table-hover">
       <thead class="text-center">
         <tr>
@@ -160,8 +175,8 @@ export default {
       const sortKey = ref('');
       const sortDir = ref('asc');
       const sortedPresupuestos = computed(() => {
-        if (!sortKey.value) return presupuestos.value;
-        return [...presupuestos.value].sort((a, b) => {
+        if (!sortKey.value) return filteredPresupuestos.value;
+        return [...filteredPresupuestos.value].sort((a, b) => {
           const valA = sortKey.value === 'nro_presupuesto' ? Number(a[sortKey.value]) : a[sortKey.value];
           const valB = sortKey.value === 'nro_presupuesto' ? Number(b[sortKey.value]) : b[sortKey.value];
           if (valA < valB) return sortDir.value === 'asc' ? -1 : 1;
@@ -173,6 +188,23 @@ export default {
         if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
         else { sortKey.value = key; sortDir.value = 'asc'; }
       };
+
+      const filterArea = ref('');
+      const filterDesde = ref('');
+      const filterHasta = ref('');
+
+      const uniqueAreas = computed(() =>
+        [...new Set(presupuestos.value.map(p => p.area_tematica))].filter(Boolean).sort()
+      );
+
+      const filteredPresupuestos = computed(() => presupuestos.value.filter(p => {
+        const areaOk = !filterArea.value || p.area_tematica === filterArea.value;
+        const desdeOk = !filterDesde.value || p.fecha_presupuesto >= filterDesde.value;
+        const hastaOk = !filterHasta.value || p.fecha_presupuesto <= filterHasta.value;
+        return areaOk && desdeOk && hastaOk;
+      }));
+
+      const clearFilters = () => { filterArea.value = ''; filterDesde.value = ''; filterHasta.value = ''; };
 
       const nroPresupuesto = ref();
       const fechaPresupuesto = ref();
@@ -313,6 +345,7 @@ export default {
       return {
         presupuestos,
         sortKey, sortDir, sortedPresupuestos, setSort,
+        filterArea, filterDesde, filterHasta, uniqueAreas, clearFilters,
         nroPresupuesto,
         fechaPresupuesto,
         contactoPresupuesto,

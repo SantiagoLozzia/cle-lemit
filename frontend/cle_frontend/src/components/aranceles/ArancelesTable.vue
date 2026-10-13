@@ -1,6 +1,13 @@
 <template>
   <div class="aranceles-container">
     <div class="table-container">
+      <div class="filter-bar mb-2 d-flex align-items-center gap-2">
+        <select v-model="filterArea" class="form-select form-select-sm w-auto">
+          <option value="">Todas las áreas</option>
+          <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
+        </select>
+        <button v-if="filterArea" @click="clearFilter" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+      </div>
       <table class="table aranceles-table">
         <colgroup>
           <col class="col-nro">
@@ -46,8 +53,8 @@ export default {
     const sortKey = ref('');
     const sortDir = ref('asc');
     const sortedData = computed(() => {
-      if (!sortKey.value) return props.data;
-      return [...props.data].sort((a, b) => {
+      if (!sortKey.value) return filteredData.value;
+      return [...filteredData.value].sort((a, b) => {
         const valA = Number.isFinite(Number(a[sortKey.value])) && sortKey.value !== 'norma'
           ? Number(a[sortKey.value]) : a[sortKey.value];
         const valB = Number.isFinite(Number(b[sortKey.value])) && sortKey.value !== 'norma'
@@ -62,6 +69,15 @@ export default {
       else { sortKey.value = key; sortDir.value = 'asc'; }
     };
 
+    const filterArea = ref('');
+    const uniqueAreas = computed(() =>
+      [...new Set(props.data.map(a => formatAreaTematica(a.area_tematica)))].filter(Boolean).sort()
+    );
+    const filteredData = computed(() =>
+      !filterArea.value ? props.data : props.data.filter(a => formatAreaTematica(a.area_tematica) === filterArea.value)
+    );
+    const clearFilter = () => { filterArea.value = ''; };
+
     const formatAreaTematica = (areaTematica) => {
       return areaTematica.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -70,6 +86,7 @@ export default {
 
     return {
       sortKey, sortDir, sortedData, setSort,
+      filterArea, uniqueAreas, clearFilter,
       formatAreaTematica
     };
   }
