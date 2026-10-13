@@ -108,6 +108,7 @@ class Presupuesto(models.Model):
     descuento = models.IntegerField(choices=DESCUENTO_CHOICES)
     arancel_presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
     observaciones = models.TextField(max_length=255, null=True, blank=True)
+    motivo_cancelacion = models.TextField(max_length=500, null=True, blank=True)
     estado_presupuesto = models.CharField(choices=ESTADO_PRESUPUESTO_CHOICES)
     nro_solicitante = models.ForeignKey('Solicitante', on_delete=models.PROTECT)
 

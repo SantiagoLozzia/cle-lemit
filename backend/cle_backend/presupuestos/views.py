@@ -64,10 +64,11 @@ def presupuestos_cancelados(request):
             'fecha_presupuesto': presupuesto.fecha_presupuesto,
             'area_tematica': presupuesto.area_tematica,
             'estado_presupuesto': presupuesto.estado_presupuesto,
-            'nombre_solicitante': presupuesto.nro_solicitante.nombre_solicitante  
+            'nombre_solicitante': presupuesto.nro_solicitante.nombre_solicitante,
+            'motivo_cancelacion': presupuesto.motivo_cancelacion,
         }
         presupuestos_con_solicitante.append(presupuesto_dict)
-    
+
     return JsonResponse(presupuestos_con_solicitante, safe=False)
 
 @require_http_methods(["GET"])
@@ -89,8 +90,16 @@ def actualizar_estado_presupuesto(request, nro_presupuesto):
         presupuesto = Presupuesto.objects.get(nro_presupuesto=nro_presupuesto)
         nuevo_estado = request.data.get('estado_presupuesto')
 
+        ESTADOS_CANCELADOS = {'rechazado', 'modificado', 'actualizado'}
         if nuevo_estado in ['en_espera', 'rechazado', 'modificado', 'actualizado']:
             presupuesto.estado_presupuesto = nuevo_estado
+            if nuevo_estado in ESTADOS_CANCELADOS:
+                motivo = request.data.get('motivo_cancelacion', '').strip()
+                if not motivo:
+                    return JsonResponse({'mensaje': 'El motivo es requerido para este cambio de estado.'}, status=status.HTTP_400_BAD_REQUEST)
+                presupuesto.motivo_cancelacion = motivo
+            else:
+                presupuesto.motivo_cancelacion = None
             presupuesto.save()
 
             return JsonResponse({'mensaje': 'Estado del presupuesto actualizado correctamente'}, status=status.HTTP_200_OK)
@@ -194,6 +203,7 @@ def obtener_presupuesto(request, nro_presupuesto):
            'descuento': presupuesto_data['descuento'],
            'arancel_presupuesto': presupuesto_data['arancel_presupuesto'],
            'observaciones': presupuesto_data['observaciones'],
+           'motivo_cancelacion': presupuesto_data.get('motivo_cancelacion'),
            'nro_solicitante': nro_solicitante,
            'nombre_solicitante': nombre_solicitante,
            'telefono': telefono,

@@ -42,13 +42,22 @@
                   <!-- Menú desplegable para cambiar el estado -->
                   <div v-if="presupuesto.mostrarMenu" class="menu">
                     <select v-model="presupuesto.nuevoEstado" class="form-select">
+                        <option value="" disabled>— Seleccionar —</option>
                         <option value="en_espera">En Espera</option>
                         <option value="rechazado">Rechazado</option>
                         <option value="modificado">Modificado</option>
                         <option value="actualizado">Actualizado</option>
                     </select>
-                    <button @click="cambiarEstado(presupuesto)" class="btn btn-primary">Guardar</button>
-                    <button @click="cerrarMenu(index)" class="btn btn-danger">✖</button> 
+                    <textarea
+                      v-if="['rechazado','modificado','actualizado'].includes(presupuesto.nuevoEstado)"
+                      v-model="presupuesto.motivo"
+                      class="form-control mt-1"
+                      rows="2"
+                      placeholder="Motivo (requerido)..."
+                      style="min-width:200px"
+                    ></textarea>
+                    <button @click="cambiarEstado(presupuesto)" class="btn btn-primary mt-1">Guardar</button>
+                    <button @click="cerrarMenu(index)" class="btn btn-danger mt-1">✖</button>
                   </div>
                 </div>
               </td>
@@ -240,8 +249,9 @@
                 fecha: formatDate(presupuesto.fecha_presupuesto),
                 area_tematica: formatAreaTematica(presupuesto.area_tematica),
                 estado_presupuesto: formatEstadoPresupuesto(presupuesto.estado_presupuesto),
-                mostrarMenu: false, // Agregar propiedad para controlar la visibilidad del menú
-                nuevoEstado: '' // Nuevo estado seleccionado
+                mostrarMenu: false,
+                nuevoEstado: '',
+                motivo: '',
             }));
             } catch (error) {
             console.error('Error al obtener presupuestos:', error);
@@ -349,16 +359,24 @@
   
         const cerrarMenu = (index) => {
             presupuestos.value[index].mostrarMenu = false;
-            // Restablecer el nuevo estado seleccionado
             presupuestos.value[index].nuevoEstado = '';
+            presupuestos.value[index].motivo = '';
         };
-  
+
+        const ESTADOS_CANCELADOS = ['rechazado', 'modificado', 'actualizado'];
+
         const cambiarEstado = async (presupuesto) => {
+            if (!presupuesto.nuevoEstado) return;
+            if (ESTADOS_CANCELADOS.includes(presupuesto.nuevoEstado) && !presupuesto.motivo.trim()) {
+                alert('Por favor, ingresá un motivo para este cambio de estado.');
+                return;
+            }
             try {
-                // Realizar la petición para actualizar el estado del presupuesto en la base de datos
-                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
-                estado_presupuesto: presupuesto.nuevoEstado
-                });
+                const payload = { estado_presupuesto: presupuesto.nuevoEstado };
+                if (ESTADOS_CANCELADOS.includes(presupuesto.nuevoEstado)) {
+                    payload.motivo_cancelacion = presupuesto.motivo.trim();
+                }
+                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, payload);
         
                 // Verificar si la actualización fue exitosa
                 if (response.status === 200) {

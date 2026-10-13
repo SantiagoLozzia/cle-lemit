@@ -23,6 +23,8 @@
             <th class="sortable" @click="setSort('fecha_presupuesto')">Fecha <span class="sort-icon">{{ sortKey === 'fecha_presupuesto' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th>Solicitante</th>
             <th>Area Tematica</th>
+            <th>Estado</th>
+            <th>Motivo</th>
             <th>ST-01 Presupuesto</th>
             <th>Acciones</th>
           </tr>
@@ -33,27 +35,37 @@
             <td>{{ presupuesto.fecha }}</td>
             <td class="text-left">{{ presupuesto.nombre_solicitante }}</td>
             <td>{{ presupuesto.area_tematica }}</td>
+            <td>{{ presupuesto.estado_presupuesto }}</td>
+            <td class="text-left motivo-cell" :title="presupuesto.motivo_cancelacion">{{ presupuesto.motivo_cancelacion || '—' }}</td>
             <td><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirPresupuesto(presupuesto.nro_presupuesto)"></i></td>
             <td>
               <div class="acciones">
                 <button @click="mostrarMenu(index)" class="btn btn-link"><i class="bi bi-arrow-right-square"></i></button>
-                <!-- Menú desplegable para cambiar el estado -->
                 <div v-if="presupuesto.mostrarMenu" class="menu">
                   <select v-model="presupuesto.nuevoEstado" class="form-select">
+                      <option value="" disabled>— Seleccionar —</option>
                       <option value="en_espera">En Espera</option>
                       <option value="rechazado">Rechazado</option>
                       <option value="modificado">Modificado</option>
                       <option value="actualizado">Actualizado</option>
                   </select>
-                  <button @click="cambiarEstado(presupuesto)" class="btn btn-primary">Guardar</button>
-                  <button @click="cerrarMenu(index)" class="btn btn-danger">✖</button> 
+                  <textarea
+                    v-if="['rechazado','modificado','actualizado'].includes(presupuesto.nuevoEstado)"
+                    v-model="presupuesto.motivo"
+                    class="form-control mt-1"
+                    rows="2"
+                    placeholder="Motivo (requerido)..."
+                    style="min-width:200px"
+                  ></textarea>
+                  <button @click="cambiarEstado(presupuesto)" class="btn btn-primary mt-1">Guardar</button>
+                  <button @click="cerrarMenu(index)" class="btn btn-danger mt-1">✖</button>
                 </div>
               </div>
             </td>
           </tr>
           <!-- Fila para mensaje cuando no hay datos -->
           <tr v-if="presupuestos.length === 0" class="no-results">
-            <td colspan="6">No hay resultados para mostrar</td>
+            <td colspan="8">No hay resultados para mostrar</td>
           </tr>
         </tbody>
       </table>
@@ -152,9 +164,14 @@
               
               <div class="mb-3">
                 <label for="observacionesPresupuesto" class="form-label text-left">Observaciones:</label>
-                <input v-model="observacionesPresupuesto" type="text" class="form-control" id="observacionesPresupuesto" name="observacionesPresupuesto" readonly required />
+                <input v-model="observacionesPresupuesto" type="text" class="form-control" id="observacionesPresupuesto" name="observacionesPresupuesto" readonly />
               </div>
-              
+
+              <div v-if="motivoCancelacionPresupuesto" class="mb-3">
+                <label class="form-label text-left fw-bold text-danger">Motivo de cancelación:</label>
+                <p class="form-control-plaintext border rounded px-2 py-1">{{ motivoCancelacionPresupuesto }}</p>
+              </div>
+
             </form>
           </div>
           <!-- Modal Footer -->
@@ -222,6 +239,7 @@ export default {
       const descuentoPresupuesto = ref();
       const arancelPresupuesto = ref();
       const observacionesPresupuesto = ref();
+      const motivoCancelacionPresupuesto = ref();
       const detallesPresupuesto = ref();
 
       const mostrarModalPresupuesto = ref(false);
@@ -235,8 +253,9 @@ export default {
               fecha: formatDate(presupuesto.fecha_presupuesto),
               area_tematica: formatAreaTematica(presupuesto.area_tematica),
               estado_presupuesto: formatEstadoPresupuesto(presupuesto.estado_presupuesto),
-              mostrarMenu: false, // Agregar propiedad para controlar la visibilidad del menú
-              nuevoEstado: '' // Nuevo estado seleccionado
+              mostrarMenu: false,
+              nuevoEstado: '',
+              motivo: '',
           }));
           } catch (error) {
           console.error('Error al obtener presupuestos:', error);
@@ -263,9 +282,8 @@ export default {
         api.get(`/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
             .then(response => {
                 // Obtener los datos del presupuesto de la respuesta
-                const { nro_presupuesto, fecha_presupuesto, contacto, telefono, telefono2, email, email2, area_tematica, subtotal, descuento, arancel_presupuesto, observaciones, nro_solicitante, nombre_solicitante, detalles_presupuesto  } = response.data;
+                const { nro_presupuesto, fecha_presupuesto, contacto, telefono, telefono2, email, email2, area_tematica, subtotal, descuento, arancel_presupuesto, observaciones, motivo_cancelacion, nro_solicitante, nombre_solicitante, detalles_presupuesto  } = response.data;
 
-                // Asignar los datos a variables en el contexto del componente
                 nroPresupuesto.value = nro_presupuesto;
                 fechaPresupuesto.value = formatDate(fecha_presupuesto);
                 nroSolicitantePresupuesto.value = nro_solicitante;
@@ -279,15 +297,14 @@ export default {
                 subTotalPresupuesto.value = formatArancel(subtotal);
                 descuentoPresupuesto.value = descuento;
                 arancelPresupuesto.value = formatArancel(arancel_presupuesto);
-                observacionesPresupuesto.value = observaciones ;
+                observacionesPresupuesto.value = observaciones;
+                motivoCancelacionPresupuesto.value = motivo_cancelacion;
                 detallesPresupuesto.value = detalles_presupuesto;
 
-                // Mostrar el modal para mostrar los detalles del presupuesto
                 mostrarModalPresupuesto.value = true;
             })
             .catch(error => {
                 console.error('Error al obtener los datos del legajo:', error);
-                // Manejar el error, mostrar un mensaje al usuario, etc.
             });
       };
 
@@ -319,16 +336,24 @@ export default {
 
       const cerrarMenu = (index) => {
           presupuestos.value[index].mostrarMenu = false;
-          // Restablecer el nuevo estado seleccionado
           presupuestos.value[index].nuevoEstado = '';
+          presupuestos.value[index].motivo = '';
       };
 
+      const ESTADOS_CANCELADOS = ['rechazado', 'modificado', 'actualizado'];
+
       const cambiarEstado = async (presupuesto) => {
+            if (!presupuesto.nuevoEstado) return;
+            if (ESTADOS_CANCELADOS.includes(presupuesto.nuevoEstado) && !presupuesto.motivo.trim()) {
+                alert('Por favor, ingresá un motivo para este cambio de estado.');
+                return;
+            }
             try {
-                // Realizar la petición para actualizar el estado del presupuesto en la base de datos
-                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
-                estado_presupuesto: presupuesto.nuevoEstado
-                });
+                const payload = { estado_presupuesto: presupuesto.nuevoEstado };
+                if (ESTADOS_CANCELADOS.includes(presupuesto.nuevoEstado)) {
+                    payload.motivo_cancelacion = presupuesto.motivo.trim();
+                }
+                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, payload);
         
                 // Verificar si la actualización fue exitosa
                 if (response.status === 200) {
@@ -362,20 +387,30 @@ export default {
         nroSolicitantePresupuesto,
         solicitantePresupuesto,
         observacionesPresupuesto,
+        motivoCancelacionPresupuesto,
         detallesPresupuesto,
         formatDate,
         formatAreaTematica,
         formatArancel,
         mostrarModalPresupuesto,
         cerrarModalPresupuesto,
-        mostrarMenu, 
-        cambiarEstado, 
+        mostrarMenu,
+        cambiarEstado,
         cerrarMenu,
         abrirPresupuesto,
-      }; 
+      };
   }
 };
 </script>
+
+<style scoped>
+.motivo-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>
 
 <style scoped>
 .title-container {
