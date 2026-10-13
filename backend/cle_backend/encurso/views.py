@@ -21,9 +21,13 @@ from cle_backend.permissions import (
     IsAreaJefe,
     IsAreaUser,
     IsServiciosTecnologicos,
+    PRIVILEGED_ROLES,
+    get_user_rol,
+    get_user_area,
     user_can_access_circuit,
     validate_upload_file,
 )
+from django.db.models import Q
 from database.models import *
 from .serializers import *
 
@@ -32,8 +36,23 @@ logger = logging.getLogger(__name__)
 # Cargar la Tabla
 class ObtenerTodoEnCurso(APIView):
     def get(self, request, format=None):
-        # Obtener todos los DataServicio donde DataServicio.finalizado = False
+        rol = get_user_rol(request)
+
         servicios_en_curso = DataServicio.objects.filter(finalizado=False)
+
+        if rol not in PRIVILEGED_ROLES:
+            # Usuarios de área: solo ven su propia área + circuitos donde son inter-área
+            user_area = get_user_area(request)
+            presupuestos_area = Presupuesto.objects.filter(
+                area_tematica=user_area
+            ).values_list('nro_presupuesto', flat=True)
+            interarea_circuitos = SolicitudInterarea.objects.filter(
+                inter_areaTematica=user_area
+            ).values_list('nro_circuito', flat=True)
+            servicios_en_curso = servicios_en_curso.filter(
+                Q(nro_presupuesto__in=presupuestos_area) |
+                Q(nro_circuito__in=interarea_circuitos)
+            )
 
         # Obtener el numero de presupuesto de los DataServicio
         numeros_presupuesto = servicios_en_curso.values_list('nro_presupuesto', flat=True)

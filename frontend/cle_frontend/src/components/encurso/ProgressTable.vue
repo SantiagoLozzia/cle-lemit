@@ -8,7 +8,7 @@
 
     <div>
       <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
-        <select v-model="filterArea" class="form-select form-select-sm w-auto">
+        <select v-if="isAdminOrTecnologicoOrDireccion" v-model="filterArea" class="form-select form-select-sm w-auto">
           <option value="">Todas las áreas</option>
           <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
         </select>
