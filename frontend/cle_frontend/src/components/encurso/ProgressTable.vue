@@ -12,6 +12,10 @@
           <option value="">Todas las áreas</option>
           <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
         </select>
+        <select v-model="filterTipoFecha" class="form-select form-select-sm w-auto">
+          <option value="solicitud">Solicitud de Servicio</option>
+          <option value="orden">Orden de Servicio</option>
+        </select>
         <div class="d-flex align-items-center gap-1">
           <small class="text-muted">Desde</small>
           <input type="date" v-model="filterDesde" class="form-control form-control-sm w-auto">
@@ -1388,6 +1392,7 @@
 <script>
   import { onMounted, ref, computed } from 'vue';
   import api from '@/api.js';
+  import { AREAS_TEMATICAS } from '@/constants/areas.js';
 
   export default {
     components: {
@@ -1417,19 +1422,30 @@
       const filterArea = ref('');
       const filterDesde = ref('');
       const filterHasta = ref('');
+      const filterTipoFecha = ref('solicitud');
+      const uniqueAreas = AREAS_TEMATICAS;
 
-      const uniqueAreas = computed(() =>
-        [...new Set(filas.value.map(f => f.area_tematica))].filter(Boolean).sort()
-      );
+      const parseFechaFila = (s) => {
+        if (!s) return '';
+        const [d, m, y] = s.split('/');
+        return `${y}-${m}-${d}`;
+      };
 
       const filteredFilas = computed(() => filas.value.filter(f => {
         const areaOk = !filterArea.value || f.area_tematica === filterArea.value;
-        const desdeOk = !filterDesde.value || f.fecha_dataServicio >= filterDesde.value;
-        const hastaOk = !filterHasta.value || f.fecha_dataServicio <= filterHasta.value;
+        const fechaRaw = filterTipoFecha.value === 'orden' ? f.fecha_ordenServicio : f.fecha_dataServicio;
+        const fecha = parseFechaFila(fechaRaw);
+        const desdeOk = !filterDesde.value || fecha >= filterDesde.value;
+        const hastaOk = !filterHasta.value || fecha <= filterHasta.value;
         return areaOk && desdeOk && hastaOk;
       }));
 
-      const clearFilters = () => { filterArea.value = ''; filterDesde.value = ''; filterHasta.value = ''; };
+      const clearFilters = () => {
+        filterArea.value = '';
+        filterDesde.value = '';
+        filterHasta.value = '';
+        filterTipoFecha.value = 'solicitud';
+      };
       const numeroCircuitoGlobal = ref(null);
       const showSuccessAlert = ref(false);
       const showErrorAlert = ref(false);
@@ -2888,7 +2904,7 @@
         // General
         filas,
         sortKey, sortDir, sortedFilas, setSort,
-        filterArea, filterDesde, filterHasta, uniqueAreas, clearFilters,
+        filterArea, filterDesde, filterHasta, filterTipoFecha, uniqueAreas, clearFilters,
         validarNumeroEntero,
         formatDate,
         formatArancel,

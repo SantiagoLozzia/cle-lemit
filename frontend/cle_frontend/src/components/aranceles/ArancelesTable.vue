@@ -41,6 +41,7 @@
 
 <script>
 import { ref, computed } from 'vue';
+import { AREAS_TEMATICAS } from '@/constants/areas.js';
 
 export default {
   props: {
@@ -70,9 +71,7 @@ export default {
     };
 
     const filterArea = ref('');
-    const uniqueAreas = computed(() =>
-      [...new Set(props.data.map(a => formatAreaTematica(a.area_tematica)))].filter(Boolean).sort()
-    );
+    const uniqueAreas = AREAS_TEMATICAS;
     const filteredData = computed(() =>
       !filterArea.value ? props.data : props.data.filter(a => formatAreaTematica(a.area_tematica) === filterArea.value)
     );

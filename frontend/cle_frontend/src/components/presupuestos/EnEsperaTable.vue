@@ -167,6 +167,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api.js';
+import { AREAS_TEMATICAS } from '@/constants/areas.js';
 
 export default {
   setup() {
@@ -193,9 +194,7 @@ export default {
       const filterDesde = ref('');
       const filterHasta = ref('');
 
-      const uniqueAreas = computed(() =>
-        [...new Set(presupuestos.value.map(p => p.area_tematica))].filter(Boolean).sort()
-      );
+      const uniqueAreas = AREAS_TEMATICAS;
 
       const filteredPresupuestos = computed(() => presupuestos.value.filter(p => {
         const areaOk = !filterArea.value || p.area_tematica === filterArea.value;
