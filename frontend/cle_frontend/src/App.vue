@@ -66,9 +66,12 @@ export default {
 <style>
 @import "~bootstrap-icons/font/bootstrap-icons.css";
 
+html {
+  font-size: 13px;
+}
+
 body {
   background-color: #cccccc !important;
-  zoom: 0.7;
 }
 
 .header-fixed {
@@ -110,6 +113,19 @@ body {
   background-color: #026290 !important;
   /* background-color: #557A95 !important; */
   color: white !important;
+}
+
+.table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.table th.sortable:hover {
+  filter: brightness(1.18);
+}
+.sort-icon {
+  font-size: 0.72em;
+  opacity: 0.75;
+  margin-left: 3px;
 }
 
 .custom-shadow-btn {

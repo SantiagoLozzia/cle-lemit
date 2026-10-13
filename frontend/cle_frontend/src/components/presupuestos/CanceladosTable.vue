@@ -4,8 +4,8 @@
       <table class="table presupuestos-table">
         <thead>
           <tr>
-            <th>Nro</th>
-            <th>Fecha</th>
+            <th class="sortable" @click="setSort('nro_presupuesto')">Nro <span class="sort-icon">{{ sortKey === 'nro_presupuesto' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th class="sortable" @click="setSort('fecha_presupuesto')">Fecha <span class="sort-icon">{{ sortKey === 'fecha_presupuesto' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th>Solicitante</th>
             <th>Area Tematica</th>
             <th>ST-01 Presupuesto</th>
@@ -13,7 +13,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(presupuesto, index) in presupuestos" :key="index">
+          <tr v-for="(presupuesto, index) in sortedPresupuestos" :key="index">
             <td>{{ presupuesto.nro_presupuesto }}</td>
             <td>{{ presupuesto.fecha }}</td>
             <td class="text-left">{{ presupuesto.nombre_solicitante }}</td>
@@ -153,12 +153,29 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '@/api.js';
 
 export default {
   setup() {
       const presupuestos = ref([]);
+
+      const sortKey = ref('');
+      const sortDir = ref('asc');
+      const sortedPresupuestos = computed(() => {
+        if (!sortKey.value) return presupuestos.value;
+        return [...presupuestos.value].sort((a, b) => {
+          const valA = sortKey.value === 'nro_presupuesto' ? Number(a[sortKey.value]) : a[sortKey.value];
+          const valB = sortKey.value === 'nro_presupuesto' ? Number(b[sortKey.value]) : b[sortKey.value];
+          if (valA < valB) return sortDir.value === 'asc' ? -1 : 1;
+          if (valA > valB) return sortDir.value === 'asc' ? 1 : -1;
+          return 0;
+        });
+      });
+      const setSort = (key) => {
+        if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+        else { sortKey.value = key; sortDir.value = 'asc'; }
+      };
 
       const nroPresupuesto = ref();
       const fechaPresupuesto = ref();
@@ -296,8 +313,9 @@ export default {
 
       onMounted(fetchPresupuestos); // Utilizamos onMounted para llamar a fetchPresupuestos en la creación del componente
   
-      return { 
+      return {
         presupuestos,
+        sortKey, sortDir, sortedPresupuestos, setSort,
         nroPresupuesto,
         fechaPresupuesto,
         contactoPresupuesto,

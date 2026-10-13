@@ -89,7 +89,7 @@ async function login() {
   background-image: url('@/assets/edificioviejo.jpg');
   background-size: cover;
   background-position: center 55%;
-  min-height: calc(100vh / 0.7); /* compensate body { zoom: 0.7 } */
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;

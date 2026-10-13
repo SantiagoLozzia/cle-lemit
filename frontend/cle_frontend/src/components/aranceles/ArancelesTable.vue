@@ -11,15 +11,15 @@
         </colgroup>
         <thead>
           <tr>
-            <th class="add-border-right">Nro</th>
+            <th class="add-border-right sortable" @click="setSort('nro_servicio')">Nro <span class="sort-icon">{{ sortKey === 'nro_servicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th class="add-border-right text-start">Servicio</th>
             <th class="add-border-right">Norma</th>
-            <th class="add-border-right">Valor</th>
+            <th class="add-border-right sortable" @click="setSort('arancel')">Valor <span class="sort-icon">{{ sortKey === 'arancel' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th class="add-border-right">Area Tematica</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(arancel, index) in data" :key="index">
+          <tr v-for="(arancel, index) in sortedData" :key="index">
             <td class="add-border-right">{{ arancel.nro_servicio }}</td>
             <td class="text-start add-border-right">{{ arancel.servicio }}</td>
             <td class="add-border-right">{{ arancel.norma }}</td>
@@ -33,6 +33,8 @@
 </template>
 
 <script>
+import { ref, computed } from 'vue';
+
 export default {
   props: {
     data: {
@@ -40,7 +42,26 @@ export default {
       required: true
     }
   },
-  setup() {
+  setup(props) {
+    const sortKey = ref('');
+    const sortDir = ref('asc');
+    const sortedData = computed(() => {
+      if (!sortKey.value) return props.data;
+      return [...props.data].sort((a, b) => {
+        const valA = Number.isFinite(Number(a[sortKey.value])) && sortKey.value !== 'norma'
+          ? Number(a[sortKey.value]) : a[sortKey.value];
+        const valB = Number.isFinite(Number(b[sortKey.value])) && sortKey.value !== 'norma'
+          ? Number(b[sortKey.value]) : b[sortKey.value];
+        if (valA < valB) return sortDir.value === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir.value === 'asc' ? 1 : -1;
+        return 0;
+      });
+    });
+    const setSort = (key) => {
+      if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+      else { sortKey.value = key; sortDir.value = 'asc'; }
+    };
+
     const formatAreaTematica = (areaTematica) => {
       return areaTematica.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -48,6 +69,7 @@ export default {
     };
 
     return {
+      sortKey, sortDir, sortedData, setSort,
       formatAreaTematica
     };
   }

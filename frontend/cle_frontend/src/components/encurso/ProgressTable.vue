@@ -25,8 +25,8 @@
           </tr>
           <tr>
             <!-- Subcolumnas de Solicitud de Servicio -->
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">N°</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('nro_dataServicio')">N° <span class="sort-icon">{{ sortKey === 'nro_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('fecha_dataServicio')">Fecha <span class="sort-icon">{{ sortKey === 'fecha_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Area Tematica</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">ST-01 Presupuesto</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Data Servicio</th>
@@ -70,7 +70,7 @@
           </tr>
         </thead>
         <tbody >
-          <tr v-for="(fila, index) in filas" :key="index">
+          <tr v-for="(fila, index) in sortedFilas" :key="index">
 
             <!-- Columna Solicitud de Servicio -->
 
@@ -1371,16 +1371,33 @@
 </template>
   
 <script>
-  import { onMounted, ref} from 'vue';
+  import { onMounted, ref, computed } from 'vue';
   import api from '@/api.js';
 
-  export default {  
+  export default {
     components: {
     },
     setup() {
 
       // Setup General
       const filas = ref([]);
+
+      const sortKey = ref('');
+      const sortDir = ref('asc');
+      const sortedFilas = computed(() => {
+        if (!sortKey.value) return filas.value;
+        return [...filas.value].sort((a, b) => {
+          const valA = sortKey.value === 'nro_dataServicio' ? Number(a[sortKey.value]) : a[sortKey.value];
+          const valB = sortKey.value === 'nro_dataServicio' ? Number(b[sortKey.value]) : b[sortKey.value];
+          if (valA < valB) return sortDir.value === 'asc' ? -1 : 1;
+          if (valA > valB) return sortDir.value === 'asc' ? 1 : -1;
+          return 0;
+        });
+      });
+      const setSort = (key) => {
+        if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+        else { sortKey.value = key; sortDir.value = 'asc'; }
+      };
       const numeroCircuitoGlobal = ref(null);
       const showSuccessAlert = ref(false);
       const showErrorAlert = ref(false);
@@ -2838,6 +2855,7 @@
       return {
         // General
         filas,
+        sortKey, sortDir, sortedFilas, setSort,
         validarNumeroEntero,
         formatDate,
         formatArancel,
