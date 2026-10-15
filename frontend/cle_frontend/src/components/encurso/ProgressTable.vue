@@ -1876,8 +1876,8 @@
           const nro_circuito = numeroCircuitoGlobal.value;
           api({
               method: 'get',
-              url: `//encurso/generar_pdf_legajo/${nro_circuito}/`, // Ajusta la URL a tu endpoint en el backend
-              responseType: 'blob' // Indicamos que esperamos una respuesta de tipo archivo binario (PDF)
+              url: `encurso/generar_pdf_legajo/${nro_circuito}/`,
+              responseType: 'blob'
           })
           .then((response) => {
               // Crear un enlace temporal para descargar el archivo
