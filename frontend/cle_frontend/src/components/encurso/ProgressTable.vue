@@ -610,60 +610,51 @@
           </div>
           <!-- Modal Body -->
           <div class="modal-body">
-            <form class="was-validated">
+            <div class="ds-header mb-3">
+              <div>
+                <div class="ds-doc-title">Data Servicio N° {{ nroDataServicio }}</div>
+                <div class="ds-doc-sub">N° Presupuesto: <strong>{{ nroPresupuestoDataServicio }}</strong></div>
+              </div>
+              <div class="ds-fecha">
+                <span class="ds-fecha-label">Fecha</span>
+                <span class="ds-fecha-val">{{ fechaDataServicio }}</span>
+              </div>
+            </div>
 
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h1 class="modal-title fs-5 fw-bold mb-0">Data Servicio N° {{ nroDataServicio }}</h1>
-                  <div class="mb-0 ms-3">
-                      <span class="form-label">Fecha: <strong>{{ fechaDataServicio }}</strong></span>
-                  </div>
+            <div class="ds-grid">
+              <div class="ds-field">
+                <span class="ds-label">Área Temática</span>
+                <span class="ds-val">{{ areaDataServicio }}</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">N° Presupuesto:</label>
-                <span><strong>{{ nroPresupuestoDataServicio }}</strong></span>
+              <div class="ds-field">
+                <span class="ds-label">Solicitante</span>
+                <span class="ds-val">{{ solicitanteDataServicio }}</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">Area Temática:</label>
-                <span><strong>{{ areaDataServicio }}</strong></span>
+              <div class="ds-field">
+                <span class="ds-label">Obra</span>
+                <span class="ds-val">{{ obraDataServicio || '—' }}</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">Solicitante:</label>
-                <span><strong>{{ solicitanteDataServicio }}</strong></span>
+              <div class="ds-field">
+                <span class="ds-label">Cant. Laboratorios</span>
+                <span class="ds-val">{{ cantNumLabsDataServicio }}</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">Obra:</label>
-                <span><strong>{{ obraDataServicio }}</strong></span>
+              <div class="ds-field">
+                <span class="ds-label">Plazo Estimado</span>
+                <span class="ds-val">{{ plazoEstimadoDataServicio }} días</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">Cantidad Num Laboratorios:</label>
-                <span><strong>{{ cantNumLabsDataServicio }}</strong></span>
+              <div class="ds-field">
+                <span class="ds-label">Arancel</span>
+                <span class="ds-val ds-arancel">{{ arancelDataServicio }}</span>
               </div>
-              
-              <div class="mb-3">
-                <label class="form-label text-left">Plazo Estimado:</label>
-                <span><strong>{{ plazoEstimadoDataServicio }}</strong></span>
+              <div class="ds-field ds-field--full">
+                <span class="ds-label">Muestras</span>
+                <span class="ds-val">{{ muestrasDataServicio }}</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">Muestras:</label>
-                <span><strong>{{ muestrasDataServicio }}</strong></span>
+              <div class="ds-field ds-field--full">
+                <span class="ds-label">Observaciones</span>
+                <span class="ds-val">{{ observacionesDataServicio || '—' }}</span>
               </div>
-
-              <div class="mb-3">
-                <label class="form-label text-left">Arancel:</label>
-                <span><strong>{{ arancelDataServicio }}</strong></span>
-              </div>
-              
-              <div class="mb-3">
-                <label for="observacionesDataServicio" class="form-label text-left">Observaciones:</label>
-                <input v-model="observacionesDataServicio" type="text" class="form-control" id="observacionesDataServicio" name="observacionesDataServicio" readonly required />
-              </div>
-            </form>
+            </div>
           </div>
           <!-- Modal Footer -->
           <div class="modal-footer-a4">
@@ -3212,28 +3203,87 @@
 </style>
 
 <style>
+/* ── Estilos pantalla para el nuevo layout del modal Data Servicio ── */
+.ds-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #026290;
+}
+.ds-doc-title { font-size: 1.1rem; font-weight: 700; color: #026290; }
+.ds-doc-sub   { font-size: 0.85rem; color: #555; margin-top: 2px; }
+.ds-fecha     { display: flex; flex-direction: column; align-items: flex-end; }
+.ds-fecha-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+.ds-fecha-val   { font-weight: 600; font-size: 0.95rem; }
+
+.ds-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-top: 10px;
+}
+.ds-field {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  background: #f8f9fa;
+}
+.ds-field:nth-child(odd)  { background: #f8f9fa; }
+.ds-field:nth-child(even) { background: #fff; border-left: 1px solid #e9ecef; }
+.ds-field--full { grid-column: 1 / -1; background: #fff !important; border-top: 1px solid #e9ecef; border-left: none !important; }
+.ds-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: #026290; margin-bottom: 2px; }
+.ds-val   { font-weight: 600; font-size: 0.92rem; }
+.ds-arancel { color: #198754; font-size: 1rem; }
+
+/* ── Impresión ── */
+@page {
+  margin: 0;
+  size: A4;
+}
+
 @media print {
   body * { visibility: hidden; }
+
   #modalAbrirDataServicio,
   #modalAbrirDataServicio * { visibility: visible; }
+
   #modalAbrirDataServicio {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 100%;
-    height: auto;
-    overflow: visible;
     background: white;
     z-index: 9999;
     display: block !important;
   }
+
   #modalAbrirDataServicio .no-print { display: none !important; visibility: hidden; }
-  #modalAbrirDataServicio .modal-dialog-a4 { box-shadow: none; margin: 0; max-width: 100%; width: 100%; }
-  /* Forzar impresion de imagenes de fondo (logo membrete) */
-  #modalAbrirDataServicio .modal-logo {
+
+  #modalAbrirDataServicio .modal-dialog-a4 {
+    box-shadow: none;
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #modalAbrirDataServicio .modal-body { flex: 1; padding: 20px 30px; }
+
+  /* Forzar imagenes de fondo */
+  #modalAbrirDataServicio .modal-logo,
+  #modalAbrirDataServicio .footer-image {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    visibility: visible !important;
   }
+
+  /* Grid de campos en 2 columnas al imprimir */
+  .ds-grid { gap: 1px; border: 1px solid #dee2e6; }
+  .ds-field { border: none; border-bottom: 1px solid #dee2e6; }
+  .ds-field--full { border-top: 1px solid #dee2e6; }
+  .ds-field:nth-child(odd)  { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 </style>
   
