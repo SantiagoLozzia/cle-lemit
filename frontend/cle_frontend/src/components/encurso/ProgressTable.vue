@@ -699,28 +699,37 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-logo"></div>
-            <div><i class="bi bi-download" style="cursor: pointer;" @click="descargarLegajoPDF"></i></div>
-            <button type="button" class="btn-close" @click="cerrarModalLegajo" aria-label="Close"></button>
+            <div class="d-flex align-items-center gap-2 no-print">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirLegajo" title="Imprimir / Guardar como PDF">
+                <i class="bi bi-printer"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="descargarLegajoPDF" title="Descargar PDF">
+                <i class="bi bi-download"></i>
+              </button>
+              <button type="button" class="btn-close" @click="cerrarModalLegajo" aria-label="Close"></button>
+            </div>
           </div>
           <!-- Modal Body -->
           <div class="modal-body">
-            <form class="was-validated">
-              <h1 class="modal-title fs-5 fw-bold">Legajo N° {{ nroLegajo }}/{{ añoLegajo }}</h1>
-              <div class="mb-3">
-                  <label for="fechaLegajo" class="form-label text-left">Fecha:</label>
-                  <input v-model="fechaLegajo" type="date" readonly class="form-control" id="fechaLegajo" name="fechaLegajo" required />
+            <div class="ds-header mb-3">
+              <div>
+                <div class="ds-doc-title">Legajo N° {{ nroLegajo }}/{{ añoLegajo }}</div>
               </div>
-
-              <div class="mb-3">
-                <label for="rangosLaboratorios" class="form-label text-left">Rango Numeros de Laboratorios:</label>
-                <input v-model="rangosLaboratorios" type="text" class="form-control" id="rangosLaboratorios" name="rangosLaboratorios" readonly required />
+              <div class="ds-fecha">
+                <span class="ds-fecha-label">Fecha</span>
+                <span class="ds-fecha-val">{{ fechaLegajo }}</span>
               </div>
-
-              <div class="mb-3">
-                <label for="nombreSolicitante" class="form-label text-left">Solicitante:</label>
-                <input v-model="nombreSolicitante" type="text" class="form-control" id="nombreSolicitante" name="nombreSolicitante" readonly required />
+            </div>
+            <div class="ds-grid">
+              <div class="ds-field">
+                <span class="ds-label">Solicitante</span>
+                <span class="ds-val">{{ nombreSolicitante }}</span>
               </div>
-            </form>
+              <div class="ds-field">
+                <span class="ds-label">Rango N° Laboratorios</span>
+                <span class="ds-val">{{ rangosLaboratorios }}</span>
+              </div>
+            </div>
           </div>
           <!-- Modal Footer -->
           <div class="modal-footer-a4">
@@ -2895,9 +2904,8 @@
           }
         };
 
-        const imprimirDataServicio = () => {
-          window.print();
-        };
+        const imprimirDataServicio = () => { window.print(); };
+        const imprimirLegajo = () => { window.print(); };
 
       return {
         // General
@@ -3067,6 +3075,7 @@
         abrirModalArchivar,
         cerrarModalArchivar,
         imprimirDataServicio,
+        imprimirLegajo,
         mostrarModalArchivar,
         enviarArchivar,
       };
@@ -3245,10 +3254,14 @@
 @media print {
   body * { visibility: hidden; }
 
-  #modalAbrirDataServicio,
-  #modalAbrirDataServicio * { visibility: visible; }
+  /* Solo el modal abierto (clase .show) es visible al imprimir */
+  #modalAbrirDataServicio.show,
+  #modalAbrirDataServicio.show *,
+  #modalAbrirLegajo.show,
+  #modalAbrirLegajo.show * { visibility: visible; }
 
-  #modalAbrirDataServicio {
+  #modalAbrirDataServicio.show,
+  #modalAbrirLegajo.show {
     position: fixed;
     top: 0; left: 0;
     width: 100%;
@@ -3257,9 +3270,11 @@
     display: block !important;
   }
 
-  #modalAbrirDataServicio .no-print { display: none !important; visibility: hidden; }
+  #modalAbrirDataServicio .no-print,
+  #modalAbrirLegajo .no-print { display: none !important; visibility: hidden; }
 
-  #modalAbrirDataServicio .modal-dialog-a4 {
+  #modalAbrirDataServicio.show .modal-dialog-a4,
+  #modalAbrirLegajo.show .modal-dialog-a4 {
     box-shadow: none;
     margin: 0;
     max-width: 100%;
@@ -3269,21 +3284,24 @@
     flex-direction: column;
   }
 
-  #modalAbrirDataServicio .modal-content {
+  #modalAbrirDataServicio.show .modal-content,
+  #modalAbrirLegajo.show .modal-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     height: 100%;
   }
 
-  #modalAbrirDataServicio .modal-body {
+  #modalAbrirDataServicio.show .modal-body,
+  #modalAbrirLegajo.show .modal-body {
     flex: 1;
     padding: 20px 30px 120px 30px;
     overflow: visible;
   }
 
   /* Footer pegado al fondo de la hoja */
-  #modalAbrirDataServicio .modal-footer-a4 {
+  #modalAbrirDataServicio.show .modal-footer-a4,
+  #modalAbrirLegajo.show .modal-footer-a4 {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -3291,8 +3309,10 @@
   }
 
   /* Forzar imagenes de fondo */
-  #modalAbrirDataServicio .modal-logo,
-  #modalAbrirDataServicio .footer-image {
+  #modalAbrirDataServicio.show .modal-logo,
+  #modalAbrirDataServicio.show .footer-image,
+  #modalAbrirLegajo.show .modal-logo,
+  #modalAbrirLegajo.show .footer-image {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
     visibility: visible !important;
