@@ -3264,12 +3264,31 @@
     margin: 0;
     max-width: 100%;
     width: 100%;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
   }
 
-  #modalAbrirDataServicio .modal-body { flex: 1; padding: 20px 30px; }
+  #modalAbrirDataServicio .modal-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  #modalAbrirDataServicio .modal-body {
+    flex: 1;
+    padding: 20px 30px 120px 30px;
+    overflow: visible;
+  }
+
+  /* Footer pegado al fondo de la hoja */
+  #modalAbrirDataServicio .modal-footer-a4 {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+  }
 
   /* Forzar imagenes de fondo */
   #modalAbrirDataServicio .modal-logo,
