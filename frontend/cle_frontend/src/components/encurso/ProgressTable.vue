@@ -601,13 +601,18 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-logo"></div>
-            <button type="button" class="btn-close" @click="cerrarModalDataServicio" aria-label="Close"></button>
+            <div class="d-flex align-items-center gap-2 no-print">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirDataServicio" title="Imprimir / Guardar como PDF">
+                <i class="bi bi-printer"></i>
+              </button>
+              <button type="button" class="btn-close" @click="cerrarModalDataServicio" aria-label="Close"></button>
+            </div>
           </div>
           <!-- Modal Body -->
           <div class="modal-body">
             <form class="was-validated">
 
-              <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex justify-content-between align-items-center mb-3">
                   <h1 class="modal-title fs-5 fw-bold mb-0">Data Servicio N° {{ nroDataServicio }}</h1>
                   <div class="mb-0 ms-3">
                       <span class="form-label">Fecha: <strong>{{ fechaDataServicio }}</strong></span>
@@ -2899,6 +2904,9 @@
           }
         };
 
+        const imprimirDataServicio = () => {
+          window.print();
+        };
 
       return {
         // General
@@ -3067,6 +3075,7 @@
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,
+        imprimirDataServicio,
         mostrarModalArchivar,
         enviarArchivar,
       };
@@ -3200,5 +3209,15 @@
   }
 
 
+</style>
+
+<style>
+@media print {
+  body > * { display: none !important; }
+  #modalAbrirDataServicio { display: block !important; position: static !important; background: none !important; }
+  #modalAbrirDataServicio .modal-dialog-a4 { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; width: 100% !important; }
+  #modalAbrirDataServicio .no-print { display: none !important; }
+  #modalAbrirDataServicio .modal-footer-a4 { display: block !important; }
+}
 </style>
   
