@@ -392,30 +392,26 @@
             <td>
               <template v-if="(fila.adjunto_informeArea !== '') || (fila.adjunto_informeArea !== null)">
                 <div v-if="fila.registros_ensayo" style="position: relative;">
-                  <!-- Icono principal -->
                   <i class="bi bi-folder-check" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
-
-                  <!-- Opciones flotantes en semi-círculo -->
-                    <div v-if="filaSeleccionada === index" class="opciones-flotantes">
-                        <div class="opcion" style="--rotation: -30deg;">
-                          <i class="bi bi-eye" @click="abrirArchivo(fila.registros_ensayo)"></i>
-                        </div>
-
-                        <!-- Ícono que llama a cargarRegistrosEnsayo -->
-                        <div class="opcion" style="--rotation: 0deg;">
-                          <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
-                            <i class="bi bi-upload"></i>
-                          </label>
-                          <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
-                        </div>
-                    </div> 
-                </div> 
-                <div v-else>
-                  <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
-                          <i class="bi bi-folder-plus"></i>
+                  <div v-if="filaSeleccionada === index" class="opciones-flotantes">
+                    <div class="opcion" style="--rotation: -30deg;">
+                      <i class="bi bi-eye" @click="abrirArchivo(fila.registros_ensayo)"></i>
+                    </div>
+                    <!-- Subir nuevo: solo area_jefe / area_standard -->
+                    <div v-if="isAreaJefe || isAreaStandard" class="opcion" style="--rotation: 0deg;">
+                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
+                        <i class="bi bi-upload"></i>
                       </label>
-                      <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
                       <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
+                    </div>
+                  </div>
+                </div>
+                <!-- Sin registros aún: solo area_jefe / area_standard pueden subir -->
+                <div v-else-if="isAreaJefe || isAreaStandard">
+                  <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
+                    <i class="bi bi-folder-plus"></i>
+                  </label>
+                  <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
                 </div>
               </template>
             </td>
