@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import *
 urlpatterns = [
+    path('archivados/', ObtenerArchivados.as_view(), name='obtener-archivados'),
     path('buscar_presupuestos/', NrosPresupuestoEnEspera.as_view(), name='presupuestos-list'),
     path('presupuesto_seleccionado/<int:nro_presupuesto>/', presupuesto_seleccionado, name='presupuesto-seleccionado'),
     # Solicitud de Servicio

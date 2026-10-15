@@ -1038,4 +1038,69 @@ class ArchivarCircuito(APIView):
         circuito.save()
 
         return JsonResponse({'message': 'Archivado correctamente.'})
+
+
+class ObtenerArchivados(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        rol = get_user_rol(request)
+        servicios = DataServicio.objects.filter(finalizado=True).select_related(
+            'nro_presupuesto', 'nro_presupuesto__nro_solicitante', 'nro_circuito'
+        )
+
+        if rol not in PRIVILEGED_ROLES:
+            user_area = get_user_area(request)
+            presupuestos_area = Presupuesto.objects.filter(
+                area_tematica=user_area
+            ).values_list('nro_presupuesto', flat=True)
+            interarea_circuitos = SolicitudInterarea.objects.filter(
+                inter_areaTematica=user_area
+            ).values_list('nro_circuito', flat=True)
+            servicios = servicios.filter(
+                Q(nro_presupuesto__in=presupuestos_area) |
+                Q(nro_circuito__in=interarea_circuitos)
+            )
+
+        result = []
+        for ds in servicios:
+            presupuesto = ds.nro_presupuesto
+            solicitante = presupuesto.nro_solicitante
+            circuito = ds.nro_circuito
+
+            legajo = Legajo.objects.filter(nro_circuito=circuito).first()
+
+            detalles = DetallePresupuesto.objects.filter(
+                nro_presupuesto=presupuesto
+            ).select_related('nro_servicio')
+
+            servicios_list = [
+                {
+                    'nro_servicio': d.nro_servicio.nro_servicio,
+                    'servicio': d.nro_servicio.servicio,
+                    'norma': d.nro_servicio.norma,
+                    'cant': d.cant,
+                    'subtotal': str(d.subtotal),
+                }
+                for d in detalles
+            ]
+
+            result.append({
+                'nro_dataServicio': ds.nro_dataServicio,
+                'nro_circuito': circuito.nro_circuito if circuito else None,
+                'fecha_dataServicio': ds.fecha_dataServicio,
+                'obra': ds.obra,
+                'observaciones_servicio': ds.observaciones,
+                'nro_presupuesto': presupuesto.nro_presupuesto,
+                'area_tematica': presupuesto.area_tematica,
+                'arancel_presupuesto': str(presupuesto.arancel_presupuesto),
+                'descuento': presupuesto.descuento,
+                'nombre_solicitante': solicitante.nombre_solicitante,
+                'cuit_solicitante': solicitante.cuit,
+                'nro_legajo': legajo.nro_legajo if legajo else None,
+                'pago': legajo.pago if legajo else None,
+                'servicios': servicios_list,
+            })
+
+        return JsonResponse(result, safe=False)
     
