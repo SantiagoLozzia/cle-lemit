@@ -703,31 +703,27 @@
               <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirLegajo" title="Imprimir / Guardar como PDF">
                 <i class="bi bi-printer"></i>
               </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" @click="descargarLegajoPDF" title="Descargar PDF">
-                <i class="bi bi-download"></i>
-              </button>
               <button type="button" class="btn-close" @click="cerrarModalLegajo" aria-label="Close"></button>
             </div>
           </div>
           <!-- Modal Body -->
-          <div class="modal-body">
-            <div class="ds-header mb-3">
-              <div>
-                <div class="ds-doc-title">Legajo N° {{ nroLegajo }}/{{ añoLegajo }}</div>
-              </div>
-              <div class="ds-fecha">
-                <span class="ds-fecha-label">Fecha</span>
-                <span class="ds-fecha-val">{{ fechaLegajo }}</span>
-              </div>
+          <div class="modal-body lg-body">
+            <div class="lg-fecha-row">
+              <span class="lg-fecha-label">Fecha</span>
+              <span class="lg-fecha-val">{{ fechaLegajoFormateada }}</span>
             </div>
-            <div class="ds-grid">
-              <div class="ds-field">
-                <span class="ds-label">Solicitante</span>
-                <span class="ds-val">{{ nombreSolicitante }}</span>
+            <div class="lg-title-area">
+              <div class="lg-number">Legajo N° {{ nroLegajo }}/{{ añoLegajo }}</div>
+              <div class="lg-divider"></div>
+            </div>
+            <div class="lg-fields">
+              <div class="lg-field">
+                <span class="lg-label">Solicitante</span>
+                <span class="lg-value">{{ nombreSolicitante }}</span>
               </div>
-              <div class="ds-field">
-                <span class="ds-label">Rango N° Laboratorios</span>
-                <span class="ds-val">{{ rangosLaboratorios }}</span>
+              <div class="lg-field">
+                <span class="lg-label">Rango N° Laboratorios</span>
+                <span class="lg-value">{{ rangosLaboratorios }}</span>
               </div>
             </div>
           </div>
@@ -2907,6 +2903,12 @@
         const imprimirDataServicio = () => { window.print(); };
         const imprimirLegajo = () => { window.print(); };
 
+        const fechaLegajoFormateada = computed(() => {
+          if (!fechaLegajo.value) return '';
+          const [y, m, d] = fechaLegajo.value.split('-');
+          return `${d}/${m}/${y}`;
+        });
+
       return {
         // General
         filas,
@@ -3076,6 +3078,7 @@
         cerrarModalArchivar,
         imprimirDataServicio,
         imprimirLegajo,
+        fechaLegajoFormateada,
         mostrarModalArchivar,
         enviarArchivar,
       };
@@ -3245,6 +3248,71 @@
 .ds-val   { font-weight: 600; font-size: 0.92rem; }
 .ds-arancel { color: #198754; font-size: 1rem; }
 
+/* ── Legajo carátula ── */
+.lg-body {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 36px 36px;
+}
+.lg-fecha-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-bottom: 52px;
+}
+.lg-fecha-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #026290;
+}
+.lg-fecha-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+}
+.lg-title-area {
+  margin-bottom: 52px;
+}
+.lg-number {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #026290;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.lg-divider {
+  width: 64px;
+  height: 4px;
+  background: #026290;
+  margin-top: 12px;
+  border-radius: 2px;
+}
+.lg-fields {
+  display: flex;
+  gap: 16px;
+}
+.lg-field {
+  flex: 1;
+  background: #f0f5fb;
+  border-left: 4px solid #026290;
+  padding: 16px 20px;
+  border-radius: 0 6px 6px 0;
+}
+.lg-label {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #026290;
+  margin-bottom: 6px;
+}
+.lg-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
 /* ── Impresión ── */
 @page {
   margin: 0;
@@ -3318,11 +3386,22 @@
     visibility: visible !important;
   }
 
-  /* Grid de campos en 2 columnas al imprimir */
+  /* Grid Data Servicio en 2 columnas al imprimir */
   .ds-grid { gap: 1px; border: 1px solid #dee2e6; }
   .ds-field { border: none; border-bottom: 1px solid #dee2e6; }
   .ds-field--full { border-top: 1px solid #dee2e6; }
   .ds-field:nth-child(odd)  { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+  /* Legajo: centrar verticalmente en la hoja */
+  #modalAbrirLegajo.show .modal-body {
+    justify-content: center;
+    padding: 20px 36px 140px;
+  }
+  /* Forzar colores en los bloques de campos */
+  .lg-field { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .lg-number { color: #026290 !important; }
+  .lg-divider { background: #026290 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .lg-label { color: #026290 !important; }
 }
 </style>
   
