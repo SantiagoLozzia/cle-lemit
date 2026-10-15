@@ -3229,6 +3229,11 @@
   }
   #modalAbrirDataServicio .no-print { display: none !important; visibility: hidden; }
   #modalAbrirDataServicio .modal-dialog-a4 { box-shadow: none; margin: 0; max-width: 100%; width: 100%; }
+  /* Forzar impresion de imagenes de fondo (logo membrete) */
+  #modalAbrirDataServicio .modal-logo {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
 }
 </style>
   
