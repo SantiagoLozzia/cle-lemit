@@ -3213,11 +3213,22 @@
 
 <style>
 @media print {
-  body > * { display: none !important; }
-  #modalAbrirDataServicio { display: block !important; position: static !important; background: none !important; }
-  #modalAbrirDataServicio .modal-dialog-a4 { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; width: 100% !important; }
-  #modalAbrirDataServicio .no-print { display: none !important; }
-  #modalAbrirDataServicio .modal-footer-a4 { display: block !important; }
+  body * { visibility: hidden; }
+  #modalAbrirDataServicio,
+  #modalAbrirDataServicio * { visibility: visible; }
+  #modalAbrirDataServicio {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    background: white;
+    z-index: 9999;
+    display: block !important;
+  }
+  #modalAbrirDataServicio .no-print { display: none !important; visibility: hidden; }
+  #modalAbrirDataServicio .modal-dialog-a4 { box-shadow: none; margin: 0; max-width: 100%; width: 100%; }
 }
 </style>
   
