@@ -1749,9 +1749,13 @@
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
                   fetchData();
+                  showSuccessAlert.value = true;
+                  setTimeout(() => { showSuccessAlert.value = false; }, 3000);
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
+                  showErrorAlert.value = true;
+                  setTimeout(() => { showErrorAlert.value = false; }, 3000);
               });
       };
 
@@ -1899,9 +1903,13 @@
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
                   fetchData();
+                  showSuccessAlert.value = true;
+                  setTimeout(() => { showSuccessAlert.value = false; }, 3000);
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
+                  showErrorAlert.value = true;
+                  setTimeout(() => { showErrorAlert.value = false; }, 3000);
               });
       };
 
@@ -2327,8 +2335,12 @@
           const response = await api.post('/encurso/guardar_adjunto_informearea/', formData);
           console.log('Archivo guardado exitosamente:', response.data);
           fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
           console.error('Error al guardar el archivo:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
         }
       };
 
@@ -2345,9 +2357,13 @@
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
                   fetchData();
+                  showSuccessAlert.value = true;
+                  setTimeout(() => { showSuccessAlert.value = false; }, 3000);
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
+                  showErrorAlert.value = true;
+                  setTimeout(() => { showErrorAlert.value = false; }, 3000);
               });
       };
 
@@ -2578,9 +2594,13 @@
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
                   fetchData();
+                  showSuccessAlert.value = true;
+                  setTimeout(() => { showSuccessAlert.value = false; }, 3000);
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
+                  showErrorAlert.value = true;
+                  setTimeout(() => { showErrorAlert.value = false; }, 3000);
               });
         };
       

@@ -50,8 +50,21 @@ export default {
   emits: ['upload', 'delete'],
   setup(props, { emit }) {
     const isOpen = ref(false);
-    const toggle = () => { isOpen.value = !isOpen.value; };
-    const close  = () => { isOpen.value = false; };
+    const instanceId = Symbol();
+
+    const close = () => { isOpen.value = false; };
+
+    const closeOthersHandler = (e) => {
+      if (e.detail !== instanceId) isOpen.value = false;
+    };
+
+    const toggle = () => {
+      if (!isOpen.value) {
+        document.dispatchEvent(new CustomEvent('att-cell-open', { detail: instanceId }));
+      }
+      isOpen.value = !isOpen.value;
+    };
+
     const shortName = (archivo) => {
       const name = archivo ? archivo.split('/').pop() : '';
       return name.length > 28 ? name.slice(0, 25) + '...' : name;
@@ -61,8 +74,14 @@ export default {
     };
     const onUpload = (e) => { emit('upload', e); close(); };
     const onDelete = (id) => { emit('delete', id); close(); };
-    onMounted(() => document.addEventListener('click', close));
-    onUnmounted(() => document.removeEventListener('click', close));
+    onMounted(() => {
+      document.addEventListener('click', close);
+      document.addEventListener('att-cell-open', closeOthersHandler);
+    });
+    onUnmounted(() => {
+      document.removeEventListener('click', close);
+      document.removeEventListener('att-cell-open', closeOthersHandler);
+    });
     return { isOpen, toggle, shortName, viewFile, onUpload, onDelete };
   }
 };
