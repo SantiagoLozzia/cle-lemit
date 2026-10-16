@@ -28,6 +28,9 @@ urlpatterns = [
     # Informe Area
     path('guardar_adjunto_informearea/', GuardarAdjuntoInformeArea.as_view(), name='guardar-adjunto-informearea'),
     path('guardar_registros_ensayo/', GuardarRegistrosEnsayo.as_view(), name='guardar-registros-ensayo'),
+    # Editar Data Servicio
+    path('editar_dataservicio/<int:nro_dataServicio>/', EditarDataServicio.as_view(), name='editar-dataservicio'),
+    path('aprobar_labs_adicionales/<int:nro_circuito>/', AprobarLabsAdicionales.as_view(), name='aprobar-labs-adicionales'),
     # Eliminar adjuntos por ID
     path('adjunto_solicitud/<int:pk>/', EliminarAdjuntoSolicitud.as_view(), name='eliminar-adjunto-solicitud'),
     path('adjunto_factura/<int:pk>/', EliminarAdjuntoFactura.as_view(), name='eliminar-adjunto-factura'),

@@ -96,10 +96,18 @@
             <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_dataServicio }}</td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="fecha-columna">{{ fila.fecha_dataServicio }}</td>
             <td v-if="isAdminOrTecnologicoOrDireccion" style="white-space: nowrap;">{{ fila.area_tematica }}</td>
-            <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_presupuesto }}</td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
+              {{ fila.nro_presupuesto }}
+              <span v-if="fila.presupuestos_adicionales && fila.presupuestos_adicionales.length > 0" style="color:#888; font-size:11px;">
+                , {{ fila.presupuestos_adicionales.map(p => p.nro_presupuesto).join(', ') }}
+              </span>
+            </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <button class="ds-icon-btn" @click="abrirDataServicio(fila.nro_dataServicio)" title="Ver Data Servicio">
                 <i class="bi bi-file-earmark-check-fill"></i>
+              </button>
+              <button v-if="isServiciosTecnologicos" class="ds-edit-btn" @click="abrirEditarDataServicio(fila)" title="Editar Data Servicio">
+                <i class="bi bi-pencil"></i>
               </button>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
@@ -127,7 +135,16 @@
                 </div>
               </template>
               <template v-else-if="fila.dataServicio_completo && fila.nro_legajo">
-                  <i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirLegajo(fila)"></i>
+                <div style="position: relative; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="bi bi-file-earmark-check-fill text-success" style="cursor: pointer;" @click="abrirLegajo(fila)"></i>
+                  <button
+                    v-if="fila.labs_adicionales_pendientes > 0"
+                    class="labs-warning-btn"
+                    :title="'⚠️ ' + fila.labs_adicionales_pendientes + ' labs adicionales pendientes'"
+                    @click="isAdministracion ? abrirAprobarLabs(fila) : null"
+                    :style="isAdministracion ? 'cursor:pointer' : 'cursor:default'"
+                  >⚠️</button>
+                </div>
               </template>
               <template v-else>
               </template>
@@ -608,6 +625,81 @@
           <!-- Modal Footer -->
           <div class="modal-footer-a4">
             <div class="footer-image"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Editar Data Servicio -->
+    <div class="modal" :class="{ 'show': mostrarModalEditarDS }" id="modalEditarDS">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Editar Data Servicio #{{ editarDS.nro_dataServicio }}</h5>
+            <button type="button" class="btn-close" @click="cerrarEditarDataServicio"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Presupuestos -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Presupuestos</label>
+              <div class="mb-1">
+                <span class="badge bg-secondary me-1">Principal: #{{ editarDS.nro_presupuesto }}</span>
+                <span v-for="p in editarDS.presupuestos_adicionales" :key="p.nro_presupuesto" class="badge bg-info me-1">
+                  #{{ p.nro_presupuesto }} — ${{ p.arancel_presupuesto }}
+                  <button type="button" class="btn-close btn-close-white ms-1" style="font-size:8px;" @click="quitarPresupuestoAdicional(p.nro_presupuesto)"></button>
+                </span>
+              </div>
+              <div class="input-group input-group-sm mt-2">
+                <input type="number" class="form-control" v-model="editarDS.nuevoPres" placeholder="Nro presupuesto a agregar" />
+                <button class="btn btn-outline-secondary" @click="agregarPresupuestoAdicional">Agregar</button>
+              </div>
+              <div v-if="editarDS.presupuestoInfo" class="mt-1 text-muted" style="font-size:12px;">
+                {{ editarDS.presupuestoInfo }}
+              </div>
+            </div>
+            <!-- Total -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Total estimado</label>
+              <div class="fw-bold text-success">${{ editarDS.totalCalculado }}</div>
+            </div>
+            <!-- Plazo -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Plazo estimado (días)</label>
+              <input type="number" class="form-control" v-model="editarDS.plazo_estimado" min="1" />
+            </div>
+            <!-- Cant. Labs -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Cantidad de laboratorios</label>
+              <input type="number" class="form-control" v-model="editarDS.cant_numLabs" min="1" />
+              <div v-if="parseInt(editarDS.cant_numLabs) > editarDS.cant_numLabs_original" class="form-text text-warning">
+                ⚠️ Se agregarán {{ parseInt(editarDS.cant_numLabs) - editarDS.cant_numLabs_original }} lab(s) adicionales — pendientes de aprobación por Administración
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="cerrarEditarDataServicio">Cancelar</button>
+            <button class="btn btn-primary" @click="guardarEdicionDataServicio">Guardar cambios</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Aprobar Labs Adicionales -->
+    <div class="modal" :class="{ 'show': mostrarModalAprobarLabs }" id="modalAprobarLabs">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Labs adicionales pendientes</h5>
+            <button type="button" class="btn-close" @click="cerrarAprobarLabs"></button>
+          </div>
+          <div class="modal-body">
+            <p>Circuito <strong>#{{ aprobarLabs.nro_circuito }}</strong></p>
+            <p>Se solicitan <strong>{{ aprobarLabs.labs_adicionales_pendientes }}</strong> laboratorio(s) adicional(es).</p>
+            <p class="text-muted">Al aprobar, se calculará automáticamente el nuevo rango de números de laboratorio y se añadirá al legajo existente.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="cerrarAprobarLabs">Cancelar</button>
+            <button class="btn btn-warning" @click="confirmarAprobarLabs">Aprobar y asignar rango</button>
           </div>
         </div>
       </div>
@@ -1427,6 +1519,109 @@
       const solicitanteDataServicio = ref();
       const arancelDataServicio = ref();
       const observacionesDataServicio = ref();
+      // Editar Data Servicio
+      const mostrarModalEditarDS = ref(false);
+      const editarDS = ref({
+        nro_dataServicio: null,
+        nro_circuito: null,
+        nro_presupuesto: null,
+        presupuestos_adicionales: [],
+        plazo_estimado: null,
+        cant_numLabs: null,
+        cant_numLabs_original: null,
+        nuevoPres: '',
+        presupuestoInfo: '',
+        totalCalculado: 0,
+      });
+
+      const abrirEditarDataServicio = (fila) => {
+        editarDS.value = {
+          nro_dataServicio: fila.nro_dataServicio,
+          nro_circuito: fila.nro_circuito,
+          nro_presupuesto: fila.nro_presupuesto,
+          presupuestos_adicionales: [...(fila.presupuestos_adicionales || [])],
+          plazo_estimado: fila.plazo_estimado_ds,
+          cant_numLabs: fila.cant_numLabs,
+          cant_numLabs_original: fila.cant_numLabs,
+          nuevoPres: '',
+          presupuestoInfo: '',
+          totalCalculado: 0,
+        };
+        mostrarModalEditarDS.value = true;
+      };
+
+      const cerrarEditarDataServicio = () => { mostrarModalEditarDS.value = false; };
+
+      const agregarPresupuestoAdicional = async () => {
+        const nro = editarDS.value.nuevoPres;
+        if (!nro) return;
+        try {
+          const res = await api.get(`/encurso/presupuesto_seleccionado/${nro}/`);
+          editarDS.value.presupuestoInfo = `Presupuesto #${nro} — ${res.data.nombre_solicitante}`;
+          // Lo guardamos directamente (se persiste al guardar)
+          if (!editarDS.value.presupuestos_adicionales.find(p => p.nro_presupuesto === parseInt(nro))) {
+            editarDS.value.presupuestos_adicionales.push({ nro_presupuesto: parseInt(nro), arancel_presupuesto: res.data.arancel_presupuesto || '—' });
+          }
+          editarDS.value.nuevoPres = '';
+        } catch {
+          editarDS.value.presupuestoInfo = 'Presupuesto no encontrado.';
+        }
+      };
+
+      const quitarPresupuestoAdicional = (nro) => {
+        editarDS.value.presupuestos_adicionales = editarDS.value.presupuestos_adicionales.filter(p => p.nro_presupuesto !== nro);
+      };
+
+      const guardarEdicionDataServicio = async () => {
+        const { nro_dataServicio, plazo_estimado, cant_numLabs, presupuestos_adicionales, cant_numLabs_original } = editarDS.value;
+        try {
+          // Guardar plazo y labs
+          await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
+            plazo_estimado,
+            cant_numLabs,
+          });
+          // Agregar presupuestos adicionales nuevos
+          for (const p of presupuestos_adicionales) {
+            await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
+              nro_presupuesto_adicional: p.nro_presupuesto,
+            });
+          }
+          cerrarEditarDataServicio();
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al editar Data Servicio:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      // Aprobar Labs Adicionales
+      const mostrarModalAprobarLabs = ref(false);
+      const aprobarLabs = ref({ nro_circuito: null, labs_adicionales_pendientes: 0 });
+
+      const abrirAprobarLabs = (fila) => {
+        aprobarLabs.value = { nro_circuito: fila.nro_circuito, labs_adicionales_pendientes: fila.labs_adicionales_pendientes };
+        mostrarModalAprobarLabs.value = true;
+      };
+
+      const cerrarAprobarLabs = () => { mostrarModalAprobarLabs.value = false; };
+
+      const confirmarAprobarLabs = async () => {
+        try {
+          await api.post(`/encurso/aprobar_labs_adicionales/${aprobarLabs.value.nro_circuito}/`);
+          cerrarAprobarLabs();
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al aprobar labs:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
       // Setup Legajo
       const nuevoLegajo = ref({
         fecha_legajo: new Date().toISOString().substring(0, 10), // Obtener la fecha actual en formato "YYYY-MM-DD",
@@ -1601,6 +1796,9 @@
                   fecha_dataServicio: formatDate(solicitud.fecha_dataServicio),
                   area_tematica: formatAreaTematica(solicitud.area_tematica),
                   nro_presupuesto: solicitud.nro_presupuesto,
+                  presupuestos_adicionales: solicitud.presupuestos_adicionales || [],
+                  plazo_estimado_ds: solicitud.plazo_estimado,
+                  cant_numLabs: solicitud.cant_numLabs,
                   adjuntos_solicitud,
                   nro_circuito: solicitud.nro_circuito,
                   dataServicio_completo: solicitud.completo,
@@ -1611,6 +1809,7 @@
                   pago: legajoCorrespondiente ? legajoCorrespondiente.pago : '',
                   plazo_pago: legajoCorrespondiente ? legajoCorrespondiente.plazo_pago : '',
                   legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo : '',
+                  labs_adicionales_pendientes: legajoCorrespondiente ? (legajoCorrespondiente.labs_adicionales_pendientes || 0) : 0,
                   // Recepcion
                   nros_remitos: recepcionCorrespondiente ? recepcionCorrespondiente.nros_remitos : '',
                   estado_recepcion: recepcionCorrespondiente ? recepcionCorrespondiente.estado_recepcion : '',
@@ -2985,6 +3184,19 @@
         mostrarModalDataServicio,
         cargarAdjuntoSolicitud,
         eliminarAdjuntoSolicitud,
+        // Editar Data Servicio
+        mostrarModalEditarDS,
+        editarDS,
+        abrirEditarDataServicio,
+        cerrarEditarDataServicio,
+        agregarPresupuestoAdicional,
+        quitarPresupuestoAdicional,
+        guardarEdicionDataServicio,
+        mostrarModalAprobarLabs,
+        aprobarLabs,
+        abrirAprobarLabs,
+        cerrarAprobarLabs,
+        confirmarAprobarLabs,
         // Legajo
         nuevoLegajo,
         obtenerRangoLab,
@@ -3463,6 +3675,33 @@
 .ds-icon-btn:hover {
   background: #28a745;
   color: white;
+}
+.ds-edit-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid #026290;
+  background: white;
+  color: #026290;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  padding: 0;
+  margin-left: 3px;
+  transition: background 0.15s, color 0.15s;
+}
+.ds-edit-btn:hover {
+  background: #026290;
+  color: white;
+}
+.labs-warning-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
 }
 </style>
   

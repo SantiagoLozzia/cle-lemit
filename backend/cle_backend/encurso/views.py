@@ -64,12 +64,21 @@ class ObtenerTodoEnCurso(APIView):
         # Serializar los datos de los DataServicio
         servicios_en_curso_serializer = DataServicioSerializer(servicios_en_curso, many=True)
 
-        # Agregar los campos 'area_tematica' y 'nombre_solicitante' a los datos de DataServicio
+        # Mapa de presupuestos adicionales por nro_dataServicio
+        presupuestos_adicionales_map = {}
+        for ds in servicios_en_curso.prefetch_related('presupuestos_adicionales'):
+            presupuestos_adicionales_map[ds.nro_dataServicio] = [
+                {'nro_presupuesto': p.nro_presupuesto, 'arancel_presupuesto': str(p.arancel_presupuesto)}
+                for p in ds.presupuestos_adicionales.all()
+            ]
+
+        # Agregar los campos 'area_tematica', 'nombre_solicitante' y 'presupuestos_adicionales' a los datos de DataServicio
         for data_servicio in servicios_en_curso_serializer.data:
             nro_presupuesto = data_servicio['nro_presupuesto']
             area_tematica, nombre_solicitante = presupuesto_map.get(nro_presupuesto, ('', ''))
             data_servicio['area_tematica'] = area_tematica
             data_servicio['nombre_solicitante'] = nombre_solicitante
+            data_servicio['presupuestos_adicionales'] = presupuestos_adicionales_map.get(data_servicio['nro_dataServicio'], [])
 
         # Obtener el numero de circuito de los DataServicio
         numeros_circuito = servicios_en_curso.values_list('nro_circuito', flat=True)
@@ -143,6 +152,7 @@ def presupuesto_seleccionado(request, nro_presupuesto):
         data = {
             'nro_presupuesto': presupuesto.nro_presupuesto,
             'nombre_solicitante': nombre_solicitante,
+            'arancel_presupuesto': str(presupuesto.arancel_presupuesto),
         }
         return JsonResponse(data)
     except Presupuesto.DoesNotExist:
@@ -869,6 +879,66 @@ class EliminarInformeInterarea(APIView):
         informe = get_object_or_404(InformeInterarea, pk=pk)
         informe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class EditarDataServicio(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def patch(self, request, nro_dataServicio):
+        data_servicio = get_object_or_404(DataServicio, nro_dataServicio=nro_dataServicio)
+
+        plazo_estimado = request.data.get('plazo_estimado')
+        if plazo_estimado is not None:
+            data_servicio.plazo_estimado = int(plazo_estimado)
+
+        cant_numLabs_nuevo = request.data.get('cant_numLabs')
+        if cant_numLabs_nuevo is not None:
+            cant_numLabs_nuevo = int(cant_numLabs_nuevo)
+            if cant_numLabs_nuevo > data_servicio.cant_numLabs:
+                delta = cant_numLabs_nuevo - data_servicio.cant_numLabs
+                try:
+                    legajo = Legajo.objects.get(nro_circuito=data_servicio.nro_circuito)
+                    legajo.labs_adicionales_pendientes += delta
+                    legajo.save()
+                except Legajo.DoesNotExist:
+                    pass
+            data_servicio.cant_numLabs = cant_numLabs_nuevo
+
+        nro_presupuesto_adicional = request.data.get('nro_presupuesto_adicional')
+        if nro_presupuesto_adicional:
+            presupuesto = get_object_or_404(Presupuesto, nro_presupuesto=nro_presupuesto_adicional)
+            data_servicio.presupuestos_adicionales.add(presupuesto)
+
+        data_servicio.save()
+        return Response({'message': 'Data Servicio actualizado.'}, status=status.HTTP_200_OK)
+
+
+class AprobarLabsAdicionales(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
+    def post(self, request, nro_circuito):
+        legajo = get_object_or_404(Legajo, nro_circuito=nro_circuito)
+        cant_labs_nuevos = legajo.labs_adicionales_pendientes
+
+        if cant_labs_nuevos <= 0:
+            return Response({'error': 'No hay labs pendientes.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        ultimo_numero_obj = UltimoNumero.obtener()
+        inicio_rango = ultimo_numero_obj.ultimo_numero_actual + 1
+        final_rango = inicio_rango + cant_labs_nuevos - 1
+        nuevo_rango = f"{inicio_rango}-{final_rango}"
+
+        legajo.rangos_laboratorios = f"{legajo.rangos_laboratorios}, {nuevo_rango}"
+        legajo.labs_adicionales_pendientes = 0
+        legajo.save()
+
+        ultimo_numero_obj.ultimo_numero_actual = final_rango
+
+        return Response({
+            'nuevo_rango': nuevo_rango,
+            'rangos_totales': legajo.rangos_laboratorios,
+        }, status=status.HTTP_200_OK)
+
 
 # Adminsitracion
 class GuardarAdjuntoInformeServicio(APIView):

@@ -151,6 +151,7 @@ class DataServicio(models.Model):
     muestras = models.TextField()
     observaciones = models.TextField(max_length=255, null=True, blank=True)
     nro_presupuesto = models.ForeignKey('Presupuesto', on_delete=models.CASCADE)
+    presupuestos_adicionales = models.ManyToManyField('Presupuesto', related_name='data_servicios_adicionales', blank=True)
     completo = models.BooleanField(default=False) #Si es True habilito a adjuntar adjunto_solicitudServicio
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
     finalizado = models.BooleanField(default=False)
@@ -167,6 +168,7 @@ class Legajo(models.Model):
     adjunto_factura = models.FileField(upload_to='facturas/', null=True)
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    labs_adicionales_pendientes = models.IntegerField(default=0)
 
     def __str__(self):
         return f"Legajo #{self.nro_legajo} - DataServicio #{self.nro_dataServicio.nro_dataServicio}"
