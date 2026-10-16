@@ -1573,7 +1573,7 @@
       };
 
       const guardarEdicionDataServicio = async () => {
-        const { nro_dataServicio, plazo_estimado, cant_numLabs, presupuestos_adicionales, cant_numLabs_original } = editarDS.value;
+        const { nro_dataServicio, plazo_estimado, cant_numLabs, presupuestos_adicionales } = editarDS.value;
         try {
           // Guardar plazo y labs
           await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
