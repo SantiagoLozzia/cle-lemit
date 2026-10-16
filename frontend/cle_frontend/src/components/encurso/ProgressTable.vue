@@ -97,7 +97,11 @@
             <td v-if="isAdminOrTecnologicoOrDireccion" class="fecha-columna">{{ fila.fecha_dataServicio }}</td>
             <td v-if="isAdminOrTecnologicoOrDireccion" style="white-space: nowrap;">{{ fila.area_tematica }}</td>
             <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_presupuesto }}</td>
-            <td v-if="isAdminOrTecnologicoOrDireccion"><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirDataServicio(fila.nro_dataServicio)"></i></td>
+            <td v-if="isAdminOrTecnologicoOrDireccion">
+              <button class="ds-icon-btn" @click="abrirDataServicio(fila.nro_dataServicio)" title="Ver Data Servicio">
+                <i class="bi bi-file-earmark-check-fill"></i>
+              </button>
+            </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
               <AttachmentCell
                 :files="fila.adjuntos_solicitud"
@@ -3439,6 +3443,26 @@
   .lg-number { color: #026290 !important; }
   .lg-divider { background: #026290 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .lg-label { color: #026290 !important; }
+}
+
+.ds-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #28a745;
+  background: white;
+  color: #28a745;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.ds-icon-btn:hover {
+  background: #28a745;
+  color: white;
 }
 </style>
   
