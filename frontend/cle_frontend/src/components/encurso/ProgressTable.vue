@@ -150,8 +150,13 @@
                   </div>
               </template>
               <template v-else-if="fila.nro_legajo && fila.adjunto_factura">
-                  <!-- Si nro_legajo está completo y adjunto_factura está completo, mostrar el icono del archivo -->
                   <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_factura)"></i>
+                  <div v-if="isAdministracion" class="custom-file" style="display:inline-block; margin-left:4px;">
+                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputReplaceFactura-' + index" title="Reemplazar factura">
+                          <i class="bi bi-paperclip"></i>
+                      </label>
+                      <input :id="'fileInputReplaceFactura-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito)">
+                  </div>
               </template>
               <template v-else>
                   <!-- Si nro_legajo está vacío, entonces adjunto_factura también debe estar vacío -->
@@ -2020,20 +2025,12 @@
         }
       };
 
-      // Para abrir venntana para adjuntar cualquier archivo
       const abrirArchivo = (adjunto) => {
-        console.log('valor de adjunto:', adjunto)
-        const baseURL = process.env.VUE_APP_BACKEND_URL;
-        const urlCompleta = baseURL + adjunto;
-        window.open(urlCompleta, '_blank');
+        window.open(window.location.origin + '/media/' + adjunto, '_blank');
       };
 
       const abrirVistaPreliminar = (adjunto) => {
-        console.log('pdf preliminar', adjunto)
-        // Construir la URL completa
-        const baseURL = process.env.VUE_APP_BACKEND_URL;
-        urlPdf.value = baseURL + adjunto;
-        console.log('urlPDF', urlPdf)
+        urlPdf.value = window.location.origin + '/media/' + adjunto;
         mostrarModalPDFpreliminar.value = true;
       };
 

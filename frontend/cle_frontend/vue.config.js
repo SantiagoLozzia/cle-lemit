@@ -18,6 +18,10 @@ module.exports = {
         ws: true,
         changeOrigin: true,
       },
+      '^/media/': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
     },
     allowedHosts: ['cle-lemit.local'],
   },
