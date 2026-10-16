@@ -44,7 +44,7 @@ export default {
     canUpload: { type: Boolean, default: false },
     canDelete: { type: Boolean, default: false },
     inputId:   { type: String, required: true },
-    fileIcon:  { type: String, default: 'bi bi-paperclip' },
+    fileIcon:  { type: String, default: 'bi bi-file-earmark-check-fill' },
     emptyIcon: { type: String, default: 'bi bi-paperclip' },
   },
   emits: ['upload', 'delete'],
@@ -97,30 +97,28 @@ export default {
 
 .att-trigger {
   position: relative;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1.5px solid #28a745;
-  background: white;
+  border: none;
+  background: transparent;
   color: #28a745;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 18px;
   padding: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: color 0.15s;
 }
 
+.att-trigger:hover { color: #1a7a30; }
+
 .att-cell.is-open .att-trigger {
-  background: #28a745;
-  color: white;
+  color: #dc3545;
 }
 
 .att-badge {
   position: absolute;
   top: -5px;
-  right: -5px;
+  right: -7px;
   background: #28a745;
   color: white;
   border-radius: 50%;
