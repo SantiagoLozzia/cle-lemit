@@ -150,12 +150,20 @@
                   </div>
               </template>
               <template v-else-if="fila.nro_legajo && fila.adjunto_factura">
-                  <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_factura)"></i>
-                  <div v-if="isAdministracion" class="custom-file" style="display:inline-block; margin-left:4px;">
-                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputReplaceFactura-' + index" title="Reemplazar factura">
-                          <i class="bi bi-paperclip"></i>
+                  <i v-if="!isAdministracion" class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_factura)"></i>
+                  <div v-else class="factura-speed-dial" :class="{ 'is-open': facturaDialOpen === index }" @click.stop>
+                    <button class="fsd-trigger" @click="toggleFacturaDial(index)" title="Factura">
+                      <i :class="facturaDialOpen === index ? 'bi bi-x' : 'bi bi-file-earmark-word'"></i>
+                    </button>
+                    <button class="fsd-action fsd-action-1" @click="abrirArchivo(fila.adjunto_factura); closeFacturaDial()" title="Ver factura">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <div class="fsd-action fsd-action-2" title="Reemplazar factura">
+                      <label :for="'fileInputReplaceFactura-' + index" style="cursor:pointer;margin:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-arrow-up-circle"></i>
                       </label>
-                      <input :id="'fileInputReplaceFactura-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito)">
+                      <input :id="'fileInputReplaceFactura-' + index" style="display:none;" type="file" @change="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito); closeFacturaDial()">
+                    </div>
                   </div>
               </template>
               <template v-else>
@@ -1392,7 +1400,7 @@
 </template>
   
 <script>
-  import { onMounted, ref, computed } from 'vue';
+  import { onMounted, onUnmounted, ref, computed } from 'vue';
   import api from '@/api.js';
   import { AREAS_TEMATICAS } from '@/constants/areas.js';
 
@@ -1496,6 +1504,11 @@
       const mostrarModalCrearLegajo = ref(false);
       const mostrarModalLegajo = ref(false);
       const mostrarModalPagoLegajo = ref(false);
+      const facturaDialOpen = ref(null);
+      const toggleFacturaDial = (index) => {
+        facturaDialOpen.value = facturaDialOpen.value === index ? null : index;
+      };
+      const closeFacturaDial = () => { facturaDialOpen.value = null; };
       const mostrarModalPlazoPago = ref(false);
       // Setup Recepcion
       const nuevoRecepcion = ref ({
@@ -1715,6 +1728,11 @@
       // Llamamos a fetchData cuando el componente se monta
       onMounted(() => {
         fetchData();
+        document.addEventListener('click', closeFacturaDial);
+      });
+
+      onUnmounted(() => {
+        document.removeEventListener('click', closeFacturaDial);
       });
 
       const triggerFileInput = () => {
@@ -2915,6 +2933,9 @@
         showErrorAlert,
         abrirArchivo,
         abrirVistaPreliminar,
+        facturaDialOpen,
+        toggleFacturaDial,
+        closeFacturaDial,
         mostrarModalPDFpreliminar,
         cerrarModalPDFpreliminar,
         triggerFileInput,
@@ -3080,6 +3101,78 @@
 </script>
   
 <style scoped>
+
+  /* --- Speed Dial Factura --- */
+  .factura-speed-dial {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fsd-trigger {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid #026290;
+    background: white;
+    color: #026290;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    padding: 0;
+    transition: background 0.18s, color 0.18s;
+    position: relative;
+    z-index: 2;
+  }
+
+  .factura-speed-dial.is-open .fsd-trigger {
+    background: #026290;
+    color: white;
+  }
+
+  .fsd-action {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #026290;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    padding: 0;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+    transition: opacity 0.18s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Ver factura: directo hacia arriba */
+  .factura-speed-dial.is-open .fsd-action-1 {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(calc(-50% + 0px), calc(-50% - 46px));
+    transition-delay: 0.04s;
+  }
+
+  /* Reemplazar factura: diagonal arriba-derecha (45°) */
+  .factura-speed-dial.is-open .fsd-action-2 {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(calc(-50% + 34px), calc(-50% - 34px));
+    transition-delay: 0s;
+  }
+
+  /* --- Fin Speed Dial --- */
 
   /* Agrega un borde vertical a la derecha de las subcolumnas específicas */
   .add-border-right {
