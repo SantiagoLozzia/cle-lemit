@@ -318,6 +318,34 @@ class Modulo(models.Model):
         # Crea una nueva instancia con el nuevo valor
         cls.objects.create(valor=nuevo_valor)
 
+
+class AdjuntoSolicitudServicio(models.Model):
+    data_servicio = models.ForeignKey('DataServicio', on_delete=models.CASCADE, related_name='adjuntos')
+    archivo = models.FileField(upload_to='solicitudes_servicio/')
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['fecha']
+
+
+class AdjuntoFactura(models.Model):
+    legajo = models.ForeignKey('Legajo', on_delete=models.CASCADE, related_name='adjuntos_factura')
+    archivo = models.FileField(upload_to='facturas/')
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['fecha']
+
+
+class RegistroEnsayo(models.Model):
+    circuito = models.ForeignKey('Circuito', on_delete=models.CASCADE, related_name='registros_ensayo_items')
+    archivo = models.FileField(upload_to='registros_ensayo/')
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['fecha']
+
+
 # Clases singleton que podria borrar
 # class UltimoNumeroSingleton:
 #     _instance = None

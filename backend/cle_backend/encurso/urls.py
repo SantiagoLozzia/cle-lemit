@@ -28,6 +28,12 @@ urlpatterns = [
     # Informe Area
     path('guardar_adjunto_informearea/', GuardarAdjuntoInformeArea.as_view(), name='guardar-adjunto-informearea'),
     path('guardar_registros_ensayo/', GuardarRegistrosEnsayo.as_view(), name='guardar-registros-ensayo'),
+    # Eliminar adjuntos por ID
+    path('adjunto_solicitud/<int:pk>/', EliminarAdjuntoSolicitud.as_view(), name='eliminar-adjunto-solicitud'),
+    path('adjunto_factura/<int:pk>/', EliminarAdjuntoFactura.as_view(), name='eliminar-adjunto-factura'),
+    path('registro_ensayo/<int:pk>/', EliminarRegistroEnsayo.as_view(), name='eliminar-registro-ensayo'),
+    path('informe_area/<int:pk>/', EliminarInformeArea.as_view(), name='eliminar-informe-area'),
+    path('informe_interarea/<int:pk>/', EliminarInformeInterarea.as_view(), name='eliminar-informe-interarea'),
     # Inter Area
     path('obtener_servicios/<int:nro_circuito>/', obtener_servicios, name='obtener-servicios'),
     path('crear_solicitud_interarea/', CrearSolicitudInterarea.as_view(), name='crear-solicitud-interarea'),

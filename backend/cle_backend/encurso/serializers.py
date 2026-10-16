@@ -81,6 +81,22 @@ class InformeInterAreaEnCursoSerializer(serializers.ModelSerializer):
                 fields = '__all__'
 
 
+class AdjuntoSolicitudServicioSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = AdjuntoSolicitudServicio
+                fields = ['id', 'data_servicio', 'archivo', 'fecha']
+
+class AdjuntoFacturaSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = AdjuntoFactura
+                fields = ['id', 'legajo', 'archivo', 'fecha']
+
+class RegistroEnsayoSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = RegistroEnsayo
+                fields = ['id', 'circuito', 'archivo', 'fecha']
+
+
 class GuardarAdjuntoSolicitudDataServicioSerializer(serializers.ModelSerializer):
         class Meta:
                 model = DataServicio

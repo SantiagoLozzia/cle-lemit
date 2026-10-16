@@ -84,6 +84,12 @@ class ObtenerTodoEnCurso(APIView):
         informes_servicio = InformeServicio.objects.filter(nro_circuito__in=numeros_circuito)
         solicitudes_inter_area = SolicitudInterarea.objects.filter(nro_circuito__in=numeros_circuito)
         informes_inter_area = InformeInterarea.objects.filter(nro_circuito__in=numeros_circuito)
+        # Nuevos modelos multi-adjunto
+        nros_dataServicio = servicios_en_curso.values_list('nro_dataServicio', flat=True)
+        nros_legajo = legajos.values_list('nro_legajo', flat=True)
+        adjuntos_solicitud = AdjuntoSolicitudServicio.objects.filter(data_servicio__in=nros_dataServicio)
+        adjuntos_factura = AdjuntoFactura.objects.filter(legajo__in=nros_legajo)
+        registros_ensayo = RegistroEnsayo.objects.filter(circuito__in=numeros_circuito)
 
         # Serializar los datos
         legajos_serializer = LegajoEnCursoSerializer(legajos, many=True)
@@ -105,7 +111,10 @@ class ObtenerTodoEnCurso(APIView):
             'informes_parciales_area': informes_parciales_area_serializer.data,
             'informes_servicio': informes_servicio_serializer.data,
             'solicitudes_inter_area': solicitudes_inter_area_serializer.data,
-            'informes_inter_area': informes_inter_area_serializer.data
+            'informes_inter_area': informes_inter_area_serializer.data,
+            'adjuntos_solicitud': AdjuntoSolicitudServicioSerializer(adjuntos_solicitud, many=True).data,
+            'adjuntos_factura': AdjuntoFacturaSerializer(adjuntos_factura, many=True).data,
+            'registros_ensayo_items': RegistroEnsayoSerializer(registros_ensayo, many=True).data,
         }
 
         # Devolver la respuesta
@@ -229,12 +238,12 @@ class GuardarAdjuntoSolicitud(APIView):
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         data_servicio = DataServicio.objects.get(nro_dataServicio=nro_dataServicio)
-        data_servicio.adjunto_solicitudServicio = adjunto
-        data_servicio.completo = True
-        data_servicio.save()
-        serializer = GuardarAdjuntoSolicitudDataServicioSerializer(data_servicio)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+        AdjuntoSolicitudServicio.objects.create(data_servicio=data_servicio, archivo=adjunto)
+        if not data_servicio.completo:
+            data_servicio.completo = True
+            data_servicio.save()
+        return Response({'mensaje': 'Adjunto guardado.'}, status=status.HTTP_200_OK)
+
 # Legajo
 def obtener_rangoLab(request, nro_circuito):
     # Obtener la instancia de DataServicio correspondiente al nro_circuito
@@ -351,15 +360,14 @@ class GuardarAdjuntoFactura(APIView):
                 circuito = get_object_or_404(Circuito, pk=nro_circuito)
                 nueva_recepcion = Recepcion.objects.create(nro_circuito=circuito)
 
-            # Guardar el adjunto en Legajo y marcar como completo
+            # Guardar el adjunto en el nuevo modelo y marcar legajo como completo
             legajo = get_object_or_404(Legajo, nro_legajo=nro_legajo)
-            legajo.adjunto_factura = adjunto
-            legajo.completo = True
-            legajo.save()
+            AdjuntoFactura.objects.create(legajo=legajo, archivo=adjunto)
+            if not legajo.completo:
+                legajo.completo = True
+                legajo.save()
 
-            # Serializar y devolver la respuesta
-            serializer = GuardarAdjuntoFacturaSerializer(legajo)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response({'mensaje': 'Factura guardada.'}, status=status.HTTP_200_OK)
 
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -664,11 +672,6 @@ class GuardarRegistrosEnsayo(APIView):
         except Circuito.DoesNotExist:
             return Response({"error": "Circuito no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-        try:
-            informe_area = InformeArea.objects.get(nro_circuito=circuito)
-        except InformeArea.DoesNotExist:
-            return Response({"error": "InformeArea no encontrado."}, status=status.HTTP_404_NOT_FOUND)
-
         adjunto = request.FILES.get('archivo')
         if not adjunto:
             return Response({"error": "Archivo es requerido."}, status=status.HTTP_400_BAD_REQUEST)
@@ -678,12 +681,9 @@ class GuardarRegistrosEnsayo(APIView):
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        informe_area.registros_ensayo = adjunto
-        informe_area.save()
+        registro = RegistroEnsayo.objects.create(circuito=circuito, archivo=adjunto)
+        return Response({'id': registro.id, 'archivo': str(registro.archivo)}, status=status.HTTP_201_CREATED)
 
-        serializer = GuardarRegistrosEnsayoServicioSerializer(informe_area)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-        
 # Inter Area
 def obtener_servicios(request, nro_circuito):
     try:
@@ -822,6 +822,53 @@ class GuardarAdjuntoInformeInterarea(APIView):
         except Exception:
             logger.exception("Error en GuardarAdjuntoInformeInterarea")
             return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
+
+# Eliminar adjuntos por ID
+class EliminarAdjuntoSolicitud(APIView):
+    def delete(self, request, pk):
+        adjunto = get_object_or_404(AdjuntoSolicitudServicio, pk=pk)
+        data_servicio = adjunto.data_servicio
+        adjunto.delete()
+        if not data_servicio.adjuntos.exists():
+            data_servicio.completo = False
+            data_servicio.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class EliminarAdjuntoFactura(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
+    def delete(self, request, pk):
+        adjunto = get_object_or_404(AdjuntoFactura, pk=pk)
+        legajo = adjunto.legajo
+        adjunto.delete()
+        if not legajo.adjuntos_factura.exists():
+            legajo.completo = False
+            legajo.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class EliminarRegistroEnsayo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def delete(self, request, pk):
+        registro = get_object_or_404(RegistroEnsayo, pk=pk)
+        registro.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class EliminarInformeArea(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def delete(self, request, pk):
+        informe = get_object_or_404(InformeArea, pk=pk)
+        informe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class EliminarInformeInterarea(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def delete(self, request, pk):
+        informe = get_object_or_404(InformeInterarea, pk=pk)
+        informe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # Adminsitracion
 class GuardarAdjuntoInformeServicio(APIView):

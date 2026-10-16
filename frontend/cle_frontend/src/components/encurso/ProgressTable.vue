@@ -99,20 +99,14 @@
             <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_presupuesto }}</td>
             <td v-if="isAdminOrTecnologicoOrDireccion"><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirDataServicio(fila.nro_dataServicio)"></i></td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
-              <template v-if="fila.adjunto_solicitudServicio === null">
-                <div v-if="isServiciosTecnologicos" class="custom-file">
-                  <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoSolicitud-' + index">
-                    <i class="bi bi-paperclip"></i>
-                  </label>
-                  <input :id="'fileInputAdjuntoSolicitud-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)">
-                </div>
-                <div v-else> 
-                      <i class="bi bi-stopwatch"></i>
-                </div>
-              </template>
-              <template v-else>
-                <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_solicitudServicio)"></i>
-              </template>
+              <AttachmentCell
+                :files="fila.adjuntos_solicitud"
+                :can-upload="isServiciosTecnologicos"
+                :can-delete="isServiciosTecnologicos"
+                :input-id="'solicitud-' + index"
+                @upload="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)"
+                @delete="eliminarAdjuntoSolicitud"
+              />
             </td>
 
             <!-- Columna Legajo -->
@@ -135,39 +129,15 @@
               </template>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
-              <template v-if="fila.nro_legajo && !fila.adjunto_factura">
-                  <!-- Si nro_legajo está completo y adjunto_factura está vacío, mostrar el botón de cargar archivo -->
-                  <div v-if="isAdministracion" class="custom-file">
-                      <!-- El icono de Bootstrap es clicleable y activa el input de tipo file -->
-                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoFactura-' + index">
-                          <i class="bi bi-paperclip"></i>
-                      </label>
-                      <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
-                      <input :id="'fileInputAdjuntoFactura-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito)">
-                  </div>
-                  <div v-else>
-                      <i class="bi bi-stopwatch"></i>
-                  </div>
-              </template>
-              <template v-else-if="fila.nro_legajo && fila.adjunto_factura">
-                  <i v-if="!isAdministracion" class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_factura)"></i>
-                  <div v-else class="factura-speed-dial" :class="{ 'is-open': facturaDialOpen === index }" @click.stop>
-                    <button class="fsd-trigger" @click="toggleFacturaDial(index)" title="Factura">
-                      <i :class="facturaDialOpen === index ? 'bi bi-x' : 'bi bi-file-earmark-word'"></i>
-                    </button>
-                    <button class="fsd-action fsd-action-1" @click="abrirArchivo(fila.adjunto_factura); closeFacturaDial()" title="Ver factura">
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <div class="fsd-action fsd-action-2" title="Reemplazar factura">
-                      <label :for="'fileInputReplaceFactura-' + index" style="cursor:pointer;margin:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-arrow-up-circle"></i>
-                      </label>
-                      <input :id="'fileInputReplaceFactura-' + index" style="display:none;" type="file" @change="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito); closeFacturaDial()">
-                    </div>
-                  </div>
-              </template>
-              <template v-else>
-                  <!-- Si nro_legajo está vacío, entonces adjunto_factura también debe estar vacío -->
+              <template v-if="fila.nro_legajo">
+                <AttachmentCell
+                  :files="fila.adjuntos_factura"
+                  :can-upload="isAdministracion"
+                  :can-delete="isAdministracion"
+                  :input-id="'factura-' + index"
+                  @upload="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito)"
+                  @delete="eliminarAdjuntoFactura"
+                />
               </template>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
@@ -332,26 +302,22 @@
               {{ fila.inter_areaTematica }}
             </td>
             <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
-              <template v-if="(fila.nro_solicitudInterarea !== '') && (fila.adjunto_informeInterarea === '')">
-                <div v-if="isAdminOrTecnologicoOrDireccion">
-                      <i class="bi bi-stopwatch"></i>
-                </div>
-                <div v-else class="custom-file">
-                  <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeInterarea-' + index">
-                    <i class="bi bi-paperclip"></i>
-                  </label>
-                  <input :id="'fileInputAdjuntoInformeInterarea-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeInterarea($event, fila)">
-                </div>
-              </template>
-              <template v-else-if="(fila.nro_solicitudInterarea !== '') && (fila.adjunto_informeInterarea !== '')">
-                <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeInterarea)"></i>
+              <template v-if="fila.nro_solicitudInterarea !== ''">
+                <AttachmentCell
+                  :files="fila.informes_interarea"
+                  :can-upload="!isAdminOrTecnologicoOrDireccion"
+                  :can-delete="!isAdminOrTecnologicoOrDireccion"
+                  :input-id="'interarea-' + index"
+                  @upload="cargarAdjuntoInformeInterarea($event, fila)"
+                  @delete="eliminarAdjuntoInformeInterarea"
+                />
               </template>
             </td>
 
             <!-- Columna Informe de Area -->
 
             <td>
-              <template v-if="(fila.adjunto_informeArea)">
+              <template v-if="fila.informes_area && fila.informes_area.length > 0">
                 <span class="no-wrap-column">
                   {{ fila.fecha_informeArea }}
                 </span>
@@ -369,63 +335,33 @@
               </template>
             </td>
             <td>
-              <template v-if="(fila.adjunto_informeArea === '') && (fila.ordenServicio_completo === true)">
-                  <div v-if="isAdminOrTecnologicoOrDireccion">
-                      <i class="bi bi-stopwatch"></i>
-                  </div>
-                  <div v-else class="custom-file">
-                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeArea-' + index">
-                          <i class="bi bi-paperclip"></i>
-                      </label>
-                      <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
-                      <input :id="'fileInputAdjuntoInformeArea-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeArea($event, fila)">
-                  </div>
-              </template>
-              <template v-else-if="fila.adjunto_informeArea !== ''">
-                <div v-if="fila.estado_informeArea === 'total'">
-                  <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeArea)"></i>
-                </div>
-                <div v-else>
-                  <i class="bi bi-file-earmark-word" style="cursor: pointer;" @click="abrirArchivo(fila.adjunto_informeArea)"></i>
-                  <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeArea-' + index">
-                          <i class="bi bi-paperclip"></i>
-                      </label>
-                      <!-- El input de tipo file está oculto visualmente pero se activa al hacer clic en el icono -->
-                      <input :id="'fileInputAdjuntoInformeArea-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeArea($event, fila)">
-                </div>
-              </template>
+              <AttachmentCell
+                :files="fila.informes_area"
+                :can-upload="!isAdminOrTecnologicoOrDireccion && fila.ordenServicio_completo === true && fila.estado_informeArea !== 'total'"
+                :can-delete="!isAdminOrTecnologicoOrDireccion && fila.estado_informeArea !== 'total'"
+                :input-id="'informearea-' + index"
+                @upload="cargarAdjuntoInformeArea($event, fila)"
+                @delete="eliminarAdjuntoInformeArea"
+              />
 
-              <template v-if="(fila.informes_parciales  !== '' ) && (fila.informes_parciales !== 'null')">
-                {{ fila.informes_parciales }}
+              <template v-if="fila.informesParciales && fila.informesParciales.length > 0">
+                {{ fila.informesParciales }}
               </template>
-
             </td>
             
             <!-- Registros de Ensayo -->
             <td>
-              <template v-if="(fila.adjunto_informeArea !== '') || (fila.adjunto_informeArea !== null)">
-                <div v-if="fila.registros_ensayo" style="position: relative;">
-                  <i class="bi bi-folder-check" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
-                  <div v-if="filaSeleccionada === index" class="opciones-flotantes">
-                    <div class="opcion" style="--rotation: -30deg;">
-                      <i class="bi bi-eye" @click="abrirArchivo(fila.registros_ensayo)"></i>
-                    </div>
-                    <!-- Subir nuevo: solo area_jefe / area_standard -->
-                    <div v-if="isAreaJefe || isAreaStandard" class="opcion" style="--rotation: 0deg;">
-                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
-                        <i class="bi bi-upload"></i>
-                      </label>
-                      <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
-                    </div>
-                  </div>
-                </div>
-                <!-- Sin registros aún: solo area_jefe / area_standard pueden subir -->
-                <div v-else-if="isAreaJefe || isAreaStandard">
-                  <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputRegistrosEnsayo-' + index">
-                    <i class="bi bi-folder-plus"></i>
-                  </label>
-                  <input :id="'fileInputRegistrosEnsayo-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarRegistrosEnsayo($event, fila)">
-                </div>
+              <template v-if="fila.informes_area && fila.informes_area.length > 0">
+                <AttachmentCell
+                  :files="fila.registros_ensayo"
+                  :can-upload="isAreaJefe || isAreaStandard"
+                  :can-delete="isAreaJefe || isAreaStandard"
+                  :input-id="'registros-' + index"
+                  file-icon="bi bi-folder-check"
+                  empty-icon="bi bi-folder-plus"
+                  @upload="cargarRegistrosEnsayo($event, fila)"
+                  @delete="eliminarRegistrosEnsayo"
+                />
               </template>
             </td>
 
@@ -1400,13 +1336,13 @@
 </template>
   
 <script>
-  import { onMounted, onUnmounted, ref, computed } from 'vue';
+  import { onMounted, ref, computed } from 'vue';
   import api from '@/api.js';
   import { AREAS_TEMATICAS } from '@/constants/areas.js';
+  import AttachmentCell from './AttachmentCell.vue';
 
   export default {
-    components: {
-    },
+    components: { AttachmentCell },
     setup() {
 
       // Setup General
@@ -1504,11 +1440,6 @@
       const mostrarModalCrearLegajo = ref(false);
       const mostrarModalLegajo = ref(false);
       const mostrarModalPagoLegajo = ref(false);
-      const facturaDialOpen = ref(null);
-      const toggleFacturaDial = (index) => {
-        facturaDialOpen.value = facturaDialOpen.value === index ? null : index;
-      };
-      const closeFacturaDial = () => { facturaDialOpen.value = null; };
       const mostrarModalPlazoPago = ref(false);
       // Setup Recepcion
       const nuevoRecepcion = ref ({
@@ -1623,10 +1554,41 @@
                 const legajoCorrespondiente = data.legajos.find(legajo => legajo.nro_circuito === solicitud.nro_circuito);
                 const recepcionCorrespondiente = data.recepciones.find(recepciones => recepciones.nro_circuito === solicitud.nro_circuito);
                 const ordenCorrespondiente = data.ordenes_servicio.find(ordenes_servicio => ordenes_servicio.nro_circuito === solicitud.nro_circuito);
-                const informeAreaCorrespondiente = data.informes_area.find(informes_area => informes_area.nro_circuito === solicitud.nro_circuito);
                 const solicitudInterAreaCorrespondiente = data.solicitudes_inter_area.find(solicitudes_inter_area => solicitudes_inter_area.nro_circuito === solicitud.nro_circuito);
-                const InformeInterareaCorrespondiente = data.informes_inter_area.find(informes_inter_area => informes_inter_area.nro_circuito === solicitud.nro_circuito);
                 const InformeServicioCorrespondiente = data.informes_servicio.find(informes_servicio => informes_servicio.nro_circuito === solicitud.nro_circuito);
+
+                // Arrays multi-adjunto
+                const adjuntos_solicitud = (data.adjuntos_solicitud || [])
+                  .filter(a => a.data_servicio === solicitud.nro_dataServicio)
+                  .map(a => ({ id: a.id, archivo: a.archivo }));
+
+                const adjuntos_factura = legajoCorrespondiente
+                  ? (data.adjuntos_factura || [])
+                    .filter(a => a.legajo === legajoCorrespondiente.nro_legajo)
+                    .map(a => ({ id: a.id, archivo: a.archivo }))
+                  : [];
+
+                const registros_ensayo = (data.registros_ensayo_items || [])
+                  .filter(r => r.circuito === solicitud.nro_circuito)
+                  .map(r => ({ id: r.id, archivo: r.archivo }));
+
+                const informes_area = (data.informes_area || [])
+                  .filter(ia => ia.nro_circuito === solicitud.nro_circuito)
+                  .map(ia => ({ id: ia.nro_informeArea, archivo: ia.adjunto_informeArea, estado: ia.estado_informeArea, fecha: ia.fecha_informeArea, informes_parciales: ia.informes_parciales }));
+
+                const informes_interarea = (data.informes_inter_area || [])
+                  .filter(ii => ii.nro_circuito === solicitud.nro_circuito)
+                  .map(ii => ({ id: ii.nro_informeInterarea, archivo: ii.adjunto_informeInterarea }));
+
+                // Estado derivado del informe de área
+                const estado_informeArea = informes_area.length === 0 ? 'sin_informe'
+                  : informes_area.some(ia => ia.estado === 'total') ? 'total' : 'parcial';
+
+                // Fecha del informe de área más reciente
+                const ultimoInformeArea = informes_area.length > 0 ? informes_area[informes_area.length - 1] : null;
+
+                // Informes parciales del último informe de área
+                const informesParciales = ultimoInformeArea ? (ultimoInformeArea.informes_parciales || []) : [];
 
                 // Construir la fila de la tabla combinando datos de solicitudes, legajos, recepciones, etc.
                 const fila = {
@@ -1635,13 +1597,13 @@
                   fecha_dataServicio: formatDate(solicitud.fecha_dataServicio),
                   area_tematica: formatAreaTematica(solicitud.area_tematica),
                   nro_presupuesto: solicitud.nro_presupuesto,
-                  adjunto_solicitudServicio: solicitud.adjunto_solicitudServicio,
+                  adjuntos_solicitud,
                   nro_circuito: solicitud.nro_circuito,
                   dataServicio_completo: solicitud.completo,
                   // Legajo
                   nro_legajo: legajoCorrespondiente ? legajoCorrespondiente.nro_legajo : '',
                   fecha_legajo: legajoCorrespondiente ? formatDate(legajoCorrespondiente.fecha_legajo) : '',
-                  adjunto_factura: legajoCorrespondiente ? legajoCorrespondiente.adjunto_factura : '',
+                  adjuntos_factura,
                   pago: legajoCorrespondiente ? legajoCorrespondiente.pago : '',
                   plazo_pago: legajoCorrespondiente ? legajoCorrespondiente.plazo_pago : '',
                   legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo : '',
@@ -1655,13 +1617,13 @@
                   plazo_estimado: solicitud.plazo_estimado,
                   ordenServicio_completo: ordenCorrespondiente ? ordenCorrespondiente.completo : '',
                   // Informe Area
-                  fecha_informeArea: informeAreaCorrespondiente ? formatDate(informeAreaCorrespondiente.fecha_informeArea) : '',
+                  fecha_informeArea: ultimoInformeArea ? formatDate(ultimoInformeArea.fecha) : '',
                   nombre_solicitante: solicitud.nombre_solicitante,
-                  estado_informeArea: informeAreaCorrespondiente ? informeAreaCorrespondiente.estado_informeArea : '',
-                  adjunto_informeArea: informeAreaCorrespondiente ? informeAreaCorrespondiente.adjunto_informeArea : '',
-                  registros_ensayo: informeAreaCorrespondiente ? informeAreaCorrespondiente.registros_ensayo : '',
+                  estado_informeArea,
+                  informes_area,
+                  registros_ensayo,
                   // Informes Parciales
-                  informesParciales: informeAreaCorrespondiente ? informeAreaCorrespondiente.informes_parciales : [],
+                  informesParciales,
                   // Solicitud Inter Area
                   nro_solicitudInterarea: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
                   fecha_solicitudInterarea: solicitudInterAreaCorrespondiente ? formatDate(solicitudInterAreaCorrespondiente.fecha_solicitudInterarea) : '',
@@ -1670,9 +1632,8 @@
                   num_labs: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.num_labs : '',
                   observaciones: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.observaciones : '',
                   // Informe Inter Area
-                  nro_informeInterarea: InformeInterareaCorrespondiente ? InformeInterareaCorrespondiente.nro_informeInterarea : '',
-                  fecha_informeInterarea: InformeInterareaCorrespondiente ? formatDate(InformeInterareaCorrespondiente.fecha_informeInterarea) : '',
-                  adjunto_informeInterarea: InformeInterareaCorrespondiente ? InformeInterareaCorrespondiente.adjunto_informeInterarea : '',
+                  nro_solicitudInterarea_ia: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
+                  informes_interarea,
                   // Informe Servicio
                   nro_informeServicio: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.nro_informeServicio : '',
                   fecha_informeServicio: InformeServicioCorrespondiente ? formatDate(InformeServicioCorrespondiente.fecha_informeServicio) : '',
@@ -1728,11 +1689,6 @@
       // Llamamos a fetchData cuando el componente se monta
       onMounted(() => {
         fetchData();
-        document.addEventListener('click', closeFacturaDial);
-      });
-
-      onUnmounted(() => {
-        document.removeEventListener('click', closeFacturaDial);
       });
 
       const triggerFileInput = () => {
@@ -1792,6 +1748,7 @@
           api.post('/encurso/guardar_adjuntosolicitudservicio/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
+                  fetchData();
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
@@ -1941,6 +1898,7 @@
           api.post('/encurso/guardar_adjuntofactura/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
+                  fetchData();
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
@@ -2368,6 +2326,7 @@
           // Realizar una petición POST al servidor para guardar el archivo
           const response = await api.post('/encurso/guardar_adjunto_informearea/', formData);
           console.log('Archivo guardado exitosamente:', response.data);
+          fetchData();
         } catch (error) {
           console.error('Error al guardar el archivo:', error);
         }
@@ -2385,6 +2344,7 @@
         api.post('/encurso/guardar_registros_ensayo/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
+                  fetchData();
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
@@ -2617,6 +2577,7 @@
           api.post('/encurso/guardar_adjuntoinformeinterarea/', formData)
               .then(response => {
                   console.log('Archivo guardado exitosamente:', response.data);
+                  fetchData();
               })
               .catch(error => {
                   console.error('Error al guardar el archivo:', error);
@@ -2911,6 +2872,46 @@
           }
         };
 
+        const eliminarAdjuntoSolicitud = async (id) => {
+          if (!confirm('¿Eliminar el adjunto ST-02?')) return;
+          try {
+            await api.delete(`/encurso/adjunto_solicitud/${id}/`);
+            fetchData();
+          } catch (e) { console.error('Error al eliminar adjunto solicitud:', e); }
+        };
+
+        const eliminarAdjuntoFactura = async (id) => {
+          if (!confirm('¿Eliminar la factura?')) return;
+          try {
+            await api.delete(`/encurso/adjunto_factura/${id}/`);
+            fetchData();
+          } catch (e) { console.error('Error al eliminar factura:', e); }
+        };
+
+        const eliminarAdjuntoInformeInterarea = async (id) => {
+          if (!confirm('¿Eliminar el informe interárea?')) return;
+          try {
+            await api.delete(`/encurso/informe_interarea/${id}/`);
+            fetchData();
+          } catch (e) { console.error('Error al eliminar informe interárea:', e); }
+        };
+
+        const eliminarAdjuntoInformeArea = async (id) => {
+          if (!confirm('¿Eliminar el informe de área?')) return;
+          try {
+            await api.delete(`/encurso/informe_area/${id}/`);
+            fetchData();
+          } catch (e) { console.error('Error al eliminar informe de área:', e); }
+        };
+
+        const eliminarRegistrosEnsayo = async (id) => {
+          if (!confirm('¿Eliminar los registros de ensayo?')) return;
+          try {
+            await api.delete(`/encurso/registro_ensayo/${id}/`);
+            fetchData();
+          } catch (e) { console.error('Error al eliminar registros de ensayo:', e); }
+        };
+
         const imprimirDataServicio = () => { window.print(); };
         const imprimirLegajo = () => { window.print(); };
 
@@ -2933,9 +2934,6 @@
         showErrorAlert,
         abrirArchivo,
         abrirVistaPreliminar,
-        facturaDialOpen,
-        toggleFacturaDial,
-        closeFacturaDial,
         mostrarModalPDFpreliminar,
         cerrarModalPDFpreliminar,
         triggerFileInput,
@@ -2962,6 +2960,7 @@
         observacionesDataServicio,
         mostrarModalDataServicio,
         cargarAdjuntoSolicitud,
+        eliminarAdjuntoSolicitud,
         // Legajo
         nuevoLegajo,
         obtenerRangoLab,
@@ -2975,6 +2974,7 @@
         mostrarModalLegajo,
         descargarLegajoPDF,
         cargarAdjuntoFactura,
+        eliminarAdjuntoFactura,
         mostrarModalPagoLegajo,
         mostrarModalPlazoPago,
         cerrarModalCrearLegajo,
@@ -3026,11 +3026,13 @@
         mostrarModalPlazoOrdenServicio,
         // Informe Area
         cargarAdjuntoInformeArea,
+        eliminarAdjuntoInformeArea,
         abrirModalEstadoInformeArea,
         cerrarModalEstadoInformeArea,
         mostrarModalEstadoInformeArea,
         guardarEstadoInformeArea,
         cargarRegistrosEnsayo,
+        eliminarRegistrosEnsayo,
         // Inter Area
         serviciosDisponibles,
         serviciosSeleccionados,
@@ -3057,6 +3059,7 @@
         observacionesSolicitudInterArea,
         servicioSolicitudInterArea,
         cargarAdjuntoInformeInterarea,
+        eliminarAdjuntoInformeInterarea,
         // Administracion - Formato
         cargarAdjuntoInformeServicio,
         abrirModalCorreccionesInformeServicio,
@@ -3101,78 +3104,6 @@
 </script>
   
 <style scoped>
-
-  /* --- Speed Dial Factura --- */
-  .factura-speed-dial {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .fsd-trigger {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1.5px solid #026290;
-    background: white;
-    color: #026290;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    padding: 0;
-    transition: background 0.18s, color 0.18s;
-    position: relative;
-    z-index: 2;
-  }
-
-  .factura-speed-dial.is-open .fsd-trigger {
-    background: #026290;
-    color: white;
-  }
-
-  .fsd-action {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: #026290;
-    color: white;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    padding: 0;
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.4);
-    transition: opacity 0.18s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  /* Ver factura: directo hacia arriba */
-  .factura-speed-dial.is-open .fsd-action-1 {
-    opacity: 1;
-    pointer-events: all;
-    transform: translate(calc(-50% + 0px), calc(-50% - 46px));
-    transition-delay: 0.04s;
-  }
-
-  /* Reemplazar factura: diagonal arriba-derecha (45°) */
-  .factura-speed-dial.is-open .fsd-action-2 {
-    opacity: 1;
-    pointer-events: all;
-    transform: translate(calc(-50% + 34px), calc(-50% - 34px));
-    transition-delay: 0s;
-  }
-
-  /* --- Fin Speed Dial --- */
 
   /* Agrega un borde vertical a la derecha de las subcolumnas específicas */
   .add-border-right {
