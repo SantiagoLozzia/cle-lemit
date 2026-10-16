@@ -103,12 +103,18 @@
               </span>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
-              <button class="ds-icon-btn" @click="abrirDataServicio(fila.nro_dataServicio)" title="Ver Data Servicio">
-                <i class="bi bi-file-earmark-check-fill"></i>
-              </button>
-              <button v-if="isServiciosTecnologicos" class="ds-edit-btn" @click="abrirEditarDataServicio(fila)" title="Editar Data Servicio">
-                <i class="bi bi-pencil"></i>
-              </button>
+              <div class="att-cell" :class="{ 'is-open': openDSPopup === fila.nro_dataServicio }" @click.stop>
+                <button class="ds-icon-btn" @click="toggleDSPopup(fila.nro_dataServicio)" title="Data Servicio">
+                  <i :class="openDSPopup === fila.nro_dataServicio ? 'bi bi-x' : 'bi bi-file-earmark-check-fill'"></i>
+                </button>
+                <div v-if="openDSPopup === fila.nro_dataServicio" class="att-popup">
+                  <div class="att-file-row">
+                    <span class="att-file-name">Data Servicio #{{ fila.nro_dataServicio }}</span>
+                    <button class="att-btn att-btn-view" @click="abrirDataServicio(fila.nro_dataServicio); closeDSPopup()" title="Ver"><i class="bi bi-eye"></i></button>
+                    <button v-if="isServiciosTecnologicos" class="att-btn" style="color:#026290;" @click="abrirEditarDataServicio(fila); closeDSPopup()" title="Editar"><i class="bi bi-pencil"></i></button>
+                  </div>
+                </div>
+              </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
               <AttachmentCell
@@ -135,16 +141,13 @@
                 </div>
               </template>
               <template v-else-if="fila.dataServicio_completo && fila.nro_legajo">
-                <div style="position: relative; display: inline-flex; align-items: center; gap: 4px;">
-                  <i class="bi bi-file-earmark-check-fill text-success" style="cursor: pointer;" @click="abrirLegajo(fila)"></i>
-                  <button
-                    v-if="fila.labs_adicionales_pendientes > 0"
-                    class="labs-warning-btn"
-                    :title="'⚠️ ' + fila.labs_adicionales_pendientes + ' labs adicionales pendientes'"
-                    @click="isAdministracion ? abrirAprobarLabs(fila) : null"
-                    :style="isAdministracion ? 'cursor:pointer' : 'cursor:default'"
-                  >⚠️</button>
-                </div>
+                <button
+                  :class="fila.labs_adicionales_pendientes > 0 ? 'ds-icon-btn ds-icon-btn--warning' : 'ds-icon-btn'"
+                  :title="fila.labs_adicionales_pendientes > 0 ? fila.labs_adicionales_pendientes + ' labs adicionales pendientes de aprobación' : 'Ver Legajo'"
+                  @click="fila.labs_adicionales_pendientes > 0 && isAdministracion ? abrirAprobarLabs(fila) : abrirLegajo(fila)"
+                >
+                  <i class="bi bi-file-earmark-check-fill"></i>
+                </button>
               </template>
               <template v-else>
               </template>
@@ -1519,6 +1522,11 @@
       const solicitanteDataServicio = ref();
       const arancelDataServicio = ref();
       const observacionesDataServicio = ref();
+      // Popup Data Servicio
+      const openDSPopup = ref(null);
+      const toggleDSPopup = (nro) => { openDSPopup.value = openDSPopup.value === nro ? null : nro; };
+      const closeDSPopup = () => { openDSPopup.value = null; };
+
       // Editar Data Servicio
       const mostrarModalEditarDS = ref(false);
       const editarDS = ref({
@@ -1892,6 +1900,7 @@
       // Llamamos a fetchData cuando el componente se monta
       onMounted(() => {
         fetchData();
+        document.addEventListener('click', closeDSPopup);
       });
 
       const triggerFileInput = () => {
@@ -3184,6 +3193,10 @@
         mostrarModalDataServicio,
         cargarAdjuntoSolicitud,
         eliminarAdjuntoSolicitud,
+        // Popup Data Servicio
+        openDSPopup,
+        toggleDSPopup,
+        closeDSPopup,
         // Editar Data Servicio
         mostrarModalEditarDS,
         editarDS,
@@ -3676,32 +3689,13 @@
   background: #28a745;
   color: white;
 }
-.ds-edit-btn {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1.5px solid #026290;
-  background: white;
-  color: #026290;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  padding: 0;
-  margin-left: 3px;
-  transition: background 0.15s, color 0.15s;
+.ds-icon-btn--warning {
+  border-color: #e6a817;
+  color: #e6a817;
 }
-.ds-edit-btn:hover {
-  background: #026290;
+.ds-icon-btn--warning:hover {
+  background: #e6a817;
   color: white;
-}
-.labs-warning-btn {
-  border: none;
-  background: transparent;
-  padding: 0;
-  font-size: 13px;
-  line-height: 1;
 }
 </style>
   
