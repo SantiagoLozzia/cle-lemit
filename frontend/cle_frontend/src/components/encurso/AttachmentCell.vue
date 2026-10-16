@@ -44,7 +44,7 @@ export default {
     canUpload: { type: Boolean, default: false },
     canDelete: { type: Boolean, default: false },
     inputId:   { type: String, required: true },
-    fileIcon:  { type: String, default: 'bi bi-file-earmark-word' },
+    fileIcon:  { type: String, default: 'bi bi-paperclip' },
     emptyIcon: { type: String, default: 'bi bi-paperclip' },
   },
   emits: ['upload', 'delete'],
@@ -100,9 +100,9 @@ export default {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: 1.5px solid #026290;
+  border: 1.5px solid #28a745;
   background: white;
-  color: #026290;
+  color: #28a745;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -113,7 +113,7 @@ export default {
 }
 
 .att-cell.is-open .att-trigger {
-  background: #026290;
+  background: #28a745;
   color: white;
 }
 
@@ -121,7 +121,7 @@ export default {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #026290;
+  background: #28a745;
   color: white;
   border-radius: 50%;
   width: 15px;
