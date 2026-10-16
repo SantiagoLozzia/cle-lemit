@@ -254,6 +254,56 @@ body {
   .modal-dialog-a4 .modal-body {
     overflow-y: visible;
   }
+
+  #mostrarModalPresupuesto.show,
+  #mostrarModalPresupuesto.show * { visibility: visible; }
+
+  #mostrarModalPresupuesto.show {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    background: white;
+    z-index: 9999;
+    display: block !important;
+  }
+
+  #mostrarModalPresupuesto .no-print { display: none !important; visibility: hidden; }
+
+  #mostrarModalPresupuesto.show .modal-dialog-a4 {
+    box-shadow: none;
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #mostrarModalPresupuesto.show .modal-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  #mostrarModalPresupuesto.show .modal-body {
+    flex: 1;
+    padding: 20px 30px 120px 30px;
+    overflow: visible;
+  }
+
+  #mostrarModalPresupuesto.show .modal-footer-a4 {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%;
+  }
+
+  #mostrarModalPresupuesto.show .modal-logo,
+  #mostrarModalPresupuesto.show .footer-image {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    visibility: visible !important;
+  }
 }
 
 #app {

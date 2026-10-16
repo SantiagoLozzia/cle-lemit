@@ -172,6 +172,7 @@ def obtener_presupuesto(request, nro_presupuesto):
             detalle_dict = {
                 'nro_servicio': detalle.nro_servicio.nro_servicio,
                 'nombre_servicio': servicio.servicio,
+                'norma': servicio.norma,
                 'cant': detalle.cant,
                 'subtotal': detalle.subtotal
             }

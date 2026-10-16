@@ -79,7 +79,12 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-logo"></div>
-            <button type="button" class="btn-close" @click="cerrarModalPresupuesto" aria-label="Close"></button>
+            <div class="d-flex align-items-center gap-2 no-print">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirPresupuesto" title="Imprimir / Guardar como PDF">
+                <i class="bi bi-printer"></i>
+              </button>
+              <button type="button" class="btn-close" @click="cerrarModalPresupuesto" aria-label="Close"></button>
+            </div>
           </div>
           <!-- Modal Body -->
           <div class="modal-body">
@@ -120,6 +125,7 @@
                     <tr>
                       <th class="text-center">Cod.</th>
                       <th class="text-center">Nombre Servicio</th>
+                      <th class="text-center">Norma</th>
                       <th class="text-center">Cantidad</th>
                       <th class="text-center">Subtotal</th>
                     </tr>
@@ -128,6 +134,7 @@
                     <tr v-for="detalle in detallesPresupuesto" :key="detalle.nro_servicio">
                       <td class="text-center">{{ detalle.nro_servicio }}</td>
                       <td class="text-left">{{ detalle.nombre_servicio }}</td>
+                      <td class="text-center">{{ detalle.norma }}</td>
                       <td class="text-center">{{ detalle.cant }}</td>
                       <td class="text-right">{{ formatArancel(detalle.subtotal) }}</td>
                     </tr>
@@ -312,6 +319,8 @@ export default {
         mostrarModalPresupuesto.value = false;
       };
 
+      const imprimirPresupuesto = () => { window.print(); };
+
       const formatArancel = (arancel) => {
           // Verificar si arancel es numérico
           if (!isNaN(arancel)) {
@@ -394,6 +403,7 @@ export default {
         formatArancel,
         mostrarModalPresupuesto,
         cerrarModalPresupuesto,
+        imprimirPresupuesto,
         mostrarMenu,
         cambiarEstado,
         cerrarMenu,

@@ -78,8 +78,12 @@
           <!-- Modal Header -->
           <div class="modal-header">
             <div class="modal-logo"></div>
-            <div><i class="bi bi-download" style="cursor: pointer;" @click="descargarPresupuestoPDF"></i></div>
-            <button type="button" class="btn-close" @click="cerrarModalPresupuesto" aria-label="Close"></button>
+            <div class="d-flex align-items-center gap-2 no-print">
+              <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirPresupuesto" title="Imprimir / Guardar como PDF">
+                <i class="bi bi-printer"></i>
+              </button>
+              <button type="button" class="btn-close" @click="cerrarModalPresupuesto" aria-label="Close"></button>
+            </div>
           </div>
           <!-- Modal Body -->
           <div class="modal-body">
@@ -120,6 +124,7 @@
                     <tr>
                       <th class="text-center">Cod.</th>
                       <th class="text-center">Nombre Servicio</th>
+                      <th class="text-center">Norma</th>
                       <th class="text-center">Cantidad</th>
                       <th class="text-center">Subtotal</th>
                     </tr>
@@ -128,6 +133,7 @@
                     <tr v-for="detalle in detallesPresupuesto" :key="detalle.nro_servicio">
                       <td class="text-center">{{ detalle.nro_servicio }}</td>
                       <td class="text-left">{{ detalle.nombre_servicio }}</td>
+                      <td class="text-center">{{ detalle.norma }}</td>
                       <td class="text-center">{{ detalle.cant }}</td>
                       <td class="text-right">{{ formatArancel(detalle.subtotal) }}</td>
                     </tr>
@@ -238,8 +244,6 @@
 
         const mostrarModalPresupuesto = ref(false);
 
-        const nro_presupuesto_global = ref();
-
         const fetchPresupuestos = async () => {
             try {
             const response = await api.get('/presupuestos/aceptados/');
@@ -275,9 +279,6 @@
         };
 
         const abrirPresupuesto = (nro_presupuesto) => {
-          nro_presupuesto_global.value = nro_presupuesto;
-          console.log('a vergaaaaa')
-          console.log('nro_presupuesto_global',nro_presupuesto_global)
           api.get(`/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
               .then(response => {
                   // Obtener los datos del presupuesto de la respuesta
@@ -313,27 +314,7 @@
           mostrarModalPresupuesto.value = false;
         };
 
-        const descargarPresupuestoPDF = () => {
-            const nro_presupuesto = nro_presupuesto_global.value;
-            api({
-                method: 'get',
-                url: `/presupuestos/generar_pdf_presupuesto/${nro_presupuesto}/`,
-                responseType: 'blob' // Indicamos que esperamos una respuesta de tipo archivo binario (PDF)
-            })
-            .then((response) => {
-                // Crear un enlace temporal para descargar el archivo
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'informe.pdf'); // Nombre del archivo a descargar
-                document.body.appendChild(link);
-                link.click();
-                link.remove(); // Eliminar el enlace temporal
-            })
-            .catch((error) => {
-                console.error('Error al descargar el PDF:', error);
-            });
-        };
+        const imprimirPresupuesto = () => { window.print(); };
 
         const formatArancel = (arancel) => {
             // Verificar si arancel es numérico
@@ -416,10 +397,9 @@
           formatArancel,
           mostrarModalPresupuesto,
           cerrarModalPresupuesto,
-          nro_presupuesto_global,
-          descargarPresupuestoPDF,
-          mostrarMenu, 
-          cambiarEstado, 
+          imprimirPresupuesto,
+          mostrarMenu,
+          cambiarEstado,
           cerrarMenu,
           abrirPresupuesto,
         }; 
