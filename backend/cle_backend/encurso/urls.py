@@ -23,6 +23,7 @@ urlpatterns = [
     path('cambiar_plazo_muestras/<int:nro_circuito>/', CambiarPlazoMuestras.as_view(), name='cambiar-plazoMuestras'),
     # Orden de Servicio
     path('crear_ordenservicio/<int:nro_circuito>/', CrearOrdenServicio.as_view(), name='crear-ordenservicio'),
+    path('preview_ordenservicio/<int:nro_circuito>/', preview_ordenservicio, name='preview-ordenservicio'),
     path('obtener_orden_servicio/<int:nro_circuito>/', obtener_ordenServicio, name= 'obtener-ordenServicio'),
     path('cambiar_plazo_estimado/<int:nro_circuito>/', CambiarPlazoEstimado.as_view(), name= 'cambiar-plazo-estimado'),
     # Informe Area

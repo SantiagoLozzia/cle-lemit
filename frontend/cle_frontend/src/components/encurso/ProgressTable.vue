@@ -976,24 +976,64 @@
 
     <!-- Modales Orden de Servicio -->
     <div class="modal" :class="{ 'show': mostrarModalCrearOrdenServicio }" id="mostrarModalCrearOrdenServicio">
-      <div class="modal-dialog">
+      <div class="modal-dialog-a4">
         <div class="modal-content">
-          <!-- Modal Header -->
           <div class="modal-header">
-            <h4 class="modal-title">Crear Orden de Servicio</h4>
+            <div class="modal-logo"></div>
+            <h1 class="modal-title fs-5 fw-bold">Crear Orden de Servicio</h1>
             <button type="button" class="btn-close" @click="cerrarModalCrearOrdenServicio"></button>
           </div>
-
-          <!-- Modal Body -->
           <div class="modal-body">
-            <div>
-              Desea crear el ST-05 Orden de Servicio correspondiente?
-            </div>
+            <form class="was-validated">
+              <div class="mb-3">
+                <label class="form-label">Fecha:</label>
+                <input v-model="fechaOS" type="date" readonly class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Área Temática:</label>
+                <input v-model="areaOS" type="text" readonly class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">N° Legajo:</label>
+                <input v-model="legajoOS" type="text" readonly class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Rangos Laboratorios:</label>
+                <input v-model="rangosOS" type="text" readonly class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Plazo Estimado:</label>
+                <input v-model="plazoOS" type="text" readonly class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Solicitante:</label>
+                <input v-model="solicitanteOS" type="text" readonly class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Servicios Solicitados:</label>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left;">Servicio</th>
+                      <th style="text-align:center;">Cantidad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(servicio, index) in servicioOS" :key="index">
+                      <td style="text-align:left;">{{ servicio.servicio }}</td>
+                      <td>{{ servicio.cant }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Muestras:</label>
+                <input v-model="muestrasOS" type="text" readonly class="form-control" required />
+              </div>
+            </form>
           </div>
-
-          <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="crearOrdenServicio(fila); cerrarModal">Si</button>
+            <button type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">Cancelar</button>
           </div>
         </div>
@@ -2492,8 +2532,23 @@
 
       // OS - Archivo
 
-      const abrirModalCrearOrdenServicio = (fila) => {
+      const abrirModalCrearOrdenServicio = async (fila) => {
         numeroCircuitoGlobal.value = fila.nro_circuito;
+        try {
+          const res = await api.get(`/encurso/preview_ordenservicio/${fila.nro_circuito}/`);
+          const d = res.data;
+          fechaOS.value = d.fecha_ordenServicio;
+          areaOS.value = d.area_tematica;
+          legajoOS.value = d.nro_legajo;
+          rangosOS.value = d.rangos_laboratorios;
+          plazoOS.value = d.plazo_estimado;
+          solicitanteOS.value = d.nombre_solicitante;
+          servicioOS.value = d.servicio_solicitado.map(s => ({ servicio: s.servicio, cant: s.cant }));
+          muestrasOS.value = d.muestras;
+          observacionesOS.value = '';
+        } catch (e) {
+          console.error('Error al cargar preview OS:', e);
+        }
         mostrarModalCrearOrdenServicio.value = true;
       };
 

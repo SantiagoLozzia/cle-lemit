@@ -542,6 +542,36 @@ class CrearOrdenServicio(APIView):
             logger.exception("Error en CrearOrdenServicio")
             return JsonResponse({'mensaje': 'Error al crear la orden de servicio.'}, status=400)
 
+def preview_ordenservicio(request, nro_circuito):
+    try:
+        data_servicio = DataServicio.objects.select_related('nro_presupuesto').get(nro_circuito=nro_circuito)
+        nro_presupuesto = data_servicio.nro_presupuesto.nro_presupuesto
+        area_tematica = data_servicio.nro_presupuesto.area_tematica
+        presupuesto = Presupuesto.objects.select_related('nro_solicitante').get(nro_presupuesto=nro_presupuesto)
+        nombre_solicitante = presupuesto.nro_solicitante.nombre_solicitante
+        plazo_estimado = data_servicio.plazo_estimado
+        muestras = data_servicio.muestras
+        legajo = Legajo.objects.get(nro_circuito=nro_circuito)
+        nro_legajo = legajo.nro_legajo
+        rangos_laboratorios = legajo.rangos_laboratorios
+        detalle_presupuestos = DetallePresupuesto.objects.select_related('nro_servicio').filter(nro_presupuesto=nro_presupuesto)
+        serializer = DetallePresupuestoSerializer(detalle_presupuestos, many=True)
+        return JsonResponse({
+            'fecha_ordenServicio': timezone.now().date(),
+            'area_tematica': area_tematica,
+            'nro_legajo': nro_legajo,
+            'rangos_laboratorios': rangos_laboratorios,
+            'plazo_estimado': plazo_estimado,
+            'nombre_solicitante': nombre_solicitante,
+            'servicio_solicitado': serializer.data,
+            'muestras': muestras,
+        }, status=200)
+    except (DataServicio.DoesNotExist, Legajo.DoesNotExist, Presupuesto.DoesNotExist) as e:
+        return JsonResponse({'error': str(e)}, status=404)
+    except Exception:
+        logger.exception("Error en preview_ordenservicio")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
+
 def obtener_ordenServicio(request, nro_circuito):
     try:
         # Buscar el nro_presupuesto en DataServicio
