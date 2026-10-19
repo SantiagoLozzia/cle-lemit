@@ -89,7 +89,7 @@
           </tr>
         </thead>
         <tbody >
-          <tr v-for="(fila, index) in sortedFilas" :key="index">
+          <tr v-for="(fila, index) in sortedFilas" :key="index" :class="getRowClass(fila)">
 
             <!-- Columna Solicitud de Servicio -->
 
@@ -124,7 +124,7 @@
                   <label :for="'solicitud-' + index" style="cursor:pointer;"><i class="bi bi-paperclip"></i></label>
                   <input :id="'solicitud-' + index" style="display:none;" type="file" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)">
                 </div>
-                <i v-else class="bi bi-stopwatch"></i>
+                <i v-else class="bi bi-hourglass-split waiting-icon"></i>
               </template>
               <!-- Con archivos: speed dial -->
               <div v-else style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
@@ -168,10 +168,10 @@
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="fila.dataServicio_completo && !fila.nro_legajo">
                 <div v-if="isAdministracion">
-                  <i class="bi bi-plus-square"  style="cursor: pointer;" @click="obtenerRangoLab(fila.nro_circuito)"></i>
+                  <i class="bi bi-plus-circle action-icon" @click="obtenerRangoLab(fila.nro_circuito)"></i>
                 </div>
                 <div v-else>
-                      <i class="bi bi-stopwatch"></i>
+                      <i class="bi bi-hourglass-split waiting-icon"></i>
                 </div>
               </template>
               <template v-else-if="fila.dataServicio_completo && fila.nro_legajo">
@@ -230,7 +230,7 @@
               <template v-if="fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total'">
                 <template v-if="!fila.nros_remitos">
                   <div v-if="isServiciosTecnologicos">
-                    <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalRemito(fila)"></i>
+                    <i class="bi bi-plus-circle action-icon" @click="abrirModalRemito(fila)"></i>
                   </div>
                 </template>
                 <template v-else>
@@ -257,7 +257,7 @@
                     <span v-else-if="fila.estado_recepcion === 'total'">Total</span>
                   </div>
                 </template>
-                <i v-else-if="isServiciosTecnologicos && fila.nro_legajo" class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalEstadoMuestras(fila)"></i>
+                <i v-else-if="isServiciosTecnologicos && fila.nro_legajo" class="bi bi-plus-circle action-icon" @click="abrirModalEstadoMuestras(fila)"></i>
               </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
@@ -294,10 +294,10 @@
             <td>
               <template v-if="(fila.ordenServicio_completo === '' || fila.ordenServicio_completo === false) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                   <div v-if="isServiciosTecnologicos">
-                      <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalCrearOrdenServicio(fila)"></i>
+                      <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearOrdenServicio(fila)"></i>
                   </div>
                   <div v-else>
-                      <i class="bi bi-stopwatch"></i>
+                      <i class="bi bi-hourglass-split waiting-icon"></i>
                   </div>
               </template>
               <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
@@ -345,7 +345,7 @@
                     -
                   </div>
                   <div v-else style="display: flex; flex-direction: column;">
-                    <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalCrearSolicitudInterArea(fila)"></i> 
+                    <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)"></i>
                   </div>
               </template>
               <template v-else-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea !== '')">
@@ -456,7 +456,7 @@
                         <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
                       </div>
                       <div v-else>
-                        <i class="bi bi-stopwatch"></i>
+                        <i class="bi bi-hourglass-split waiting-icon"></i>
                       </div>
                   </template>
                   <template v-if="(fila.adjunto_informeServicio !== '') && (fila.adjunto_informeServicio !== null ) && (fila.corregir === false)">
@@ -487,13 +487,13 @@
                         <i class="bi bi-backspace-fill text-danger" @click="abrirModalCorreccionesInformeServicio(fila)" style="cursor: pointer; font-size: 0.8em;"></i>
                       </div> 
                       <div v-else>
-                        <i class="bi bi-stopwatch"></i>
+                        <i class="bi bi-hourglass-split waiting-icon"></i>
                       </div>
-                     
+
                   </template>
               </template>
             </td>
-            
+
 
             <!-- Columna Servicios Tecnologicos - Revision -->
             <td class="add-border-right">
@@ -522,7 +522,7 @@
                   </div>
                 </div>
                 <div v-else>
-                  <i class="bi bi-stopwatch"></i>
+                  <i class="bi bi-hourglass-split waiting-icon"></i>
                 </div>
               </template>
               <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.corregir === false)">
@@ -554,7 +554,7 @@
                     </div>
                   </div>
                   <div v-else>
-                    <i class="bi bi-stopwatch"></i>
+                    <i class="bi bi-hourglass-split waiting-icon"></i>
                   </div>
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true)">
@@ -577,7 +577,7 @@
                     <i class="bi bi-pen" style="cursor: pointer;" @click="abrirModalFirmaDireccion(fila)"></i>
                   </div>
                   <div v-else>
-                    <i class="bi bi-stopwatch"></i>
+                    <i class="bi bi-hourglass-split waiting-icon"></i>
                   </div>
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true) && (fila.firma_direccion === true)">
@@ -1546,6 +1546,21 @@
         if (!s) return '';
         const [d, m, y] = s.split('/');
         return `${y}-${m}-${d}`;
+      };
+
+      const getRowClass = (fila) => {
+        if (!fila.ordenServicio_completo || fila.firma_direccion === true) return '';
+        if (!fila.fecha_ordenServicio || !fila.plazo_estimado) return '';
+        const fechaISO = parseFechaFila(fila.fecha_ordenServicio);
+        if (!fechaISO) return '';
+        const inicio = new Date(fechaISO);
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const diasTranscurridos = Math.floor((hoy - inicio) / 86400000);
+        const diasRestantes = Number(fila.plazo_estimado) - diasTranscurridos;
+        if (diasRestantes <= 5) return 'row-urgente';
+        if (diasRestantes <= 15) return 'row-alerta';
+        return '';
       };
 
       const filteredFilas = computed(() => filas.value.filter(f => {
@@ -3305,6 +3320,7 @@
         filas,
         sortKey, sortDir, sortedFilas, setSort,
         filterArea, filterDesde, filterHasta, filterTipoFecha, uniqueAreas, clearFilters,
+        getRowClass,
         validarNumeroEntero,
         formatDate,
         formatArancel,
@@ -3520,6 +3536,42 @@
 
   .table tbody tr:hover {
     background-color: #daeaf3;
+  }
+
+  /* Alertas de plazo */
+  .table tbody tr.row-alerta,
+  .table tbody tr.row-alerta:nth-child(even) {
+    background-color: #fff8e1 !important;
+  }
+  .table tbody tr.row-alerta:hover { background-color: #ffecb3 !important; }
+
+  .table tbody tr.row-urgente,
+  .table tbody tr.row-urgente:nth-child(even) {
+    background-color: #fde8ea !important;
+  }
+  .table tbody tr.row-urgente:hover { background-color: #f5c2c7 !important; }
+
+  /* Ícono de espera */
+  .waiting-icon {
+    color: #9db7c8;
+    font-size: 15px;
+    animation: hg-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes hg-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+
+  /* Ícono de acción (+ crear) */
+  .action-icon {
+    cursor: pointer;
+    font-size: 17px;
+    color: #026290;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .action-icon:hover {
+    color: #014f73;
+    transform: scale(1.18);
   }
 
   .radio-options input[type="radio"] {
