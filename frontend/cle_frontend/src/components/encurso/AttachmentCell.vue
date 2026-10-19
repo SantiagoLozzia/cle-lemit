@@ -8,14 +8,28 @@
     <i v-else class="bi bi-stopwatch"></i>
   </template>
 
-  <!-- Con archivos -->
-  <div v-else class="att-cell" :class="{ 'is-open': isOpen }" @click.stop>
-    <button class="att-trigger" @click="toggle" :title="files.length + ' archivo(s)'">
-      <i :class="isOpen ? 'bi bi-x' : fileIcon"></i>
-      <span v-if="!isOpen && files.length > 1" class="att-badge">{{ files.length }}</span>
+  <!-- Con archivos: speed dial -->
+  <div v-else class="att-cell" @click.stop>
+    <button class="att-trigger" @click="toggleSpeedDial" :title="files.length + ' archivo(s)'">
+      <i :class="fileIcon"></i>
+      <span v-if="files.length > 1" class="att-badge">{{ files.length }}</span>
     </button>
 
-    <div v-if="isOpen" class="att-popup">
+    <!-- Speed dial semicírculo -->
+    <div v-if="isSpeedDialOpen" class="att-speed-dial">
+      <div class="att-opcion" :style="canUpload ? '--rotation: -120deg' : '--rotation: -90deg'" @click="toggleFileList">
+        <i class="bi bi-eye"></i>
+      </div>
+      <div v-if="canUpload" class="att-opcion" style="--rotation: -60deg">
+        <label :for="inputId + '-quick'" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+          <i class="bi bi-plus-lg"></i>
+        </label>
+        <input :id="inputId + '-quick'" style="display:none;" type="file" @change="onUpload">
+      </div>
+    </div>
+
+    <!-- Lista de archivos -->
+    <div v-if="isFileListOpen" class="att-popup">
       <div v-for="f in files" :key="f.id" class="att-file-row">
         <span class="att-file-name" :title="shortName(f.archivo)">{{ shortName(f.archivo) }}</span>
         <button class="att-btn att-btn-view" @click="viewFile(f.archivo)" title="Ver">
@@ -49,20 +63,29 @@ export default {
   },
   emits: ['upload', 'delete'],
   setup(props, { emit }) {
-    const isOpen = ref(false);
+    const isSpeedDialOpen = ref(false);
+    const isFileListOpen = ref(false);
     const instanceId = Symbol();
 
-    const close = () => { isOpen.value = false; };
+    const close = () => { isSpeedDialOpen.value = false; isFileListOpen.value = false; };
 
     const closeOthersHandler = (e) => {
-      if (e.detail !== instanceId) isOpen.value = false;
+      if (e.detail !== instanceId) close();
     };
 
-    const toggle = () => {
-      if (!isOpen.value) {
+    const onSpeedDialOpen = () => { close(); };
+
+    const toggleSpeedDial = () => {
+      if (!isSpeedDialOpen.value) {
         document.dispatchEvent(new CustomEvent('att-cell-open', { detail: instanceId }));
+        isFileListOpen.value = false;
       }
-      isOpen.value = !isOpen.value;
+      isSpeedDialOpen.value = !isSpeedDialOpen.value;
+    };
+
+    const toggleFileList = () => {
+      isSpeedDialOpen.value = false;
+      isFileListOpen.value = !isFileListOpen.value;
     };
 
     const shortName = (archivo) => {
@@ -74,7 +97,7 @@ export default {
     };
     const onUpload = (e) => { emit('upload', e); close(); };
     const onDelete = (id) => { emit('delete', id); close(); };
-    const onSpeedDialOpen = () => { isOpen.value = false; };
+
     onMounted(() => {
       document.addEventListener('click', close);
       document.addEventListener('att-cell-open', closeOthersHandler);
@@ -85,7 +108,7 @@ export default {
       document.removeEventListener('att-cell-open', closeOthersHandler);
       document.removeEventListener('speed-dial-open', onSpeedDialOpen);
     });
-    return { isOpen, toggle, shortName, viewFile, onUpload, onDelete };
+    return { isSpeedDialOpen, isFileListOpen, toggleSpeedDial, toggleFileList, shortName, viewFile, onUpload, onDelete };
   }
 };
 </script>
@@ -95,7 +118,9 @@ export default {
 
 .att-cell {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .att-trigger {
@@ -115,7 +140,7 @@ export default {
   transition: background 0.15s, color 0.15s;
 }
 
-.att-cell.is-open .att-trigger {
+.att-trigger:hover {
   background: #026290;
   color: white;
 }
@@ -136,6 +161,43 @@ export default {
   font-weight: 600;
 }
 
+/* Speed dial semicírculo */
+.att-speed-dial {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  z-index: 200;
+}
+
+.att-opcion {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 2px solid #026290;
+  border-radius: 50%;
+  color: #026290;
+  cursor: pointer;
+  transform: rotate(var(--rotation)) translate(50px) rotate(calc(-1 * var(--rotation)));
+  transition: transform 0.25s ease, background-color 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.att-opcion i { font-size: 14px; cursor: pointer; }
+
+.att-opcion:hover {
+  background-color: #026290;
+  color: white;
+  transform: rotate(var(--rotation)) translate(58px) rotate(calc(-1 * var(--rotation)));
+}
+
+/* Lista de archivos */
 .att-popup {
   position: absolute;
   bottom: calc(100% + 6px);
@@ -146,7 +208,7 @@ export default {
   border-radius: 6px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.18);
   min-width: 210px;
-  z-index: 200;
+  z-index: 300;
   padding: 4px 0;
 }
 

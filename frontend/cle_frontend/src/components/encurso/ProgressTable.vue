@@ -2220,7 +2220,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el pago del legajo en la base de datos
-          const response = await api.put(`//encurso/guardar_pago_legajo/${nro_circuito}/`, {
+          const response = await api.put(`/encurso/guardar_pago_legajo/${nro_circuito}/`, {
             pago: pagoLegajoNuevo
           });
 
@@ -2266,7 +2266,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el plazo de muestras en la base de datos
-          const response = await api.put(`//encurso/cambiar_plazo_pago/${nro_circuito}/`, {
+          const response = await api.put(`/encurso/cambiar_plazo_pago/${nro_circuito}/`, {
             plazo_pago: plazoPagoNuevo
           });
 
@@ -2343,7 +2343,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el numero de remito en la base de datos
-          const response = await api.put(`//encurso/cambiar_remito/${nro_circuito}/`, {
+          const response = await api.put(`/encurso/cambiar_remito/${nro_circuito}/`, {
             nros_remitos: remitoNuevo
           });
 
@@ -2396,7 +2396,7 @@
         const nro_circuito = numeroCircuitoGlobal.value;
         try {
           // Realizar la petición para actualizar el estado de la recepción de muestras en la base de datos
-          const response = await api.put(`/guardar_estado_recepcion/${nro_circuito}/`, {
+          const response = await api.put(`/encurso/guardar_estado_recepcion/${nro_circuito}/`, {
             estado_recepcion: estadoMuestrasNuevo
           });
 
@@ -2940,7 +2940,7 @@
         // console.log('nro circuito', nro_circuito)
         // console.log('correcciones', correcciones.value)
         try {
-          const response = await api.put(`//encurso/corregir_informe_servicio/${nro_circuito}/`);
+          const response = await api.put(`/encurso/corregir_informe_servicio/${nro_circuito}/`);
             
           // Verificar si la actualización fue exitosa
           if (response.status === 200) {
