@@ -107,11 +107,11 @@
                 <button class="ds-icon-btn" @click="toggleDSPopup(fila.nro_dataServicio)" title="Data Servicio">
                   <i class="bi bi-file-earmark-check-fill"></i>
                 </button>
-                <div v-if="openDSPopup === fila.nro_dataServicio" class="opciones-flotantes">
-                  <div class="opcion" :style="isServiciosTecnologicos ? '--rotation: -30deg' : '--rotation: 0deg'" @click="abrirDataServicio(fila.nro_dataServicio); closeDSPopup()">
+                <div v-if="openDSPopup === fila.nro_dataServicio" class="opciones-flotantes ds-opciones-flotantes">
+                  <div class="opcion" :style="isServiciosTecnologicos ? '--rotation: -120deg' : '--rotation: -90deg'" @click="abrirDataServicio(fila.nro_dataServicio); closeDSPopup()">
                     <i class="bi bi-eye"></i>
                   </div>
-                  <div v-if="isServiciosTecnologicos" class="opcion" style="--rotation: 30deg" @click="abrirEditarDataServicio(fila); closeDSPopup()">
+                  <div v-if="isServiciosTecnologicos" class="opcion" style="--rotation: -60deg" @click="abrirEditarDataServicio(fila); closeDSPopup()">
                     <i class="bi bi-pencil"></i>
                   </div>
                 </div>
@@ -1525,7 +1525,10 @@
       const observacionesDataServicio = ref();
       // Popup Data Servicio
       const openDSPopup = ref(null);
-      const toggleDSPopup = (nro) => { openDSPopup.value = openDSPopup.value === nro ? null : nro; };
+      const toggleDSPopup = (nro) => {
+        filaSeleccionada.value = null;
+        openDSPopup.value = openDSPopup.value === nro ? null : nro;
+      };
       const closeDSPopup = () => { openDSPopup.value = null; };
 
       // Editar Data Servicio
@@ -2931,11 +2934,11 @@
 
 
       const toggleOpciones = (index) => {
+        openDSPopup.value = null;
         if (filaSeleccionada.value === index) {
-          filaSeleccionada.value = null; // Ocultar si ya está seleccionada
+          filaSeleccionada.value = null;
         } else {
-          filaSeleccionada.value = index; // Mostrar opciones para la fila seleccionada
-          console.log('Fila seleccionada:', filaSeleccionada.value);
+          filaSeleccionada.value = index;
         }
       };
 
@@ -3448,34 +3451,57 @@
 
   .opciones-flotantes {
     position: absolute;
-    top: -30px; /* Ajusta según el espacio que quieras arriba */
+    top: -30px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     justify-content: center;
+    z-index: 50;
+  }
+
+  /* Override para el speed dial de Data Servicio: origen centrado en el botón */
+  .ds-opciones-flotantes {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
   }
 
   .opcion {
     position: absolute;
-    width: 40px;  /* Tamaño del ícono */
-    height: 40px; /* Tamaño del ícono */
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #026290; /* Color de fondo */
-    border-radius: 50%;  /* Hace que sea un círculo */
-    color: white;  /* Color del ícono */
-    transform: rotate(var(--rotation)) translate(60px) rotate(calc(-1 * var(--rotation))); /* Semi círculo */
-    transition: transform 0.3s ease;
+    background-color: #026290;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transform: rotate(var(--rotation)) translate(60px) rotate(calc(-1 * var(--rotation)));
+    transition: transform 0.25s ease, background-color 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   }
 
   .opcion i {
-    font-size: 20px; /* Ajusta el tamaño del ícono */
+    font-size: 16px;
     cursor: pointer;
   }
 
   .opcion:hover {
-    transform: rotate(var(--rotation)) translate(70px) rotate(calc(-1 * var(--rotation))); /* Aumenta la distancia cuando haces hover */
+    transform: rotate(var(--rotation)) translate(70px) rotate(calc(-1 * var(--rotation)));
+  }
+
+  /* Opciones del DS: blanco con borde teal para contrastar con header */
+  .ds-opciones-flotantes .opcion {
+    background-color: white;
+    border: 2px solid #026290;
+    color: #026290;
+  }
+
+  .ds-opciones-flotantes .opcion:hover {
+    background-color: #026290;
+    color: white;
   }
 
 
