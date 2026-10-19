@@ -307,13 +307,13 @@
             <td class="add-border-right">
               <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-if="isServiciosTecnologicos">
-                  <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor: pointer;">
-                    {{ fila.plazo_estimado }}
+                  <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor: pointer;" :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
+                    {{ diasRestantesOS(fila) }}
                   </span>
                 </div>
                 <div v-else>
-                  <span>
-                    {{ fila.plazo_estimado }}
+                  <span :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
+                    {{ diasRestantesOS(fila) }}
                   </span>
                 </div>
               </template>
@@ -1548,20 +1548,32 @@
         return `${y}-${m}-${d}`;
       };
 
-      const getRowClass = (fila) => {
-        if (!fila.ordenServicio_completo || fila.firma_direccion === true) return '';
-        if (!fila.fecha_ordenServicio || !fila.plazo_estimado) return '';
+      const todayBuenosAires = () => {
+        const parts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Argentina/Buenos_Aires',
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+        const [y, m, d] = parts.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+
+      const diasRestantesOS = (fila) => {
+        if (!fila.ordenServicio_completo || !fila.fecha_ordenServicio || !fila.plazo_estimado) return null;
         const fechaISO = parseFechaFila(fila.fecha_ordenServicio);
-        if (!fechaISO || fechaISO.length < 10) return '';
-        // Parsear en hora local para evitar desfase de zona horaria UTC
+        if (!fechaISO || fechaISO.length < 10) return null;
         const [y, m, d] = fechaISO.split('-').map(Number);
         const inicio = new Date(y, m - 1, d);
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
+        const hoy = todayBuenosAires();
         const diasTranscurridos = Math.floor((hoy - inicio) / 86400000);
-        const diasRestantes = Number(fila.plazo_estimado) - diasTranscurridos;
-        if (diasRestantes <= 3) return 'row-urgente';
-        if (diasRestantes <= 7) return 'row-alerta';
+        return Number(fila.plazo_estimado) - diasTranscurridos;
+      };
+
+      const getRowClass = (fila) => {
+        if (fila.firma_direccion === true) return '';
+        const restantes = diasRestantesOS(fila);
+        if (restantes === null) return '';
+        if (restantes <= 3) return 'row-urgente';
+        if (restantes <= 7) return 'row-alerta';
         return '';
       };
 
@@ -3323,6 +3335,7 @@
         sortKey, sortDir, sortedFilas, setSort,
         filterArea, filterDesde, filterHasta, filterTipoFecha, uniqueAreas, clearFilters,
         getRowClass,
+        diasRestantesOS,
         validarNumeroEntero,
         formatDate,
         formatArancel,
