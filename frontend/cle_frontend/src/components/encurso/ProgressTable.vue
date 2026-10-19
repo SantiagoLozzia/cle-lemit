@@ -124,7 +124,7 @@
                   <label :for="'solicitud-' + index" style="cursor:pointer;"><i class="bi bi-paperclip"></i></label>
                   <input :id="'solicitud-' + index" style="display:none;" type="file" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)">
                 </div>
-                <i v-else class="bi bi-hourglass-split waiting-icon"></i>
+                <i v-else class="bi bi-stopwatch"></i>
               </template>
               <!-- Con archivos: speed dial -->
               <div v-else style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
@@ -171,7 +171,7 @@
                   <i class="bi bi-plus-circle action-icon" @click="obtenerRangoLab(fila.nro_circuito)"></i>
                 </div>
                 <div v-else>
-                      <i class="bi bi-hourglass-split waiting-icon"></i>
+                      <i class="bi bi-stopwatch"></i>
                 </div>
               </template>
               <template v-else-if="fila.dataServicio_completo && fila.nro_legajo">
@@ -297,7 +297,7 @@
                       <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearOrdenServicio(fila)"></i>
                   </div>
                   <div v-else>
-                      <i class="bi bi-hourglass-split waiting-icon"></i>
+                      <i class="bi bi-stopwatch"></i>
                   </div>
               </template>
               <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
@@ -456,7 +456,7 @@
                         <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
                       </div>
                       <div v-else>
-                        <i class="bi bi-hourglass-split waiting-icon"></i>
+                        <i class="bi bi-stopwatch"></i>
                       </div>
                   </template>
                   <template v-if="(fila.adjunto_informeServicio !== '') && (fila.adjunto_informeServicio !== null ) && (fila.corregir === false)">
@@ -487,7 +487,7 @@
                         <i class="bi bi-backspace-fill text-danger" @click="abrirModalCorreccionesInformeServicio(fila)" style="cursor: pointer; font-size: 0.8em;"></i>
                       </div> 
                       <div v-else>
-                        <i class="bi bi-hourglass-split waiting-icon"></i>
+                        <i class="bi bi-stopwatch"></i>
                       </div>
 
                   </template>
@@ -522,7 +522,7 @@
                   </div>
                 </div>
                 <div v-else>
-                  <i class="bi bi-hourglass-split waiting-icon"></i>
+                  <i class="bi bi-stopwatch"></i>
                 </div>
               </template>
               <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.corregir === false)">
@@ -554,7 +554,7 @@
                     </div>
                   </div>
                   <div v-else>
-                    <i class="bi bi-hourglass-split waiting-icon"></i>
+                    <i class="bi bi-stopwatch"></i>
                   </div>
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true)">
@@ -577,7 +577,7 @@
                     <i class="bi bi-pen" style="cursor: pointer;" @click="abrirModalFirmaDireccion(fila)"></i>
                   </div>
                   <div v-else>
-                    <i class="bi bi-hourglass-split waiting-icon"></i>
+                    <i class="bi bi-stopwatch"></i>
                   </div>
                 </template>
                 <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true) && (fila.firma_direccion === true)">
@@ -1552,8 +1552,10 @@
         if (!fila.ordenServicio_completo || fila.firma_direccion === true) return '';
         if (!fila.fecha_ordenServicio || !fila.plazo_estimado) return '';
         const fechaISO = parseFechaFila(fila.fecha_ordenServicio);
-        if (!fechaISO) return '';
-        const inicio = new Date(fechaISO);
+        if (!fechaISO || fechaISO.length < 10) return '';
+        // Parsear en hora local para evitar desfase de zona horaria UTC
+        const [y, m, d] = fechaISO.split('-').map(Number);
+        const inicio = new Date(y, m - 1, d);
         const hoy = new Date();
         hoy.setHours(0, 0, 0, 0);
         const diasTranscurridos = Math.floor((hoy - inicio) / 86400000);
@@ -3550,17 +3552,6 @@
     background-color: #fde8ea !important;
   }
   .table tbody tr.row-urgente:hover { background-color: #f5c2c7 !important; }
-
-  /* Ícono de espera */
-  .waiting-icon {
-    color: #9db7c8;
-    font-size: 15px;
-    animation: hg-pulse 2.2s ease-in-out infinite;
-  }
-  @keyframes hg-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.45; }
-  }
 
   /* Ícono de acción (+ crear) */
   .action-icon {
