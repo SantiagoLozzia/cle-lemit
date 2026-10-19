@@ -227,39 +227,37 @@
             <!-- Columna Recepcion -->
 
             <td v-if="isAdminOrTecnologicoOrDireccion">
-              <template v-if="(fila.nros_remitos === null) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <div v-if="isServiciosTecnologicos">
-                  <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalRemito(fila)"></i>
-                </div>
-              </template>
-              <template v-if="(fila.remitos !== null) && (fila.estado_recepcion == 'parcial' || fila.estado_recepcion == 'total')">
-                <div v-if="isServiciosTecnologicos">
-                  <span @click="abrirModalRemito(fila)" style="cursor: pointer;">
-                    {{ fila.nros_remitos }}
-                  </span>
-                </div>
-                <div v-else>
-                  <span>
-                    {{ fila.nros_remitos }}
-                  </span>
-                </div>
+              <template v-if="fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total'">
+                <template v-if="!fila.nros_remitos">
+                  <div v-if="isServiciosTecnologicos">
+                    <i class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalRemito(fila)"></i>
+                  </div>
+                </template>
+                <template v-else>
+                  <div v-if="isServiciosTecnologicos">
+                    <span @click="abrirModalRemito(fila)" style="cursor: pointer;">{{ fila.nros_remitos }}</span>
+                  </div>
+                  <div v-else>
+                    <span>{{ fila.nros_remitos }}</span>
+                  </div>
+                </template>
               </template>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <div>
-                <span v-if="(fila.pago == 50 ||fila.pago == 100) && (fila.estado_recepcion !== undefined && fila.estado_recepcion !== null)">
-                    <div v-if="isServiciosTecnologicos">
-                      <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Sin Llegar</span>
-                      <span v-else-if="fila.estado_recepcion === 'parcial'" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Parcial</span>
-                      <span v-else-if="fila.estado_recepcion === 'total'"  @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Total</span>
-                    </div> 
-                    <div v-else>
-                      <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column">Sin Llegar</span>
-                      <span v-else-if="fila.estado_recepcion === 'parcial'">Parcial</span>
-                      <span v-else-if="fila.estado_recepcion === 'total'">Total</span>
-                    </div>
-                </span>
-                <span v-else-if="isServiciosTecnologicos" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">&nbsp;</span>
+                <template v-if="fila.estado_recepcion">
+                  <div v-if="isServiciosTecnologicos">
+                    <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Sin Llegar</span>
+                    <span v-else-if="fila.estado_recepcion === 'parcial'" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Parcial</span>
+                    <span v-else-if="fila.estado_recepcion === 'total'" @click="abrirModalEstadoMuestras(fila)" style="cursor: pointer;">Total</span>
+                  </div>
+                  <div v-else>
+                    <span v-if="fila.estado_recepcion === 'sin_llegar'" class="no-wrap-column">Sin Llegar</span>
+                    <span v-else-if="fila.estado_recepcion === 'parcial'">Parcial</span>
+                    <span v-else-if="fila.estado_recepcion === 'total'">Total</span>
+                  </div>
+                </template>
+                <i v-else-if="isServiciosTecnologicos && fila.nro_legajo" class="bi bi-plus-square" style="cursor: pointer;" @click="abrirModalEstadoMuestras(fila)"></i>
               </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
