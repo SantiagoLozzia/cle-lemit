@@ -269,7 +269,8 @@ def obtener_rangoLab(request, nro_circuito):
     inicio_rango = ultimo_numero + 1
     cantidad_numeros = dataservicio.cant_numLabs
     final_rango = inicio_rango + cantidad_numeros - 1
-    rangLab = f"{inicio_rango}-{final_rango}"
+    anio = timezone.now().year
+    rangLab = f"{inicio_rango}-{final_rango}/{anio}"
 
     # Devolver la respuesta como JSON incluyendo el rangoLab y el último número
     response_data = {
@@ -303,6 +304,7 @@ class CrearLegajo(APIView):
                 # Actualizar el último número en el modelo UltimoNumero
                 ultimo_numero_obj = UltimoNumero.obtener()
                 ultimo_numero_obj.ultimo_numero_actual = nuevo_ultimo_numero
+                ultimo_numero_obj.save()
 
                 return Response({'message': 'Legajo creado y último número actualizado correctamente'}, status=status.HTTP_201_CREATED)
             else:
@@ -956,13 +958,15 @@ class AprobarLabsAdicionales(APIView):
         ultimo_numero_obj = UltimoNumero.obtener()
         inicio_rango = ultimo_numero_obj.ultimo_numero_actual + 1
         final_rango = inicio_rango + cant_labs_nuevos - 1
-        nuevo_rango = f"{inicio_rango}-{final_rango}"
+        anio = timezone.now().year
+        nuevo_rango = f"{inicio_rango}-{final_rango}/{anio}"
 
         legajo.rangos_laboratorios = f"{legajo.rangos_laboratorios}, {nuevo_rango}"
         legajo.labs_adicionales_pendientes = 0
         legajo.save()
 
         ultimo_numero_obj.ultimo_numero_actual = final_rango
+        ultimo_numero_obj.save()
 
         return Response({
             'nuevo_rango': nuevo_rango,

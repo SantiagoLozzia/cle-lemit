@@ -669,7 +669,7 @@
 
     <!-- Modal Editar Data Servicio -->
     <div class="modal" :class="{ 'show': mostrarModalEditarDS }" id="modalEditarDS">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-md">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Editar Data Servicio #{{ editarDS.nro_dataServicio }}</h5>

@@ -18,8 +18,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="cerrarModal">Cerrar</button>
             <button type="button" class="btn btn-primary" @click="actualizarModulo">Actualizar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModal">Cerrar</button>
           </div>
         </div>
       </div>

@@ -198,12 +198,22 @@ body {
   margin: auto;
 }
 
+.modal-dialog {
+  max-width: 440px;
+  width: calc(100% - 2rem);
+  margin: auto;
+}
+
+.modal-dialog-md {
+  max-width: 660px;
+}
+
 .modal-content {
   /* background-color: blue; */
   padding: 1.25rem;
   border: 1px solid #888;
-  width: 80%; 
-  margin-bottom: 1.875rem; 
+  width: 100%;
+  margin-bottom: 1.875rem;
   text-align: left;
 }
 
