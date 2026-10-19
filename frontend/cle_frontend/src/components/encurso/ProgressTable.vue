@@ -103,15 +103,16 @@
               </span>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
-              <div class="att-cell" :class="{ 'is-open': openDSPopup === fila.nro_dataServicio }" @click.stop>
+              <div style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
                 <button class="ds-icon-btn" @click="toggleDSPopup(fila.nro_dataServicio)" title="Data Servicio">
-                  <i :class="openDSPopup === fila.nro_dataServicio ? 'bi bi-x' : 'bi bi-file-earmark-check-fill'"></i>
+                  <i class="bi bi-file-earmark-check-fill"></i>
                 </button>
-                <div v-if="openDSPopup === fila.nro_dataServicio" class="att-popup">
-                  <div class="att-file-row">
-                    <span class="att-file-name">Data Servicio #{{ fila.nro_dataServicio }}</span>
-                    <button class="att-btn att-btn-view" @click="abrirDataServicio(fila.nro_dataServicio); closeDSPopup()" title="Ver"><i class="bi bi-eye"></i></button>
-                    <button v-if="isServiciosTecnologicos" class="att-btn" style="color:#026290;" @click="abrirEditarDataServicio(fila); closeDSPopup()" title="Editar"><i class="bi bi-pencil"></i></button>
+                <div v-if="openDSPopup === fila.nro_dataServicio" class="opciones-flotantes">
+                  <div class="opcion" :style="isServiciosTecnologicos ? '--rotation: -30deg' : '--rotation: 0deg'" @click="abrirDataServicio(fila.nro_dataServicio); closeDSPopup()">
+                    <i class="bi bi-eye"></i>
+                  </div>
+                  <div v-if="isServiciosTecnologicos" class="opcion" style="--rotation: 30deg" @click="abrirEditarDataServicio(fila); closeDSPopup()">
+                    <i class="bi bi-pencil"></i>
                   </div>
                 </div>
               </div>
