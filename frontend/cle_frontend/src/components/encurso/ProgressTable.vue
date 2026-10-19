@@ -2011,11 +2011,13 @@
         fetchData();
         document.addEventListener('click', closeAllPopups);
         document.addEventListener('att-cell-open', closeAllPopups);
+        document.addEventListener('encurso-refresh', fetchData);
       });
 
       onUnmounted(() => {
         document.removeEventListener('click', closeAllPopups);
         document.removeEventListener('att-cell-open', closeAllPopups);
+        document.removeEventListener('encurso-refresh', fetchData);
       });
 
       const triggerFileInput = () => {
@@ -2123,6 +2125,7 @@
         .then(response => {
           console.log(response)
           cerrarModalCrearLegajo();
+          fetchData();
 
           nuevoLegajo.value = {
             fecha_legajo: new Date().toISOString().substring(0, 10), // Obtener la fecha actual en formato "YYYY-MM-DD",
@@ -2266,6 +2269,7 @@
           if (response.status === 200) {
             console.log('Pago de Legajo actualizado correctamente:', pagoLegajoNuevo);
             mostrarModalPagoLegajo.value = false;  // Cerrar el modal
+            fetchData();
             showSuccessAlert.value = true;
             
             setTimeout(() => {
@@ -2312,6 +2316,7 @@
           if (response.status === 200) {
             console.log('Plazo de Pago actualizado correctamente:', plazoPagoNuevo);
             mostrarModalPlazoPago.value = false;  // Cerrar el modal
+            fetchData();
             showSuccessAlert.value = true;
             
             setTimeout(() => {
@@ -2388,7 +2393,8 @@
           // Verificar si la actualización fue exitosa
           if (response.status === 200) {
             console.log('Numero de Remito actualizado correctamente:', remitoNuevo);
-            mostrarModalRemito.value = false;  
+            mostrarModalRemito.value = false;
+            fetchData();
             remitoNuevo = '';
             showSuccessAlert.value = true;
             
@@ -2442,6 +2448,7 @@
           if (response.status === 200) {
             console.log('Estado de recepción de muestras actualizado correctamente:', estadoMuestrasNuevo);
             mostrarModalEstadoMuestras.value = false;  // Cerrar el modal
+            fetchData();
             showSuccessAlert.value = true;
             
             // Llamar a crearOrdenServicio si la actualización fue exitosa
@@ -2493,6 +2500,7 @@
           if (response.status === 200) {
             console.log('Plazo de muestras actualizado correctamente:', plazoMuestrasNuevo);
             mostrarModalPlazoMuestras.value = false;  // Cerrar el modal
+            fetchData();
             showSuccessAlert.value = true;
             
             setTimeout(() => {
@@ -2563,6 +2571,7 @@
               const response = await api.post(`/encurso/crear_ordenservicio/${nro_circuito}/`);
               console.log('Orden de servicio creada exitosamente:', response.data);
               mostrarModalCrearOrdenServicio.value = false;
+              fetchData();
               showSuccessAlert.value = true;
               setTimeout(() => {
                   showSuccessAlert.value = false;
@@ -2635,6 +2644,7 @@
             if (response.status === 200) {
                 console.log('Plazo de orden de servicio actualizado correctamente:', plazoEstimadoNuevo);
                 mostrarModalPlazoOrdenServicio.value = false;  // Cerrar el modal
+                fetchData();
                 showSuccessAlert.value = true;
                 
                 setTimeout(() => {
@@ -2958,7 +2968,7 @@
         api.post('/encurso/guardar_adjuntoinformeservicio/', formData)
           .then(response => {
             console.log('Archivo guardado exitosamente:', response.data);
-            
+            fetchData();
             // Actualizar la referencia al nuevo archivo en la fila después de guardar
             fila.adjunto_informeServicio = response.data.nuevo_adjunto_url; // Suponiendo que el backend devuelve la URL del nuevo archivo
           })
@@ -2999,6 +3009,7 @@
           if (response.status === 200) {
             console.log('Revisiones corregidas correctamente:', nro_circuito);
             mostrarModalCorreccionesInformeServicio.value = false;  // Cerrar el modal
+            fetchData();
             showSuccessAlert.value = true;
             
             setTimeout(() => {
@@ -3042,6 +3053,7 @@
                 );
                 console.log('Revisión confirmada correctamente:', response.data);
                 mostrarModalRevision.value = false;
+                fetchData();
                 showSuccessAlert.value = true;
                 setTimeout(() => {
                     showSuccessAlert.value = false;
@@ -3090,6 +3102,7 @@
             console.log('Correcciones advertidas correctamente:', response.data);
             console.log(correccionesNuevas)
             mostrarModalAdvertirCorrecciones.value = false;
+            fetchData();
             showSuccessAlert.value = true;
               setTimeout(() => {
                   showSuccessAlert.value = false;
@@ -3122,6 +3135,7 @@
               );
               console.log('Firma Responsable Area confirmada correctamente:', response.data);
               mostrarModalFirmaResponsableArea.value = false;
+              fetchData();
               showSuccessAlert.value = true;
                 setTimeout(() => {
                     showSuccessAlert.value = false;
@@ -3158,6 +3172,7 @@
           api.post('/encurso/guardar_adjuntoinformeserviciofirmado/', formData)
             .then(response => {
               console.log('Archivo guardado exitosamente:', response.data);
+              fetchData();
               showSuccessAlert.value = true;
                 setTimeout(() => {
                     showSuccessAlert.value = false;
@@ -3182,6 +3197,7 @@
               );
               console.log('Firma Dirección confirmada correctamente:', response.data);
               mostrarModalFirmaDireccion.value = false;
+              fetchData();
               showSuccessAlert.value = true;
                 setTimeout(() => {
                     showSuccessAlert.value = false;
@@ -3215,6 +3231,7 @@
               );
               console.log('Archivado correctamente:', response.data);
               mostrarModalArchivar.value = false;
+              fetchData();
 
               showSuccessAlert.value = true;
               setTimeout(() => {

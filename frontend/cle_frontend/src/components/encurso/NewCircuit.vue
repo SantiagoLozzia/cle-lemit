@@ -144,16 +144,17 @@
             .then(response => {
               console.log(response.data);
               cerrarModal();
-    
+
               // Limpiar el formulario y mostrar la alerta de éxito
               nuevoDataServicio.value = {
                 fecha_dataServicio: null,
                 obra: null,
-                muestras:null, 
+                muestras:null,
                 plazo_estimado: null,
                 cant_numLabs: null,
               };
-    
+
+              document.dispatchEvent(new CustomEvent('encurso-refresh'));
               showSuccessAlert.value = true;
     
               setTimeout(() => {
