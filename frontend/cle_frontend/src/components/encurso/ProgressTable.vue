@@ -129,7 +129,7 @@
               <!-- Con archivos: speed dial -->
               <div v-else style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
                 <button class="ds-icon-btn ds-icon-btn--blue" @click="toggleST02Popup(fila.nro_dataServicio)" title="ST-02 Solicitud">
-                  <i class="bi bi-file-earmark-word-fill"></i>
+                  <i class="bi bi-file-earmark-word"></i>
                   <span v-if="fila.adjuntos_solicitud.length > 1" class="att-badge-st02">{{ fila.adjuntos_solicitud.length }}</span>
                 </button>
                 <!-- Speed dial -->
@@ -391,14 +391,16 @@
               </template>
             </td>
             <td>
-              <AttachmentCell
-                :files="fila.informes_area"
-                :can-upload="!isAdminOrTecnologicoOrDireccion && fila.ordenServicio_completo === true && fila.estado_informeArea !== 'total'"
-                :can-delete="!isAdminOrTecnologicoOrDireccion && fila.estado_informeArea !== 'total'"
-                :input-id="'informearea-' + index"
-                @upload="cargarAdjuntoInformeArea($event, fila)"
-                @delete="eliminarAdjuntoInformeArea"
-              />
+              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+                <AttachmentCell
+                  :files="fila.informes_area"
+                  :can-upload="!isAdminOrTecnologicoOrDireccion && fila.estado_informeArea !== 'total'"
+                  :can-delete="!isAdminOrTecnologicoOrDireccion && fila.estado_informeArea !== 'total'"
+                  :input-id="'informearea-' + index"
+                  @upload="cargarAdjuntoInformeArea($event, fila)"
+                  @delete="eliminarAdjuntoInformeArea"
+                />
+              </template>
 
               <template v-if="fila.informesParciales && fila.informesParciales.length > 0">
                 {{ fila.informesParciales }}
@@ -980,7 +982,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <div class="modal-logo"></div>
-            <h1 class="modal-title fs-5 fw-bold">Crear Orden de Servicio</h1>
+            <h1 class="modal-title fs-5 fw-bold">{{ osReadOnly ? 'Orden de Servicio N°' + nroOS : 'Crear Orden de Servicio' }}</h1>
             <button type="button" class="btn-close" @click="cerrarModalCrearOrdenServicio"></button>
           </div>
           <div class="modal-body">
@@ -1033,8 +1035,8 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">Cancelar</button>
+            <button v-if="!osReadOnly" type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">{{ osReadOnly ? 'Cerrar' : 'Cancelar' }}</button>
           </div>
         </div>
       </div>
@@ -1801,6 +1803,7 @@
       const muestrasOS = ref();
       const observacionesOS = ref();
       const mostrarModalCrearOrdenServicio = ref(false);
+      const osReadOnly = ref(false);
       const mostrarModalOrdenServicio = ref(false);
       const mostrarModalPlazoOrdenServicio = ref(false);
       // Setup Informe Area
@@ -2591,6 +2594,7 @@
 
       const cerrarModalCrearOrdenServicio = () => {
         mostrarModalCrearOrdenServicio.value = false;
+        osReadOnly.value = false;
       };
       
       const crearOrdenServicio = async () => {
@@ -2616,31 +2620,28 @@
       };
 
       // OS - Abrir Orden de Servicio
-      const abrirOrdenServicio = (fila) => {
+      const abrirOrdenServicio = async (fila) => {
           const nro_circuito = fila.nro_circuito;
-          api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`)
-              .then(response => {
-                  // Obtener los datos de la orden de servicio de la respuesta
-                  const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, plazo_estimado, nombre_solicitante,servicio_solicitado, muestras, observaciones } = response.data;
-
-                  // Asignar los datos de la orden de servicio a variables en el contexto del componente
-                  nroOS.value = nro_ordenServicio;
-                  fechaOS.value = fecha_ordenServicio; 
-                  areaOS.value = formatAreaTematica(area_tematica);
-                  legajoOS.value = nro_legajo;
-                  rangosOS.value= rangos_laboratorios;
-                  plazoOS.value= plazo_estimado;
-                  solicitanteOS.value= nombre_solicitante;
-                  servicioOS.value = servicio_solicitado;
-                  muestrasOS.value= muestras;
-                  observacionesOS.value= observaciones;
-                  // Mostrar el modal para mostrar los detalles del legajo
-                  mostrarModalOrdenServicio.value = true;
-              })
-              .catch(error => {
-                  console.error('Error al obtener los datos de la orden de servicio:', error);
-                  // Manejar el error, mostrar un mensaje al usuario, etc.
-              });
+          try {
+              const response = await api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`);
+              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones } = response.data;
+              nroOS.value = nro_ordenServicio;
+              fechaOS.value = fecha_ordenServicio;
+              areaOS.value = formatAreaTematica(area_tematica);
+              legajoOS.value = nro_legajo;
+              rangosOS.value = rangos_laboratorios;
+              plazoOS.value = plazo_estimado;
+              solicitanteOS.value = nombre_solicitante;
+              servicioOS.value = servicio_solicitado;
+              muestrasOS.value = muestras;
+              observacionesOS.value = observaciones;
+              osReadOnly.value = true;
+              mostrarModalCrearOrdenServicio.value = true;
+          } catch (error) {
+              console.error('Error al obtener la orden de servicio:', error);
+              showErrorAlert.value = true;
+              setTimeout(() => { showErrorAlert.value = false; }, 5000);
+          }
       };
 
       const cerrarModalOrdenServicio = () => {
@@ -3450,6 +3451,7 @@
         observacionesOS,
         crearOrdenServicio,
         mostrarModalCrearOrdenServicio,
+        osReadOnly,
         abrirModalCrearOrdenServicio,
         cerrarModalCrearOrdenServicio,
         abrirOrdenServicio,
