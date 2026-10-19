@@ -1558,8 +1558,8 @@
         hoy.setHours(0, 0, 0, 0);
         const diasTranscurridos = Math.floor((hoy - inicio) / 86400000);
         const diasRestantes = Number(fila.plazo_estimado) - diasTranscurridos;
-        if (diasRestantes <= 5) return 'row-urgente';
-        if (diasRestantes <= 15) return 'row-alerta';
+        if (diasRestantes <= 3) return 'row-urgente';
+        if (diasRestantes <= 7) return 'row-alerta';
         return '';
       };
 
