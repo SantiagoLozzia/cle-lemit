@@ -118,14 +118,47 @@
               </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
-              <AttachmentCell
-                :files="fila.adjuntos_solicitud"
-                :can-upload="isServiciosTecnologicos"
-                :can-delete="isServiciosTecnologicos"
-                :input-id="'solicitud-' + index"
-                @upload="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)"
-                @delete="eliminarAdjuntoSolicitud"
-              />
+              <!-- Sin archivos -->
+              <template v-if="!fila.adjuntos_solicitud || fila.adjuntos_solicitud.length === 0">
+                <div v-if="isServiciosTecnologicos" class="att-empty">
+                  <label :for="'solicitud-' + index" style="cursor:pointer;"><i class="bi bi-paperclip"></i></label>
+                  <input :id="'solicitud-' + index" style="display:none;" type="file" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)">
+                </div>
+                <i v-else class="bi bi-stopwatch"></i>
+              </template>
+              <!-- Con archivos: speed dial -->
+              <div v-else style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
+                <button class="ds-icon-btn ds-icon-btn--blue" @click="toggleST02Popup(fila.nro_dataServicio)" title="ST-02 Solicitud">
+                  <i class="bi bi-file-earmark-word-fill"></i>
+                  <span v-if="fila.adjuntos_solicitud.length > 1" class="att-badge-st02">{{ fila.adjuntos_solicitud.length }}</span>
+                </button>
+                <!-- Speed dial -->
+                <div v-if="openST02Popup === fila.nro_dataServicio" class="opciones-flotantes ds-opciones-flotantes">
+                  <div class="opcion" :style="isServiciosTecnologicos ? '--rotation: -120deg' : '--rotation: -90deg'" @click="toggleST02FileList(fila.nro_dataServicio); closeST02Popup()">
+                    <i class="bi bi-eye"></i>
+                  </div>
+                  <div v-if="isServiciosTecnologicos" class="opcion" style="--rotation: -60deg">
+                    <label :for="'solicitud-add-' + index" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                      <i class="bi bi-plus-lg"></i>
+                    </label>
+                    <input :id="'solicitud-add-' + index" style="display:none;" type="file" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio); closeST02Popup()">
+                  </div>
+                </div>
+                <!-- Lista de archivos (se abre al clickear ojo) -->
+                <div v-if="openST02FileList === fila.nro_dataServicio" class="st02-file-popup">
+                  <div v-for="f in fila.adjuntos_solicitud" :key="f.id" class="st02-file-row">
+                    <span class="st02-file-name" :title="shortFileName(f.archivo)">{{ shortFileName(f.archivo) }}</span>
+                    <button class="st02-btn st02-btn-view" @click="viewAttachment(f.archivo)" title="Ver"><i class="bi bi-eye"></i></button>
+                    <button v-if="isServiciosTecnologicos" class="st02-btn st02-btn-del" @click="eliminarAdjuntoSolicitud(f.id)" title="Eliminar"><i class="bi bi-trash"></i></button>
+                  </div>
+                  <div v-if="isServiciosTecnologicos" class="st02-add-row">
+                    <label :for="'solicitud-list-add-' + index" class="st02-add-btn">
+                      <i class="bi bi-plus-circle"></i> Agregar
+                    </label>
+                    <input :id="'solicitud-list-add-' + index" style="display:none;" type="file" @change="cargarAdjuntoSolicitud($event, fila.nro_dataServicio)">
+                  </div>
+                </div>
+              </div>
             </td>
 
             <!-- Columna Legajo -->
@@ -1436,7 +1469,7 @@
 </template>
   
 <script>
-  import { onMounted, ref, computed } from 'vue';
+  import { onMounted, onUnmounted, ref, computed } from 'vue';
   import api from '@/api.js';
   import { AREAS_TEMATICAS } from '@/constants/areas.js';
   import AttachmentCell from './AttachmentCell.vue';
@@ -1527,9 +1560,36 @@
       const openDSPopup = ref(null);
       const toggleDSPopup = (nro) => {
         filaSeleccionada.value = null;
-        openDSPopup.value = openDSPopup.value === nro ? null : nro;
+        openST02Popup.value = null;
+        openST02FileList.value = null;
+        const newVal = openDSPopup.value === nro ? null : nro;
+        openDSPopup.value = newVal;
+        if (newVal !== null) document.dispatchEvent(new CustomEvent('speed-dial-open'));
       };
       const closeDSPopup = () => { openDSPopup.value = null; };
+
+      // Popup ST-02 Solicitud (speed dial + file list)
+      const openST02Popup = ref(null);
+      const openST02FileList = ref(null);
+      const toggleST02Popup = (nro) => {
+        filaSeleccionada.value = null;
+        openDSPopup.value = null;
+        openST02FileList.value = null;
+        const newVal = openST02Popup.value === nro ? null : nro;
+        openST02Popup.value = newVal;
+        if (newVal !== null) document.dispatchEvent(new CustomEvent('speed-dial-open'));
+      };
+      const closeST02Popup = () => { openST02Popup.value = null; };
+      const toggleST02FileList = (nro) => {
+        openST02FileList.value = openST02FileList.value === nro ? null : nro;
+      };
+      const shortFileName = (archivo) => {
+        const name = archivo ? archivo.split('/').pop() : '';
+        return name.length > 28 ? name.slice(0, 25) + '...' : name;
+      };
+      const viewAttachment = (archivo) => {
+        window.open(window.location.origin + '/media/' + archivo, '_blank');
+      };
 
       // Editar Data Servicio
       const mostrarModalEditarDS = ref(false);
@@ -1901,10 +1961,23 @@
           .replace(/ /g, '_'); // Reemplaza los espacios por guiones bajos
       };
 
-      // Llamamos a fetchData cuando el componente se monta
+      // Cierra todos los speed dials al hacer click fuera o al abrir un AttachmentCell
+      const closeAllPopups = () => {
+        openDSPopup.value = null;
+        openST02Popup.value = null;
+        openST02FileList.value = null;
+        filaSeleccionada.value = null;
+      };
+
       onMounted(() => {
         fetchData();
-        document.addEventListener('click', closeDSPopup);
+        document.addEventListener('click', closeAllPopups);
+        document.addEventListener('att-cell-open', closeAllPopups);
+      });
+
+      onUnmounted(() => {
+        document.removeEventListener('click', closeAllPopups);
+        document.removeEventListener('att-cell-open', closeAllPopups);
       });
 
       const triggerFileInput = () => {
@@ -2935,11 +3008,11 @@
 
       const toggleOpciones = (index) => {
         openDSPopup.value = null;
-        if (filaSeleccionada.value === index) {
-          filaSeleccionada.value = null;
-        } else {
-          filaSeleccionada.value = index;
-        }
+        openST02Popup.value = null;
+        openST02FileList.value = null;
+        const newVal = filaSeleccionada.value === index ? null : index;
+        filaSeleccionada.value = newVal;
+        if (newVal !== null) document.dispatchEvent(new CustomEvent('speed-dial-open'));
       };
 
       // Responsable del Area - Firma
@@ -3201,6 +3274,14 @@
         openDSPopup,
         toggleDSPopup,
         closeDSPopup,
+        // Popup ST-02 Solicitud
+        openST02Popup,
+        openST02FileList,
+        toggleST02Popup,
+        closeST02Popup,
+        toggleST02FileList,
+        shortFileName,
+        viewAttachment,
         // Editar Data Servicio
         mostrarModalEditarDS,
         editarDS,
@@ -3724,5 +3805,93 @@
   background: #e6a817;
   color: white;
 }
+.ds-icon-btn--blue {
+  border-color: #026290;
+  color: #026290;
+  position: relative;
+}
+.ds-icon-btn--blue:hover {
+  background: #026290;
+  color: white;
+}
+.att-badge-st02 {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #026290;
+  color: white;
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+.st02-file-popup {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  min-width: 210px;
+  z-index: 300;
+  padding: 4px 0;
+}
+.st02-file-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 4px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.st02-file-row:last-of-type { border-bottom: none; }
+.st02-file-name {
+  flex: 1;
+  font-size: 11px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.st02-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  padding: 0;
+  background: transparent;
+  color: #026290;
+  flex-shrink: 0;
+}
+.st02-btn:hover { background: #e8f4f8; }
+.st02-btn-del { color: #dc3545; }
+.st02-btn-del:hover { background: #fde8ea; }
+.st02-add-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px 4px;
+  border-top: 1px solid #e8e8e8;
+}
+.st02-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #026290;
+  cursor: pointer;
+  font-weight: 500;
+}
+.st02-add-btn:hover { text-decoration: underline; }
 </style>
   

@@ -74,13 +74,16 @@ export default {
     };
     const onUpload = (e) => { emit('upload', e); close(); };
     const onDelete = (id) => { emit('delete', id); close(); };
+    const onSpeedDialOpen = () => { isOpen.value = false; };
     onMounted(() => {
       document.addEventListener('click', close);
       document.addEventListener('att-cell-open', closeOthersHandler);
+      document.addEventListener('speed-dial-open', onSpeedDialOpen);
     });
     onUnmounted(() => {
       document.removeEventListener('click', close);
       document.removeEventListener('att-cell-open', closeOthersHandler);
+      document.removeEventListener('speed-dial-open', onSpeedDialOpen);
     });
     return { isOpen, toggle, shortName, viewFile, onUpload, onDelete };
   }
