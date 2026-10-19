@@ -129,7 +129,7 @@
               <!-- Con archivos: speed dial -->
               <div v-else style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
                 <button class="ds-icon-btn ds-icon-btn--blue" @click="toggleST02Popup(fila.nro_dataServicio)" title="ST-02 Solicitud">
-                  <i class="bi bi-file-earmark-word"></i>
+                  <i class="bi bi-file-earmark-check-fill"></i>
                   <span v-if="fila.adjuntos_solicitud.length > 1" class="att-badge-st02">{{ fila.adjuntos_solicitud.length }}</span>
                 </button>
                 <!-- Speed dial -->

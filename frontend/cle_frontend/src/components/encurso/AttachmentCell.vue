@@ -58,7 +58,7 @@ export default {
     canUpload: { type: Boolean, default: false },
     canDelete: { type: Boolean, default: false },
     inputId:   { type: String, required: true },
-    fileIcon:  { type: String, default: 'bi bi-file-earmark-word' },
+    fileIcon:  { type: String, default: 'bi bi-file-earmark-check-fill' },
     emptyIcon: { type: String, default: 'bi bi-paperclip' },
   },
   emits: ['upload', 'delete'],
