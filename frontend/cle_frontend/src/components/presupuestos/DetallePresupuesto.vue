@@ -19,7 +19,7 @@
                 </td>
 
                 <td>
-                    <div class="mb-3 position-relative">
+                    <div class="position-relative">
                         <input
                             v-model="fila.servicio"
                             type="text"
@@ -91,7 +91,7 @@
         </tbody>
     </table>
   </div>
-  <button @click="agregarServicio" class="btn btn-sm btn-outline-primary mt-1">+ Agregar servicio</button>
+  <button @click="agregarServicio" class="btn btn-sm btn-outline-primary mt-3 mb-2">+ Agregar servicio</button>
 </template>
 
 <script>
@@ -305,38 +305,44 @@ input {
     position: absolute;
     top: 100%;
     left: 0;
-    width: 420px;
-    max-height: 240px;
+    min-width: 560px;
+    max-width: 700px;
+    max-height: 280px;
     overflow-y: auto;
     background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid #c0c7d0;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
     z-index: 1050;
 }
 
 .sugerencias-lista li {
-    padding: 6px 10px;
+    padding: 7px 12px;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
     border-bottom: 1px solid #f0f0f0;
 }
 
+.sugerencias-lista li:last-child {
+    border-bottom: none;
+}
+
 .sugerencias-lista li:hover {
-    background-color: rgba(18, 100, 189, 0.1);
+    background-color: #e8f0fe;
 }
 
 .sug-nombre {
-    font-size: 0.82rem;
+    display: block;
+    font-size: 0.83rem;
     font-weight: 500;
     color: #212529;
-    white-space: normal;
-    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sug-meta {
-    font-size: 0.73rem;
+    display: block;
+    font-size: 0.72rem;
     color: #6c757d;
     margin-top: 1px;
 }
