@@ -75,7 +75,7 @@
             <th class="align-middle text-center">Solicitante</th>
             <th class="align-middle text-center">Informe Area</th>
             <th class="align-middle text-center">Registros de Ensayo</th>
-            <th class="add-border-right align-middle text-center">Estado</th>
+            <th class="add-border-right align-middle text-center">Tipo</th>
             <!-- Subcolumnas de Administracion -->
             <th class="add-border-right align-middle text-center">Formato</th>
             <!-- Subcolumnas de Servicios Tecnologicos -->
@@ -370,225 +370,171 @@
               </template>
             </td>
 
-            <!-- Columna Informe de Area -->
-
+            <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
-              <template v-if="fila.informes_area && fila.informes_area.length > 0">
-                <span class="no-wrap-column">
-                  {{ fila.fecha_informeArea }}
-                </span>
-              </template>
-              <template v-else>
-
-              </template>
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
+              </div>
             </td>
+
+            <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
-              <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 {{ fila.nombre_solicitante }}
               </template>
-              <template v-else>
-              
-              </template>
             </td>
+
+            <!-- Columna Informe Area (por ciclo) -->
             <td>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <AttachmentCell
-                  :files="fila.informes_area"
-                  :can-upload="!isAdminOrTecnologicoOrDireccion && fila.estado_informeArea !== 'total'"
-                  :can-delete="!isAdminOrTecnologicoOrDireccion && fila.estado_informeArea !== 'total'"
-                  :input-id="'informearea-' + index"
-                  @upload="cargarAdjuntoInformeArea($event, fila)"
-                  @delete="eliminarAdjuntoInformeArea"
-                />
-              </template>
-
-              <template v-if="fila.informesParciales && fila.informesParciales.length > 0">
-                {{ fila.informesParciales }}
+                <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                  <span v-if="ciclo.adjunto_informeArea">
+                    <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754;"
+                       @click="abrirArchivo(ciclo.adjunto_informeArea)" :title="'Ver informe ciclo ' + ciclo.numero"></i>
+                    <label v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                           :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer; margin-left:4px;" title="Reemplazar">
+                      <i class="bi bi-arrow-repeat action-icon"></i>
+                    </label>
+                    <input :id="'inf-area-ciclo-' + ciclo.id" style="display:none;" type="file"
+                           @change="seleccionarArchivoInformeAreaCiclo($event, ciclo)">
+                  </span>
+                  <span v-else-if="isAreaJefe || isAreaStandard">
+                    <label :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe área">
+                      <i class="bi bi-paperclip action-icon"></i>
+                    </label>
+                    <input :id="'inf-area-ciclo-' + ciclo.id" style="display:none;" type="file"
+                           @change="seleccionarArchivoInformeAreaCiclo($event, ciclo)">
+                  </span>
+                  <span v-else><i class="bi bi-stopwatch"></i></span>
+                </div>
+                <!-- Botón crear nuevo ciclo -->
+                <div v-if="(isAreaJefe || isAreaStandard) && puedeCrearNuevoCiclo(fila)" class="mt-1">
+                  <i class="bi bi-plus-circle action-icon text-primary" title="Nuevo ciclo" style="cursor:pointer;"
+                     @click="crearCiclo(fila)"></i>
+                </div>
               </template>
             </td>
-            
-            <!-- Registros de Ensayo -->
+
+            <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
-              <template v-if="fila.informes_area && fila.informes_area.length > 0">
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <AttachmentCell
-                  :files="fila.registros_ensayo"
-                  :can-upload="isAreaJefe || isAreaStandard"
-                  :can-delete="isAreaJefe || isAreaStandard"
-                  :input-id="'registros-' + index"
+                  :files="ciclo.registros_ensayo"
+                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                  :can-delete="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                  :input-id="'registros-ciclo-' + ciclo.id"
                   file-icon="bi bi-folder-check"
                   empty-icon="bi bi-folder-plus"
-                  @upload="cargarRegistrosEnsayo($event, fila)"
-                  @delete="eliminarRegistrosEnsayo"
+                  @upload="subirRegistroEnsayoCiclo($event, ciclo)"
+                  @delete="eliminarRegistroEnsayoCiclo"
                 />
-              </template>
+              </div>
             </td>
 
-            
-
+            <!-- Columna Estado/Tipo (por ciclo) -->
             <td class="add-border-right">
-              <template v-if="fila.estado_informeArea === 'sin_informe'">
-                <!-- Si el estado es 'sin_informe', muestra en blanco -->
-              </template>
-              <template v-else-if="fila.estado_informeArea === 'parcial'">
-                <div v-if="isAreaJefe || isAreaStandard">
-                  <span @click="cambiarEstadoInformeArea(fila)" style="cursor: pointer;">Parcial</span>
-                </div>
-                <div v-else>
-                  <span>Parcial</span>
-                </div>
-              </template>
-              <template v-else-if="fila.estado_informeArea === 'total'">
-                <div v-if="isAreaJefe || isAreaStandard">
-                  <span @click="cambiarEstadoInformeArea(fila)" style="cursor: pointer;">Total</span>
-                </div>
-                <div v-else>
-                  <span>Total</span>
-                </div>
-              </template>
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <span v-if="ciclo.adjunto_informeArea"
+                      class="badge"
+                      :class="ciclo.tipo === 'complementario' ? 'bg-success' : 'bg-primary'"
+                      style="font-size:10px;">
+                  {{ ciclo.tipo === 'complementario' ? 'Compl.' : 'Parcial' }}
+                </span>
+              </div>
             </td>
 
-            <!-- Columna Administracion - Formato -->
+            <!-- Columna Administracion - Informe Servicio (por ciclo) -->
             <td class="add-border-right">
-              <template v-if="(fila.estado_informeArea === 'parcial') || (fila.estado_informeArea === 'total')">
-                  <template v-if="(fila.adjunto_informeServicio === '') || (fila.adjunto_informeServicio === null) && (fila.corregir === false)">
-                      <div v-if="isAdministracion" class="custom-file">
-                        <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
-                          <i class="bi bi-paperclip"></i>
-                        </label>
-                        <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
-                      </div>
-                      <div v-else>
-                        <i class="bi bi-stopwatch"></i>
-                      </div>
-                  </template>
-                  <template v-if="(fila.adjunto_informeServicio !== '') && (fila.adjunto_informeServicio !== null ) && (fila.corregir === false)">
-                    <i class="bi bi-check-lg" style="color: green;"></i>
-                  </template>
-                  <template v-if="(fila.corregir === true)">
-
-
-                    <div v-if="isAdministracion" style="position: relative; justify-content: center; align-items: center;">
-
-                        <!-- Icono principal -->
-                        <i class="bi bi-filetype-pdf" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
-
-                        <!-- Opciones flotantes en semi-círculo -->
-                        <div v-if="filaSeleccionada === index" class="opciones-flotantes">
-                            <div class="opcion" style="--rotation: -30deg;">
-                              <i class="bi bi-eye" @click="abrirArchivo(fila.adjunto_informeServicio)"></i>
-                            </div>
-
-                            <!-- Ícono que llama a cargarAdjuntoInformeServicio -->
-                            <div class="opcion" style="--rotation: 0deg;">
-                              <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
-                                <i class="bi bi-upload"></i>
-                              </label>
-                              <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
-                            </div>
-                        </div> 
-                        <i class="bi bi-backspace-fill text-danger" @click="abrirModalCorreccionesInformeServicio(fila)" style="cursor: pointer; font-size: 0.8em;"></i>
-                      </div> 
-                      <div v-else>
-                        <i class="bi bi-stopwatch"></i>
-                      </div>
-
-                  </template>
-              </template>
-            </td>
-
-
-            <!-- Columna Servicios Tecnologicos - Revision -->
-            <td class="add-border-right">
-              <template v-if="(fila.adjunto_informeServicio !== '') && (fila.adjunto_informeServicio !== null ) && (fila.revision === false) && (fila.firma_area === false) && (fila.firma_direccion === false) && (fila.corregir === false)">
-                <div v-if="isServiciosTecnologicos" style="position: relative;">
-                  <!-- Icono principal -->
-                  <i class="bi bi-filetype-pdf" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
-
-                  <!-- Opciones flotantes en semi-círculo -->
-                  <div v-if="filaSeleccionada === index" class="opciones-flotantes">
-                    <div class="opcion" style="--rotation: -30deg;">
-                      <i class="bi bi-eye" @click="abrirArchivo(fila.adjunto_informeServicio)"></i>
-                    </div>
-
-                    <!-- Ícono que llama a cargarAdjuntoInformeServicio -->
-                    <div class="opcion" style="--rotation: 0deg;">
-                      <label class="custom-file-label" style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicio-' + index">
-                        <i class="bi bi-upload"></i>
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <template v-if="ciclo.adjunto_informeArea && ciclo.registros_ensayo && ciclo.registros_ensayo.length > 0">
+                  <!-- Sin informe servicio, sin corrección pendiente -->
+                  <template v-if="!ciclo.adjunto_informeServicio && !ciclo.corregir">
+                    <div v-if="isAdministracion">
+                      <label :for="'inf-serv-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe servicio">
+                        <i class="bi bi-paperclip action-icon"></i>
                       </label>
-                      <input :id="'fileInputAdjuntoInformeServicio-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicio($event, fila)">
+                      <input :id="'inf-serv-ciclo-' + ciclo.id" style="display:none;" type="file"
+                             @change="subirInformeServicioCiclo($event, ciclo)">
                     </div>
-
-                    <div class="opcion" style="--rotation: 30deg;">
-                      <i class="bi bi-check-circle" @click="abrirModalRevision(fila)"></i>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
+                  <!-- Con informe servicio, sin corrección -->
+                  <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
+                    <i class="bi bi-check-lg" style="color:green;"></i>
+                  </template>
+                  <!-- Con corrección pendiente -->
+                  <template v-else-if="ciclo.corregir">
+                    <div v-if="isAdministracion">
+                      <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                      <label :for="'inf-serv-corr-ciclo-' + ciclo.id" style="cursor:pointer; margin-left:4px;" title="Resubir">
+                        <i class="bi bi-upload action-icon"></i>
+                      </label>
+                      <input :id="'inf-serv-corr-ciclo-' + ciclo.id" style="display:none;" type="file"
+                             @change="subirInformeServicioCiclo($event, ciclo)">
+                      <i class="bi bi-backspace-fill text-danger action-icon"
+                         @click="abrirModalCorreccionesCiclo(ciclo)" title="Ver correcciones" style="font-size:0.8em;"></i>
                     </div>
-                  </div>
-                </div>
-                <div v-else>
-                  <i class="bi bi-stopwatch"></i>
-                </div>
-              </template>
-              <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.corregir === false)">
-                <i class="bi bi-check-lg" style="color: green;"></i>
-              </template>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
+                </template>
+              </div>
             </td>
 
-            <!-- Columna Responsable Area - Firma -->
+            <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
             <td class="add-border-right">
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === false) && (fila.firma_direccion === false) && (fila.corregir === false)">
-                  <div v-if="isAreaJefe" style="position: relative;">
-                    <!-- Icono principal -->
-                    <i class="bi bi-filetype-pdf" style="cursor: pointer;" @click="toggleOpciones(index)"></i>
-
-                    <!-- Opciones flotantes en semi-círculo -->
-                    <div v-if="filaSeleccionada === index" class="opciones-flotantes">
-                      <div class="opcion" style="--rotation: -30deg;">
-                        <i class="bi bi-eye" @click="abrirArchivo(fila.adjunto_informeServicio)"></i>
-                      </div>
-
-                      <!-- Ícono que llama a cargarAdjuntoInformeServicio -->
-                      <div class="opcion" style="--rotation: 0deg;">
-                        <i class="bi bi-exclamation-triangle" @click="abrirModalAdvertirCorrecciones(fila)"></i>
-                      </div>
-
-                      <div class="opcion" style="--rotation: 30deg;">
-                        <i class="bi bi-pen" @click="abrirModalFirmaResponsableArea(fila)"></i>
-                      </div>
-                    </div>
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
+                  <div v-if="isServiciosTecnologicos">
+                    <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                    <i class="bi bi-check-circle action-icon text-primary" style="cursor:pointer; margin-left:4px;"
+                       @click="abrirModalRevisionCiclo(ciclo)" title="Confirmar revisión"></i>
                   </div>
-                  <div v-else>
-                    <i class="bi bi-stopwatch"></i>
-                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
                 </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true)">
-                  <i class="bi bi-check-lg" style="color: green;"></i>
+                <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
+                  <i class="bi bi-check-lg" style="color:green;"></i>
                 </template>
+              </div>
             </td>
 
-            <!-- Columna Direccion - Firma-->
+            <!-- Columna Responsable Área - Firma (por ciclo) -->
             <td class="add-border-right">
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === false) && (fila.firma_direccion === false)">
-              
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <template v-if="ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
+                  <div v-if="isAreaJefe">
+                    <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                    <i class="bi bi-exclamation-triangle action-icon text-warning" style="cursor:pointer; margin-left:4px;"
+                       @click="abrirModalAdvertirCorreccionesCiclo(ciclo)" title="Advertir correcciones"></i>
+                    <i class="bi bi-pen action-icon text-primary" style="cursor:pointer; margin-left:4px;"
+                       @click="abrirModalFirmaResponsableAreaCiclo(ciclo)" title="Firmar"></i>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
                 </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true) && (fila.firma_direccion === false)">
+                <template v-else-if="ciclo.firma_responsable_area">
+                  <i class="bi bi-check-lg" style="color:green;"></i>
+                </template>
+              </div>
+            </td>
+
+            <!-- Columna Dirección - Firma (por ciclo) -->
+            <td class="add-border-right">
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <template v-if="ciclo.firma_responsable_area && !ciclo.firma_direccion">
                   <div v-if="isDireccion">
-                    <i class="bi bi-filetype-pdf" @click="abrirArchivo(fila.adjunto_informeServicio)" style="cursor: pointer;"></i>
-                    <label class="custom-file-label"  style="cursor: pointer;" :for="'fileInputAdjuntoInformeServicioFirmado-' + index">
-                      <i class="bi bi-paperclip"></i>
-                    </label>
-                    <input :id="'fileInputAdjuntoInformeServicioFirmado-' + index" style="opacity:0; height:0; width:0;" type="file" class="custom-file-input" @change="cargarAdjuntoInformeServicioFirmado($event, fila)">
-                    <i class="bi bi-pen" style="cursor: pointer;" @click="abrirModalFirmaDireccion(fila)"></i>
+                    <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                    <i class="bi bi-pen action-icon text-primary" style="cursor:pointer; margin-left:4px;"
+                       @click="abrirModalFirmaDireccionCiclo(ciclo)" title="Firmar"></i>
                   </div>
-                  <div v-else>
-                    <i class="bi bi-stopwatch"></i>
-                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
                 </template>
-                <template v-if="(fila.adjunto_informeServicio !== '') && (fila.revision === true) && (fila.firma_area === true) && (fila.firma_direccion === true)">
-                  <i class="bi bi-check-lg" style="color: green;"></i>
+                <template v-else-if="ciclo.firma_direccion">
+                  <i class="bi bi-check-lg" style="color:green;"></i>
                 </template>
+              </div>
             </td>
 
             <!-- Columna Archivo -->
-            <td  v-if="isAdminOrTecnologicoOrDireccion">
+            <td v-if="isAdminOrTecnologicoOrDireccion">
               <button @click="abrirModalArchivar(fila)" class="btn btn-link"><i class="bi bi-archive-fill"></i></button>
             </td>
             
@@ -1155,32 +1101,21 @@
       </div>
     </div>
 
-    <!-- Modales Informe Area -->
-    <div class="modal" :class="{ 'show': mostrarModalEstadoInformeArea }" id="mostrarModalEstadoInformeArea">
+    <!-- Modal Tipo de Ciclo -->
+    <div class="modal" :class="{ 'show': mostrarModalTipoCiclo }" id="mostrarModalTipoCiclo">
       <div class="modal-dialog">
         <div class="modal-content">
-          <!-- Modal Header -->
           <div class="modal-header">
-            <h4 class="modal-title">Estado de Informe de Area</h4>
-            <button type="button" class="btn-close" @click="cerrarModalEstadoInformeArea"></button>
+            <h4 class="modal-title">Tipo de Informe</h4>
+            <button type="button" class="btn-close" @click="cerrarModalTipoCiclo"></button>
           </div>
-
-          <!-- Modal Body -->
           <div class="modal-body">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" v-model="estadoInformeAreaNuevo" value="parcial" name="estadoInformeAreaNuevo">
-              <label class="form-check-label">Parcial</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" v-model="estadoInformeAreaNuevo" value="total" name="estadoInformeAreaNuevo">
-              <label class="form-check-label">Total</label>
-            </div>
+            <p>¿Este informe es parcial o complementario?</p>
           </div>
-
-          <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="guardarEstadoInformeArea(estadoInformeAreaNuevo)">Guardar</button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalEstadoInformeArea">Cerrar</button>
+            <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
+            <button type="button" class="btn btn-success" @click="subirInformeAreaCiclo('complementario')">Complementario</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
           </div>
         </div>
       </div>
@@ -1359,7 +1294,7 @@
 
           <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="corregirInformeServicio(); cerrarModalCorreccionesInformeServicio">Corregido</button>
+            <button type="button" class="btn btn-primary" @click="corregirCiclo()">Corregido</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalCorreccionesInformeServicio">Cerrar</button>
           </div>
         </div>
@@ -1386,7 +1321,7 @@
 
           <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarRevision(fila); cerrarModal">Si</button>
+            <button type="button" class="btn btn-primary" @click="confirmarRevisionCiclo()">Si</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalRevision">Cancelar</button>
           </div>
         </div>
@@ -1408,11 +1343,11 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="correcciones">Ingrese observaciones o correcciones sobre el informe:</label>
-              <textarea 
-                id="correcciones" 
-                class="form-control" 
-                v-model="correccionesNuevas" 
-                rows="5" 
+              <textarea
+                id="correcciones"
+                class="form-control"
+                v-model="correccionesNuevas"
+                rows="5"
                 placeholder="Escriba aquí las correcciones..."
                 required>
               </textarea>
@@ -1421,7 +1356,7 @@
 
           <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="advertirCorrecciones(correccionesNuevas); cerrarModal">Advertir Correcciones</button>
+            <button type="button" class="btn btn-primary" @click="advertirCorreccionesCiclo(correccionesNuevas)">Advertir Correcciones</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalAdvertirCorrecciones">Cerrar</button>
           </div>
         </div>
@@ -1446,7 +1381,7 @@
 
           <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarFirmaResponsableArea(fila); cerrarModal">Si</button>
+            <button type="button" class="btn btn-primary" @click="confirmarFirmaResponsableAreaCiclo()">Si</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalFirmaResponsableArea">Cancelar</button>
           </div>
         </div>
@@ -1472,7 +1407,7 @@
 
           <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarFirmaDireccion(fila); cerrarModal">Si</button>
+            <button type="button" class="btn btn-primary" @click="confirmarFirmaDireccionCiclo()">Si</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalFirmaDireccion">Cancelar</button>
           </div>
         </div>
@@ -1806,9 +1741,8 @@
       const osReadOnly = ref(false);
       const mostrarModalOrdenServicio = ref(false);
       const mostrarModalPlazoOrdenServicio = ref(false);
-      // Setup Informe Area
-      const mostrarModalEstadoInformeArea = ref(false);
-      const guardarEstadoInformeArea = ref(null); 
+      // Setup Ciclos de Informe
+      const mostrarModalTipoCiclo = ref(false);
       // Setup Inter Area
       const serviciosDisponibles = ref([]);
       const serviciosSeleccionados = ref([]);
@@ -1866,7 +1800,7 @@
 
       // Setup Responsable del Area - Firma
       const mostrarModalAdvertirCorrecciones = ref(false);
-      // const correccionesNuevas = ref('');
+      const correccionesNuevas = ref('');
       const mostrarModalFirmaResponsableArea = ref(false);
 
       // Setup Direccion - Firma
@@ -1896,8 +1830,6 @@
                 const recepcionCorrespondiente = data.recepciones.find(recepciones => recepciones.nro_circuito === solicitud.nro_circuito);
                 const ordenCorrespondiente = data.ordenes_servicio.find(ordenes_servicio => ordenes_servicio.nro_circuito === solicitud.nro_circuito);
                 const solicitudInterAreaCorrespondiente = data.solicitudes_inter_area.find(solicitudes_inter_area => solicitudes_inter_area.nro_circuito === solicitud.nro_circuito);
-                const InformeServicioCorrespondiente = data.informes_servicio.find(informes_servicio => informes_servicio.nro_circuito === solicitud.nro_circuito);
-
                 // Arrays multi-adjunto
                 const adjuntos_solicitud = (data.adjuntos_solicitud || [])
                   .filter(a => a.data_servicio === solicitud.nro_dataServicio)
@@ -1909,27 +1841,29 @@
                     .map(a => ({ id: a.id, archivo: a.archivo }))
                   : [];
 
-                const registros_ensayo = (data.registros_ensayo_items || [])
-                  .filter(r => r.circuito === solicitud.nro_circuito)
-                  .map(r => ({ id: r.id, archivo: r.archivo }));
-
-                const informes_area = (data.informes_area || [])
-                  .filter(ia => ia.nro_circuito === solicitud.nro_circuito)
-                  .map(ia => ({ id: ia.nro_informeArea, archivo: ia.adjunto_informeArea, estado: ia.estado_informeArea, fecha: ia.fecha_informeArea, informes_parciales: ia.informes_parciales }));
+                const ciclos = (data.ciclos || [])
+                  .filter(c => c.nro_circuito === solicitud.nro_circuito)
+                  .map(c => ({
+                    id: c.id,
+                    numero: c.numero,
+                    tipo: c.tipo,
+                    adjunto_informeArea: c.adjunto_informeArea,
+                    fecha_informeArea: c.fecha_informeArea ? formatDate(c.fecha_informeArea) : '',
+                    registros_ensayo: (c.registros_ensayo || []).map(r => ({ id: r.id, archivo: r.archivo })),
+                    adjunto_informeServicio: c.adjunto_informeServicio,
+                    fecha_informeServicio: c.fecha_informeServicio ? formatDate(c.fecha_informeServicio) : '',
+                    correcciones: c.correcciones,
+                    corregir: c.corregir,
+                    revision_confirmada: c.revision_confirmada,
+                    firma_responsable_area: c.firma_responsable_area,
+                    firma_direccion: c.firma_direccion,
+                  }));
 
                 const informes_interarea = (data.informes_inter_area || [])
                   .filter(ii => ii.nro_circuito === solicitud.nro_circuito)
                   .map(ii => ({ id: ii.nro_informeInterarea, archivo: ii.adjunto_informeInterarea }));
 
-                // Estado derivado del informe de área
-                const estado_informeArea = informes_area.length === 0 ? 'sin_informe'
-                  : informes_area.some(ia => ia.estado === 'total') ? 'total' : 'parcial';
-
-                // Fecha del informe de área más reciente
-                const ultimoInformeArea = informes_area.length > 0 ? informes_area[informes_area.length - 1] : null;
-
-                // Informes parciales del último informe de área
-                const informesParciales = ultimoInformeArea ? (ultimoInformeArea.informes_parciales || []) : [];
+                const ultimoCiclo = ciclos.length > 0 ? ciclos[ciclos.length - 1] : null;
 
                 // Construir la fila de la tabla combinando datos de solicitudes, legajos, recepciones, etc.
                 const fila = {
@@ -1961,14 +1895,10 @@
                   fecha_ordenServicio: ordenCorrespondiente ? formatDate(ordenCorrespondiente.fecha_ordenServicio) : '',
                   plazo_estimado: solicitud.plazo_estimado,
                   ordenServicio_completo: ordenCorrespondiente ? ordenCorrespondiente.completo : '',
-                  // Informe Area
-                  fecha_informeArea: ultimoInformeArea ? formatDate(ultimoInformeArea.fecha) : '',
+                  // Ciclos de Informe
+                  ciclos,
+                  firma_direccion: ultimoCiclo ? ultimoCiclo.firma_direccion : false,
                   nombre_solicitante: solicitud.nombre_solicitante,
-                  estado_informeArea,
-                  informes_area,
-                  registros_ensayo,
-                  // Informes Parciales
-                  informesParciales,
                   // Solicitud Inter Area
                   nro_solicitudInterarea: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
                   fecha_solicitudInterarea: solicitudInterAreaCorrespondiente ? formatDate(solicitudInterAreaCorrespondiente.fecha_solicitudInterarea) : '',
@@ -1979,16 +1909,6 @@
                   // Informe Inter Area
                   nro_solicitudInterarea_ia: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
                   informes_interarea,
-                  // Informe Servicio
-                  nro_informeServicio: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.nro_informeServicio : '',
-                  fecha_informeServicio: InformeServicioCorrespondiente ? formatDate(InformeServicioCorrespondiente.fecha_informeServicio) : '',
-                  adjunto_informeServicio: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.adjunto_informeServicio : '',
-                  corregir: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.corregir : '',
-                  correcciones: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.correcciones : '',
-                  revision: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.revision : '',
-                  firma_area: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.firma_area : '',
-                  firma_direccion: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.firma_direccion : '',
-                  informeServicio_completo: InformeServicioCorrespondiente ? InformeServicioCorrespondiente.completo : '',
                 };
 
                 // Filtrar las filas según el área temática del usuario, excepto si es servicios_tecnologicos, administracion, o direccion
@@ -2699,73 +2619,87 @@
         }
       };
 
-      // INFORME AREA
+      // CICLOS DE INFORME
 
-      // Informe Area - Adjunto
-      const cargarAdjuntoInformeArea = async (event, fila) => {
-        const nro_circuito = fila.nro_circuito;
-        const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
-        const formData = new FormData();
-        formData.append('archivo', archivoSeleccionado);
-        formData.append('nroCircuito', nro_circuito); // Agregar el número de circuito
+      const cicloSeleccionado = ref(null);
+      const archivoPendiente = ref(null);
 
+      const puedeCrearNuevoCiclo = (fila) => {
+        if (!fila.ciclos || fila.ciclos.length === 0) return true;
+        const ultimo = fila.ciclos[fila.ciclos.length - 1];
+        return ultimo.firma_direccion === true;
+      };
+
+      const crearCiclo = async (fila) => {
         try {
-          const estadoInformeAreaNuevo = await abrirModalEstadoInformeArea(fila);
-          formData.append('estadoInformeAreaNuevo', estadoInformeAreaNuevo); // Agregar el estado del informe
-
-          // Realizar una petición POST al servidor para guardar el archivo
-          const response = await api.post('/encurso/guardar_adjunto_informearea/', formData);
-          console.log('Archivo guardado exitosamente:', response.data);
+          await api.post(`/encurso/crear_ciclo/${fila.nro_circuito}/`);
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
-          console.error('Error al guardar el archivo:', error);
+          console.error('Error al crear ciclo:', error);
           showErrorAlert.value = true;
           setTimeout(() => { showErrorAlert.value = false; }, 3000);
         }
       };
 
-      // Informe Area - Registros Ensayos
-      const cargarRegistrosEnsayo = async (event, fila) => {
-        const nro_circuito = fila.nro_circuito;
-        const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
+      const seleccionarArchivoInformeAreaCiclo = (event, ciclo) => {
+        archivoPendiente.value = event.target.files[0];
+        cicloSeleccionado.value = ciclo;
+        mostrarModalTipoCiclo.value = true;
+      };
+
+      const subirInformeAreaCiclo = async (tipo) => {
+        mostrarModalTipoCiclo.value = false;
+        const archivo = archivoPendiente.value;
+        const ciclo = cicloSeleccionado.value;
+        if (!archivo || !ciclo) return;
         const formData = new FormData();
-        formData.append('archivo', archivoSeleccionado);
-        formData.append('nroCircuito', nro_circuito); // Agregar el número de circuito
-
-        // Realizar una petición POST al servidor para guardar el archivo
-        api.post('/encurso/guardar_registros_ensayo/', formData)
-              .then(response => {
-                  console.log('Archivo guardado exitosamente:', response.data);
-                  fetchData();
-                  showSuccessAlert.value = true;
-                  setTimeout(() => { showSuccessAlert.value = false; }, 3000);
-              })
-              .catch(error => {
-                  console.error('Error al guardar el archivo:', error);
-                  showErrorAlert.value = true;
-                  setTimeout(() => { showErrorAlert.value = false; }, 3000);
-              });
+        formData.append('archivo', archivo);
+        formData.append('tipo', tipo);
+        try {
+          await api.post(`/encurso/subir_informe_area_ciclo/${ciclo.id}/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          console.error('Error al subir informe área:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        } finally {
+          archivoPendiente.value = null;
+          cicloSeleccionado.value = null;
+        }
       };
 
-      // Informe Area - Estado (Se llama cuando se adjunte informe area)
-      const abrirModalEstadoInformeArea = (fila) => {
-        return new Promise((resolve) => {
-          numeroCircuitoGlobal.value = fila.nro_circuito;
-          mostrarModalEstadoInformeArea.value = true;
-
-          const guardarEstado = (estado) => {
-            mostrarModalEstadoInformeArea.value = false;
-            resolve(estado);
-          };
-
-          guardarEstadoInformeArea.value = guardarEstado;
-        });
+      const cerrarModalTipoCiclo = () => {
+        mostrarModalTipoCiclo.value = false;
+        archivoPendiente.value = null;
+        cicloSeleccionado.value = null;
       };
 
-      const cerrarModalEstadoInformeArea = () => {
-        mostrarModalEstadoInformeArea.value = false;
+      const subirRegistroEnsayoCiclo = async (event, ciclo) => {
+        const archivo = event.target.files[0];
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        try {
+          await api.post(`/encurso/subir_registro_ensayo_ciclo/${ciclo.id}/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          console.error('Error al subir registro ensayo:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      const eliminarRegistroEnsayoCiclo = async (id) => {
+        if (!confirm('¿Eliminar el registro de ensayo?')) return;
+        try {
+          await api.delete(`/encurso/registro_ensayo_ciclo/${id}/`);
+          fetchData();
+        } catch (e) { console.error('Error al eliminar registro ensayo:', e); }
       };
 
       // INTER AREA
@@ -2986,88 +2920,52 @@
               });
         };
       
-      // Administracion - Formato
-      const cargarAdjuntoInformeServicio = (event, fila) => {
-        const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
+      // Administracion - Informe Servicio por Ciclo
+      const subirInformeServicioCiclo = async (event, ciclo) => {
+        const archivo = event.target.files[0];
         const formData = new FormData();
-
-        formData.append('archivo', archivoSeleccionado);
-        formData.append('nro_circuito', fila.nro_circuito); 
-
-        // Realizar una petición POST al servidor para guardar o reemplazar el archivo
-        api.post('/encurso/guardar_adjuntoinformeservicio/', formData)
-          .then(response => {
-            console.log('Archivo guardado exitosamente:', response.data);
-            fetchData();
-            // Actualizar la referencia al nuevo archivo en la fila después de guardar
-            fila.adjunto_informeServicio = response.data.nuevo_adjunto_url; // Suponiendo que el backend devuelve la URL del nuevo archivo
-          })
-          .catch(error => {
-            console.error('Error al guardar el archivo:', error);
-          });
+        formData.append('archivo', archivo);
+        try {
+          await api.post(`/encurso/subir_informe_servicio_ciclo/${ciclo.id}/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          console.error('Error al subir informe servicio:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
       };
 
-      const abrirModalCorreccionesInformeServicio = (fila) => {
-        numeroCircuitoGlobal.value = fila.nro_circuito;
+      const abrirModalCorreccionesCiclo = (ciclo) => {
+        cicloSeleccionado.value = ciclo;
+        correcciones.value = ciclo.correcciones || '';
         mostrarModalCorreccionesInformeServicio.value = true;
-
-        // Realiza la solicitud al backend usando api
-        api.get(`/encurso/obtener_correcciones/${numeroCircuitoGlobal.value}/`)
-          .then((response) => {
-            // Asigna la respuesta a correcciones.value
-            correcciones.value = response.data.correcciones; // Asegúrate de que la respuesta tenga esta estructura
-          })
-          .catch((error) => {
-            console.error("Error al obtener las correcciones:", error);
-            // En caso de error, puedes asignar un valor predeterminado o manejarlo como prefieras
-            correcciones.value = "Error al obtener correcciones.";
-          });
       };
 
       const cerrarModalCorreccionesInformeServicio = () => {
         mostrarModalCorreccionesInformeServicio.value = false;
       };
 
-      const corregirInformeServicio = async () => {
-        const nro_circuito = numeroCircuitoGlobal.value;
-        // console.log('nro circuito', nro_circuito)
-        // console.log('correcciones', correcciones.value)
+      const corregirCiclo = async () => {
+        const ciclo = cicloSeleccionado.value;
+        if (!ciclo) return;
         try {
-          const response = await api.put(`/encurso/corregir_informe_servicio/${nro_circuito}/`);
-            
-          // Verificar si la actualización fue exitosa
-          if (response.status === 200) {
-            console.log('Revisiones corregidas correctamente:', nro_circuito);
-            mostrarModalCorreccionesInformeServicio.value = false;  // Cerrar el modal
-            fetchData();
-            showSuccessAlert.value = true;
-            
-            setTimeout(() => {
-                  showSuccessAlert.value = false;
-                }, 3000);
-
-          } else {
-            mostrarModalCorreccionesInformeServicio.value = false;
-            console.error('Error al actualizar Revisiones:', response.statusText);
-            showErrorAlert.value = true;
-            setTimeout(() => {
-            showErrorAlert.value = false;
-          }, 5000);
-          }
+          await api.put(`/encurso/corregir_ciclo/${ciclo.id}/`);
+          mostrarModalCorreccionesInformeServicio.value = false;
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
           mostrarModalCorreccionesInformeServicio.value = false;
-          console.error('Error al actualizar Revisiones:', error);
           showErrorAlert.value = true;
-          setTimeout(() => {
-            showErrorAlert.value = false;
-          }, 5000);
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
         }
       };
 
-        
-      // Servicios Tecnologicos - Revision
-      const abrirModalRevision = (fila) => {
-        numeroCircuitoGlobal.value = fila.nro_circuito;
+      // Servicios Tecnológicos - Revisión por Ciclo
+      const abrirModalRevisionCiclo = (ciclo) => {
+        cicloSeleccionado.value = ciclo;
         mostrarModalRevision.value = true;
       };
 
@@ -3075,29 +2973,20 @@
         mostrarModalRevision.value = false;
       };
 
-      const confirmarRevision = async () => {
-            const nroCircuito = numeroCircuitoGlobal.value;
-            try {
-                const response = await api.put(
-                    `/encurso/confirmar_revision/${nroCircuito}/`
-                );
-                console.log('Revisión confirmada correctamente:', response.data);
-                mostrarModalRevision.value = false;
-                fetchData();
-                showSuccessAlert.value = true;
-                setTimeout(() => {
-                    showSuccessAlert.value = false;
-                }, 3000);
-
-            } catch (error) {
-                console.error('Error al confirmar revisión:', error);
-                // Manejar errores
-                mostrarModalRevision.value = false;
-                showErrorAlert.value = true; 
-                setTimeout(() => {
-                    showErrorAlert.value = false;
-                }, 5000);
-            }
+      const confirmarRevisionCiclo = async () => {
+        const ciclo = cicloSeleccionado.value;
+        if (!ciclo) return;
+        try {
+          await api.put(`/encurso/confirmar_revision_ciclo/${ciclo.id}/`);
+          mostrarModalRevision.value = false;
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          mostrarModalRevision.value = false;
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        }
       };
 
 
@@ -3110,131 +2999,81 @@
         if (newVal !== null) document.dispatchEvent(new CustomEvent('speed-dial-open'));
       };
 
-      // Responsable del Area - Firma
+      // Responsable del Área - Firma por Ciclo
 
-      const abrirModalAdvertirCorrecciones = (fila) => {
-          numeroCircuitoGlobal.value = fila.nro_circuito;
-          mostrarModalAdvertirCorrecciones.value = true;
-      }
-
-      const cerrarModalAdvertirCorrecciones = () => {
-          mostrarModalAdvertirCorrecciones.value = false;
+      const abrirModalAdvertirCorreccionesCiclo = (ciclo) => {
+        cicloSeleccionado.value = ciclo;
+        correccionesNuevas.value = '';
+        mostrarModalAdvertirCorrecciones.value = true;
       };
 
-      const advertirCorrecciones = async (correccionesNuevas) => {
-        const nroCircuito = numeroCircuitoGlobal.value;
-        try {
-            const response = await api.put(
-                `/encurso/advertir_correcciones/${nroCircuito}/`, {
-                correcciones: correccionesNuevas
-            }
-            );
-            console.log('Correcciones advertidas correctamente:', response.data);
-            console.log(correccionesNuevas)
-            mostrarModalAdvertirCorrecciones.value = false;
-            fetchData();
-            showSuccessAlert.value = true;
-              setTimeout(() => {
-                  showSuccessAlert.value = false;
-              }, 3000);
+      const cerrarModalAdvertirCorrecciones = () => {
+        mostrarModalAdvertirCorrecciones.value = false;
+      };
 
+      const advertirCorreccionesCiclo = async (correccionesNuevas) => {
+        const ciclo = cicloSeleccionado.value;
+        if (!ciclo) return;
+        try {
+          await api.put(`/encurso/advertir_correcciones_ciclo/${ciclo.id}/`, { correcciones: correccionesNuevas });
+          mostrarModalAdvertirCorrecciones.value = false;
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
-            console.error('Error al advertir correcciones:', error);
-            mostrarModalAdvertirCorrecciones.value = false;
-            showErrorAlert.value = true; 
-              setTimeout(() => {
-                  showErrorAlert.value = false;
-              }, 5000);
+          mostrarModalAdvertirCorrecciones.value = false;
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
         }
       };
 
-        const abrirModalFirmaResponsableArea = (fila) => {
-          numeroCircuitoGlobal.value = fila.nro_circuito;
-          mostrarModalFirmaResponsableArea.value = true;
-        };
+      const abrirModalFirmaResponsableAreaCiclo = (ciclo) => {
+        cicloSeleccionado.value = ciclo;
+        mostrarModalFirmaResponsableArea.value = true;
+      };
 
-        const cerrarModalFirmaResponsableArea = () => {
+      const cerrarModalFirmaResponsableArea = () => {
+        mostrarModalFirmaResponsableArea.value = false;
+      };
+
+      const confirmarFirmaResponsableAreaCiclo = async () => {
+        const ciclo = cicloSeleccionado.value;
+        if (!ciclo) return;
+        try {
+          await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${ciclo.id}/`);
           mostrarModalFirmaResponsableArea.value = false;
-        };
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          mostrarModalFirmaResponsableArea.value = false;
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        }
+      };
 
-        const confirmarFirmaResponsableArea = async () => {
-          const nroCircuito = numeroCircuitoGlobal.value;
-          try {
-              const response = await api.put(
-                  `/encurso/confirmar_firma_responsable_area/${nroCircuito}/`
-              );
-              console.log('Firma Responsable Area confirmada correctamente:', response.data);
-              mostrarModalFirmaResponsableArea.value = false;
-              fetchData();
-              showSuccessAlert.value = true;
-                setTimeout(() => {
-                    showSuccessAlert.value = false;
-                }, 3000);
+      // Dirección - Firma por Ciclo
+      const abrirModalFirmaDireccionCiclo = (ciclo) => {
+        cicloSeleccionado.value = ciclo;
+        mostrarModalFirmaDireccion.value = true;
+      };
 
-          } catch (error) {
-              console.error('Error al confirmar Firma Responsable Area:', error);
-              mostrarModalFirmaResponsableArea.value = false;
-              showErrorAlert.value = true; 
-                setTimeout(() => {
-                    showErrorAlert.value = false;
-                }, 5000);
-          }
-        };
+      const cerrarModalFirmaDireccion = () => {
+        mostrarModalFirmaDireccion.value = false;
+      };
 
-        // Direccion - Firma
-        const abrirModalFirmaDireccion = (fila) => {
-          numeroCircuitoGlobal.value = fila.nro_circuito;
-          mostrarModalFirmaDireccion.value = true;
-        };
-
-        const cerrarModalFirmaDireccion = () => {
+      const confirmarFirmaDireccionCiclo = async () => {
+        const ciclo = cicloSeleccionado.value;
+        if (!ciclo) return;
+        try {
+          await api.put(`/encurso/confirmar_firma_direccion_ciclo/${ciclo.id}/`);
           mostrarModalFirmaDireccion.value = false;
-        };
-
-        const cargarAdjuntoInformeServicioFirmado = (event, fila) => {
-          const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
-          const formData = new FormData();
-
-          formData.append('archivo', archivoSeleccionado);
-          formData.append('nro_circuito', fila.nro_circuito); 
-
-          // Realizar una petición POST al servidor para guardar o reemplazar el archivo
-          api.post('/encurso/guardar_adjuntoinformeserviciofirmado/', formData)
-            .then(response => {
-              console.log('Archivo guardado exitosamente:', response.data);
-              fetchData();
-              showSuccessAlert.value = true;
-                setTimeout(() => {
-                    showSuccessAlert.value = false;
-                }, 3000);
-              // Actualizar la referencia al nuevo archivo en la fila después de guardar
-              fila.adjunto_informeServicio = response.data.nuevo_adjunto_url; // Suponiendo que el backend devuelve la URL del nuevo archivo
-            })
-            .catch(error => {
-              console.error('Error al guardar el archivo:', error);
-              showErrorAlert.value = true; 
-                setTimeout(() => {
-                    showErrorAlert.value = false;
-                }, 5000);
-            });
-        };
-
-        const confirmarFirmaDireccion = async () => {
-          const nroCircuito = numeroCircuitoGlobal.value;
-          try {
-              const response = await api.put(
-                  `/encurso/confirmar_firma_direccion/${nroCircuito}/`
-              );
-              console.log('Firma Dirección confirmada correctamente:', response.data);
-              mostrarModalFirmaDireccion.value = false;
-              fetchData();
-              showSuccessAlert.value = true;
-                setTimeout(() => {
-                    showSuccessAlert.value = false;
-                }, 3000);
-
-          } catch (error) {
-              console.error('Error al confirmar Firma Dirección:', error);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          mostrarModalFirmaDireccion.value = false;
+          console.error('Error al confirmar Firma Dirección:', error);
               mostrarModalFirmaDireccion.value = false;
               showErrorAlert.value = true; 
                 setTimeout(() => {
@@ -3305,21 +3144,6 @@
           } catch (e) { console.error('Error al eliminar informe interárea:', e); }
         };
 
-        const eliminarAdjuntoInformeArea = async (id) => {
-          if (!confirm('¿Eliminar el informe de área?')) return;
-          try {
-            await api.delete(`/encurso/informe_area/${id}/`);
-            fetchData();
-          } catch (e) { console.error('Error al eliminar informe de área:', e); }
-        };
-
-        const eliminarRegistrosEnsayo = async (id) => {
-          if (!confirm('¿Eliminar los registros de ensayo?')) return;
-          try {
-            await api.delete(`/encurso/registro_ensayo/${id}/`);
-            fetchData();
-          } catch (e) { console.error('Error al eliminar registros de ensayo:', e); }
-        };
 
         const imprimirDataServicio = () => { window.print(); };
         const imprimirLegajo = () => { window.print(); };
@@ -3461,15 +3285,15 @@
         abrirModalPlazoOrdenServicio,
         cerrarModalPlazoOrdenServicio,
         mostrarModalPlazoOrdenServicio,
-        // Informe Area
-        cargarAdjuntoInformeArea,
-        eliminarAdjuntoInformeArea,
-        abrirModalEstadoInformeArea,
-        cerrarModalEstadoInformeArea,
-        mostrarModalEstadoInformeArea,
-        guardarEstadoInformeArea,
-        cargarRegistrosEnsayo,
-        eliminarRegistrosEnsayo,
+        // Ciclos de Informe
+        mostrarModalTipoCiclo,
+        puedeCrearNuevoCiclo,
+        crearCiclo,
+        seleccionarArchivoInformeAreaCiclo,
+        subirInformeAreaCiclo,
+        cerrarModalTipoCiclo,
+        subirRegistroEnsayoCiclo,
+        eliminarRegistroEnsayoCiclo,
         // Inter Area
         serviciosDisponibles,
         serviciosSeleccionados,
@@ -3497,36 +3321,36 @@
         servicioSolicitudInterArea,
         cargarAdjuntoInformeInterarea,
         eliminarAdjuntoInformeInterarea,
-        // Administracion - Formato
-        cargarAdjuntoInformeServicio,
-        abrirModalCorreccionesInformeServicio,
+        // Administracion - Informe Servicio
+        subirInformeServicioCiclo,
+        abrirModalCorreccionesCiclo,
         cerrarModalCorreccionesInformeServicio,
         mostrarModalCorreccionesInformeServicio,
         correcciones,
-        corregirInformeServicio,
+        corregirCiclo,
         // Servicios Tecnologicos - Revision
-        abrirModalRevision,
+        abrirModalRevisionCiclo,
         cerrarModalRevision,
         mostrarModalRevision,
-        confirmarRevision,
+        confirmarRevisionCiclo,
         mostrarOpciones,
         filaSeleccionada,
         toggleOpciones,
-        // Responsable del Area - Firma 
-        abrirModalAdvertirCorrecciones,
+        // Responsable del Area - Firma
+        abrirModalAdvertirCorreccionesCiclo,
         cerrarModalAdvertirCorrecciones,
         mostrarModalAdvertirCorrecciones,
-        advertirCorrecciones,
-        abrirModalFirmaResponsableArea,
+        advertirCorreccionesCiclo,
+        correccionesNuevas,
+        abrirModalFirmaResponsableAreaCiclo,
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
-        confirmarFirmaResponsableArea,
+        confirmarFirmaResponsableAreaCiclo,
         // Direccion - Firma
-        abrirModalFirmaDireccion,
+        abrirModalFirmaDireccionCiclo,
         cerrarModalFirmaDireccion,
         mostrarModalFirmaDireccion,
-        cargarAdjuntoInformeServicioFirmado,
-        confirmarFirmaDireccion,
+        confirmarFirmaDireccionCiclo,
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,
@@ -3567,6 +3391,15 @@
     background-color: #fde8ea !important;
   }
   .table tbody tr.row-urgente:hover { background-color: #f5c2c7 !important; }
+
+  /* Fila de ciclo - espacio mínimo entre ciclos */
+  .ciclo-row {
+    min-height: 26px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 0;
+  }
 
   /* Ícono de acción (+ crear) */
   .action-icon {
