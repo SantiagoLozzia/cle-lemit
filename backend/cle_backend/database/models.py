@@ -121,10 +121,12 @@ class Presupuesto(models.Model):
 class Servicio(models.Model):
     nro_servicio = models.AutoField(primary_key=True)
     servicio = models.CharField(max_length=255)
-    norma = models.CharField(max_length=255)
+    norma = models.CharField(max_length=255, blank=True, default='')
     arancel = models.IntegerField(validators=[MaxValueValidator(999999)])
     area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES)
     modulo = models.IntegerField(validators=[MaxValueValidator(999999)], default=275)
+    categoria = models.CharField(max_length=150, blank=True, default='')
+    subcategoria = models.CharField(max_length=150, blank=True, default='')
     
 
     def __str__(self):
