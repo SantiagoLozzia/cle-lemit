@@ -6,7 +6,7 @@
       </div>
   
       <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">
-        <div class="modal-dialog-a4">
+        <div class="modal-dialog-budget">
           <div class="modal-content">
             <div class="modal-header">
               <h1 class="modal-title fs-5 fw-bold">Nuevo Presupuesto</h1>

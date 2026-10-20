@@ -198,6 +198,24 @@ body {
   margin: auto;
 }
 
+.modal-dialog-budget {
+  width: min(95vw, 960px);
+  max-height: 90vh;
+  margin: auto;
+}
+
+.modal-dialog-budget .modal-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal-dialog-budget .modal-body {
+  overflow-y: auto;
+  flex: 1;
+}
+
 .modal-dialog {
   max-width: 440px;
   width: calc(100% - 2rem);

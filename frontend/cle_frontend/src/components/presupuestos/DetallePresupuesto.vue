@@ -1,5 +1,6 @@
 <template>
-    <table class="table table-hover"> 
+  <div class="tabla-wrapper">
+    <table class="table table-hover table-sm">
         <thead class="text-center">
             <tr>
                 <th class="col-nro">Nro</th>
@@ -19,32 +20,26 @@
 
                 <td>
                     <div class="mb-3 position-relative">
-                        <input 
-                            v-model="fila.servicio" 
-                            type="text" 
-                            class="form-control" 
-                            @input="buscarServicio($event, index)" 
-                            :title="fila.servicio" 
-                            :readonly="!fila.editable" 
+                        <input
+                            v-model="fila.servicio"
+                            type="text"
+                            class="form-control"
+                            @input="buscarServicio($event, index)"
+                            @blur="cerrarSugerencias(index)"
+                            :title="fila.servicio"
+                            :readonly="!fila.editable"
                             required
                         >
-                        
-                        <select 
-                            v-if="fila.sugerencias.length > 0" 
-                            v-model="fila.servicioSeleccionado"
-                            @change="seleccionarServicio($event, index)" 
-                            class="form-select position-absolute" 
-                            style="display: block;"
-                        >
-                            <option 
-                                v-for="sugerencia in fila.sugerencias" 
-                                :key="sugerencia.nro_servicio" 
-                                :value="sugerencia.nro_servicio"
+                        <ul v-if="fila.sugerencias.length > 0" class="sugerencias-lista">
+                            <li
+                                v-for="sugerencia in fila.sugerencias"
+                                :key="sugerencia.nro_servicio"
+                                @mousedown.prevent="seleccionarServicio(sugerencia, index)"
                             >
-                            {{ sugerencia.nro_servicio }} - {{ sugerencia.servicio }} - {{ sugerencia.norma }} - {{ sugerencia.area_tematica }}
-                            </option>
-                        </select>
-
+                                <span class="sug-nombre">{{ sugerencia.servicio }}</span>
+                                <span class="sug-meta">Nº{{ sugerencia.nro_servicio }}{{ sugerencia.norma ? ' · ' + sugerencia.norma : '' }}</span>
+                            </li>
+                        </ul>
                     </div>
                 </td>
 
@@ -95,7 +90,8 @@
             </tr>
         </tbody>
     </table>
-    <button @click="agregarServicio">+</button>
+  </div>
+  <button @click="agregarServicio" class="btn btn-sm btn-outline-primary mt-1">+ Agregar servicio</button>
 </template>
 
 <script>
@@ -154,31 +150,26 @@ export default {
             }
         }, 1000);
 
-        const seleccionarServicio = (event, index) => {
+        const seleccionarServicio = (sugerencia, index) => {
             const fila = filas.value[index];
-            const servicioSeleccionado = event.target.value;
+            if (!sugerencia?.nro_servicio) return;
+            api.get(`/presupuestos/seleccionar_servicio/${sugerencia.nro_servicio}/`)
+                .then(response => {
+                    fila.nro_servicio = response.data.nro_servicio;
+                    fila.servicio = response.data.servicio;
+                    fila.norma = response.data.norma;
+                    fila.precioUnitario = parseInt(response.data.arancel) * parseInt(moduloValor.value);
+                    fila.sugerencias = [];
+                    fila.editable = false;
+                    serviciosSeleccionados.value.add(fila.nro_servicio);
+                })
+                .catch(error => {
+                    console.error('Error al obtener los detalles del servicio:', error);
+                });
+        };
 
-            console.log('Servicio seleccionado:', servicioSeleccionado);
-
-            if (servicioSeleccionado) {
-                api.get(`/presupuestos/seleccionar_servicio/${servicioSeleccionado}/`)
-                    .then(response => {
-                        fila.nro_servicio = response.data.nro_servicio;
-                        fila.servicio = response.data.servicio;
-                        fila.norma = response.data.norma;
-                        const arancel = response.data.arancel;
-                        fila.precioUnitario = parseInt(arancel) * parseInt(moduloValor.value);
-                        fila.sugerencias = [];
-                        fila.editable = false;
-                        // Añadir servicio seleccionado a un conjunto de servicios ya seleccionados
-                        serviciosSeleccionados.value.add(fila.nro_servicio);
-                    })
-                    .catch(error => {
-                        console.error('Error al obtener los detalles del servicio:', error);
-                    });
-            } else {
-                console.warn('Ningún servicio seleccionado');
-            }
+        const cerrarSugerencias = (index) => {
+            setTimeout(() => { filas.value[index].sugerencias = []; }, 200);
         };
 
         // Watcher para recalcular el subtotal y emitir los cambios
@@ -264,6 +255,7 @@ export default {
             obtenerModulo,
             buscarServicio,
             seleccionarServicio,
+            cerrarSugerencias,
             agregarServicio,
             detallePresupuesto,
             eliminarFila,
@@ -274,66 +266,78 @@ export default {
 
 
 <style scoped>
+.tabla-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
 table {
-    width: 100%; /* Hace que la tabla ocupe el 100% del ancho del contenedor */
-    table-layout: fixed; /* Opcional: Permite que las celdas tengan un tamaño fijo */
-    overflow-wrap: break-word; /* Hace que las palabras se ajusten */
+    min-width: 700px;
+    table-layout: fixed;
 }
 
-input,
-select {
-    width: 100%; /* Hace que los elementos se ajusten al 100% del ancho de su contenedor */
-    box-sizing: border-box; /* Incluye padding y borde en el ancho total */
-}
-
-.col-nro {
-    width: 60px; /* Ajusta el ancho de la columna Nro */
-}
-
-.col-servicio {
-    width: 300px; /* Ajusta el ancho de la columna Servicio Solicitado */
-}
-
-.col-norma,
-.col-precio,
-.col-cant,
-.col-total {
-    width: 100px; /* Ajusta el ancho de las demás columnas */
-}
-
-.col-action {
-    width: 60px; /* Ajusta el ancho de la columna de acción */
-}
-
-.position-relative {
-    position:
-    relative; 
-}
-
-.position-absolute { 
-    position: absolute; 
-}
-
-input, select { 
+input {
+    width: 100%;
+    box-sizing: border-box;
     text-overflow: ellipsis;
-    overflow: hidden; 
+    overflow: hidden;
+    font-size: 0.85rem;
+    padding: 2px 4px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
 }
 
-.btn-secondary { 
-    padding: 0; 
-    border-radius: 50%; 
-    width: 20px; 
-    height: 20px; 
-    line-height: 1; 
-    font-size: 12px; 
-    color: #6c757d; 
-    background-color: #f8f9fa; 
-} 
+.col-nro      { width: 55px; }
+.col-servicio { width: auto; }
+.col-norma    { width: 110px; }
+.col-precio   { width: 110px; }
+.col-cant     { width: 70px; }
+.col-total    { width: 100px; }
+.col-action   { width: 44px; }
 
-.form-select {
-    max-height: 200px; /* Ajusta la altura máxima del dropdown si es necesario */
-    overflow-y: auto; /* Agrega un scroll si hay muchas opciones */
+.position-relative { position: relative; }
+
+/* Lista de sugerencias de servicios */
+.sugerencias-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 420px;
+    max-height: 240px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1050;
 }
 
+.sugerencias-lista li {
+    padding: 6px 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #f0f0f0;
+}
 
+.sugerencias-lista li:hover {
+    background-color: rgba(18, 100, 189, 0.1);
+}
+
+.sug-nombre {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #212529;
+    white-space: normal;
+    line-height: 1.3;
+}
+
+.sug-meta {
+    font-size: 0.73rem;
+    color: #6c757d;
+    margin-top: 1px;
+}
 </style>
