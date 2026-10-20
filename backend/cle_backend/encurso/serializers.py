@@ -25,7 +25,7 @@ class LegajoEnCursoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Legajo
         fields = '__all__'
-    
+
 class GuardarPagoLegajoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = Legajo
@@ -40,7 +40,7 @@ class RecepcionEnCursoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = Recepcion
                 fields = '__all__'
-        
+
 class OrdenServicioEnCursoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = OrdenServicio
@@ -53,33 +53,15 @@ class DetallePresupuestoSerializer(serializers.ModelSerializer):
                 model = DetallePresupuesto
                 fields = ['nro_servicio', 'servicio', 'cant']
 
-class InformeAreaParcialEnCursoSerializer(serializers.ModelSerializer):
-        class Meta:   
-                model = InformeAreaParcial
-                fields = '__all__'
-
-class InformeAreaEnCursoSerializer(serializers.ModelSerializer):
-        informes_parciales = InformeAreaParcialEnCursoSerializer(many=True, read_only=True)
-        
-        class Meta:   
-                model = InformeArea
-                fields = '__all__'
-
-class InformeServicioEnCursoSerializer(serializers.ModelSerializer):
-        class Meta:
-                model = InformeServicio
-                fields = '__all__'
-        
 class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = SolicitudInterarea
                 fields = '__all__'
-                
+
 class InformeInterAreaEnCursoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = InformeInterarea
                 fields = '__all__'
-
 
 class AdjuntoSolicitudServicioSerializer(serializers.ModelSerializer):
         class Meta:
@@ -91,23 +73,27 @@ class AdjuntoFacturaSerializer(serializers.ModelSerializer):
                 model = AdjuntoFactura
                 fields = ['id', 'legajo', 'archivo', 'fecha']
 
-class RegistroEnsayoSerializer(serializers.ModelSerializer):
+class RegistroEnsayoCicloSerializer(serializers.ModelSerializer):
         class Meta:
-                model = RegistroEnsayo
-                fields = ['id', 'circuito', 'archivo', 'fecha']
+                model = RegistroEnsayoCiclo
+                fields = ['id', 'ciclo', 'archivo', 'fecha']
 
+class CicloInformeSerializer(serializers.ModelSerializer):
+        registros_ensayo = RegistroEnsayoCicloSerializer(many=True, read_only=True)
+
+        class Meta:
+                model = CicloInforme
+                fields = '__all__'
 
 class GuardarAdjuntoSolicitudDataServicioSerializer(serializers.ModelSerializer):
         class Meta:
                 model = DataServicio
                 fields = ['nro_dataServicio', 'adjunto_solicitudServicio']
 
-
 class GuardarAdjuntoFacturaSerializer(serializers.ModelSerializer):
         class Meta:
                 model = Legajo
                 fields = ['nro_legajo', 'adjunto_factura']
-
 
 class CambiarRemitoSerializer(serializers.ModelSerializer):
         class Meta:
@@ -129,16 +115,6 @@ class CambiarPlazoEstimadoSerializer(serializers.ModelSerializer):
                 model = DataServicio
                 fields = ['plazo_estimado']
 
-class GuardarAdjuntoInformeArea(serializers.ModelSerializer):
-        class Meta:
-                model = InformeArea
-                fields = ['']
-
-class GuardarRegistrosEnsayoServicioSerializer(serializers.ModelSerializer):
-        class Meta:
-                model = InformeArea
-                fields = '__all__'
-
 class SolicitudInterareaSerializer(serializers.ModelSerializer):
         class Meta:
                 model = SolicitudInterarea
@@ -146,38 +122,26 @@ class SolicitudInterareaSerializer(serializers.ModelSerializer):
 
 class DetalleInterareaSerializer(serializers.ModelSerializer):
     servicio = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = DetalleInterarea
         fields = ('nro_servicio', 'cant', 'servicio')
-    
+
     def get_servicio(self, obj):
-        # Obtener el nombre del servicio usando el nro_servicio
         servicio = Servicio.objects.get(pk=obj.nro_servicio.pk)
         return servicio.servicio
-    
+
 class InformeInterareaSerializer(serializers.ModelSerializer):
     class Meta:
         model = InformeInterarea
         fields = '__all__'
 
-class InformeServicioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InformeServicio
-        fields = '__all__'
-
-class CorregirInformeServicioSerializer(serializers.ModelSerializer):
+class CorregirCicloSerializer(serializers.ModelSerializer):
         class Meta:
-                model = InformeServicio
+                model = CicloInforme
                 fields = ['corregir']
 
-class AdvertirCorreccionesSerializer(serializers.ModelSerializer):
-       class Meta:
-                model = InformeServicio
-                fields = ('correcciones', 'corregir', 'revision')
-
-                
-class CambiarRevision(serializers.ModelSerializer):
-       class Meta:
-        model = InformeServicio
-        fields = '__all__'
+class AdvertirCorreccionesCicloSerializer(serializers.ModelSerializer):
+        class Meta:
+                model = CicloInforme
+                fields = ['correcciones', 'corregir', 'revision_confirmada']

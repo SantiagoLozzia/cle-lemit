@@ -88,25 +88,19 @@ class ObtenerTodoEnCurso(APIView):
         legajos = Legajo.objects.filter(nro_circuito__in=numeros_circuito)
         recepciones = Recepcion.objects.filter(nro_circuito__in=numeros_circuito)
         ordenes_servicio = OrdenServicio.objects.filter(nro_circuito__in=numeros_circuito)
-        informes_area = InformeArea.objects.filter(nro_circuito__in=numeros_circuito)
-        informes_parciales_area = InformeAreaParcial.objects.filter(nro_circuito__in=numeros_circuito)
-        informes_servicio = InformeServicio.objects.filter(nro_circuito__in=numeros_circuito)
+        ciclos = CicloInforme.objects.filter(nro_circuito__in=numeros_circuito).prefetch_related('registros_ensayo')
         solicitudes_inter_area = SolicitudInterarea.objects.filter(nro_circuito__in=numeros_circuito)
         informes_inter_area = InformeInterarea.objects.filter(nro_circuito__in=numeros_circuito)
-        # Nuevos modelos multi-adjunto
         nros_dataServicio = servicios_en_curso.values_list('nro_dataServicio', flat=True)
         nros_legajo = legajos.values_list('nro_legajo', flat=True)
         adjuntos_solicitud = AdjuntoSolicitudServicio.objects.filter(data_servicio__in=nros_dataServicio)
         adjuntos_factura = AdjuntoFactura.objects.filter(legajo__in=nros_legajo)
-        registros_ensayo = RegistroEnsayo.objects.filter(circuito__in=numeros_circuito)
 
         # Serializar los datos
         legajos_serializer = LegajoEnCursoSerializer(legajos, many=True)
         recepciones_serializer = RecepcionEnCursoSerializer(recepciones, many=True)
         ordenes_servicio_serializer = OrdenServicioEnCursoSerializer(ordenes_servicio, many=True)
-        informes_area_serializer = InformeAreaEnCursoSerializer(informes_area, many=True)
-        informes_parciales_area_serializer = InformeAreaParcialEnCursoSerializer(informes_parciales_area, many=True)
-        informes_servicio_serializer = InformeServicioEnCursoSerializer(informes_servicio, many=True)
+        ciclos_serializer = CicloInformeSerializer(ciclos, many=True)
         solicitudes_inter_area_serializer = SolicitudInterAreaEnCursoSerializer(solicitudes_inter_area, many=True)
         informes_inter_area_serializer = InformeInterAreaEnCursoSerializer(informes_inter_area, many=True)
 
@@ -116,14 +110,11 @@ class ObtenerTodoEnCurso(APIView):
             'legajos': legajos_serializer.data,
             'recepciones': recepciones_serializer.data,
             'ordenes_servicio': ordenes_servicio_serializer.data,
-            'informes_area': informes_area_serializer.data,
-            'informes_parciales_area': informes_parciales_area_serializer.data,
-            'informes_servicio': informes_servicio_serializer.data,
+            'ciclos': ciclos_serializer.data,
             'solicitudes_inter_area': solicitudes_inter_area_serializer.data,
             'informes_inter_area': informes_inter_area_serializer.data,
             'adjuntos_solicitud': AdjuntoSolicitudServicioSerializer(adjuntos_solicitud, many=True).data,
             'adjuntos_factura': AdjuntoFacturaSerializer(adjuntos_factura, many=True).data,
-            'registros_ensayo_items': RegistroEnsayoSerializer(registros_ensayo, many=True).data,
         }
 
         # Devolver la respuesta
@@ -658,73 +649,70 @@ class CambiarPlazoEstimado(APIView):
             logger.exception("Error en CambiarPlazoEstimado")
             return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
-# Informe de Area
-class GuardarAdjuntoInformeArea(APIView):
+# ── Ciclos de Informe ─────────────────────────────────────────────────────────
+
+class CrearCiclo(APIView):
     permission_classes = [IsAuthenticated, IsAreaUser]
 
-    def post(self, request):
-        try:
-            # Obtener el archivo y el nro_circuito del request
-            adjunto = request.FILES.get('archivo')
-            nro_circuito = request.data.get('nroCircuito')
-            estado_informeArea = request.data.get('estadoInformeAreaNuevo')
-
-            if not adjunto or not nro_circuito:
-                return Response({'error': 'Archivo y nro_circuito son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
-
-            validate_upload_file(adjunto)
-
-            if not user_can_access_circuit(request.user, nro_circuito):
-                return Response({'error': 'No tiene permisos para este circuito.'}, status=status.HTTP_403_FORBIDDEN)
-
-            # Crear una instancia de InformeArea
-            informe_area = InformeArea(
-                fecha_informeArea=timezone.now().date(),
-                adjunto_informeArea=adjunto,
-                completo=False,
-                estado_informeArea=estado_informeArea,
-                nro_circuito_id=nro_circuito  # Asignar el nro_circuito directamente
-            )
-            informe_area.save()
-
-            # Serializar los datos de la nueva instancia
-            serializer = InformeAreaEnCursoSerializer(informe_area)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            logger.exception("Error en GuardarAdjuntoInformeArea")
-            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class GuardarRegistrosEnsayo(APIView):
-    permission_classes = [IsAuthenticated, IsAreaUser]
-
-    def post(self, request):
-        nroCircuito = request.data.get('nroCircuito')
-
-        if not nroCircuito:
-            return Response({"error": "nro_circuito is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not user_can_access_circuit(request.user, nroCircuito):
+    def post(self, request, nro_circuito):
+        if not user_can_access_circuit(request.user, nro_circuito):
             return Response({'error': 'No tiene permisos para este circuito.'}, status=status.HTTP_403_FORBIDDEN)
+        circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
+        ultimo = CicloInforme.objects.filter(nro_circuito=circuito).order_by('-numero').first()
+        numero = (ultimo.numero + 1) if ultimo else 1
+        ciclo = CicloInforme.objects.create(nro_circuito=circuito, numero=numero)
+        return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_201_CREATED)
 
+
+class SubirInformeAreaCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
+            return Response({'error': 'No tiene permisos para este circuito.'}, status=status.HTTP_403_FORBIDDEN)
+        archivo = request.FILES.get('archivo')
+        tipo = request.data.get('tipo', 'parcial')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            circuito = Circuito.objects.get(nro_circuito=nroCircuito)
-        except Circuito.DoesNotExist:
-            return Response({"error": "Circuito no encontrado."}, status=status.HTTP_404_NOT_FOUND)
-
-        adjunto = request.FILES.get('archivo')
-        if not adjunto:
-            return Response({"error": "Archivo es requerido."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            validate_upload_file(adjunto)
+            validate_upload_file(archivo)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo.adjunto_informeArea = archivo
+        ciclo.fecha_informeArea = timezone.now().date()
+        ciclo.tipo = tipo
+        ciclo.save()
+        return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
-        registro = RegistroEnsayo.objects.create(circuito=circuito, archivo=adjunto)
+
+class SubirRegistroEnsayoCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
+            return Response({'error': 'No tiene permisos para este circuito.'}, status=status.HTTP_403_FORBIDDEN)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_upload_file(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        registro = RegistroEnsayoCiclo.objects.create(ciclo=ciclo, archivo=archivo)
         return Response({'id': registro.id, 'archivo': str(registro.archivo)}, status=status.HTTP_201_CREATED)
+
+
+class EliminarRegistroEnsayoCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def delete(self, request, pk):
+        registro = get_object_or_404(RegistroEnsayoCiclo, pk=pk)
+        if not user_can_access_circuit(request.user, registro.ciclo.nro_circuito_id):
+            return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        registro.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 # Inter Area
 def obtener_servicios(request, nro_circuito):
@@ -888,21 +876,6 @@ class EliminarAdjuntoFactura(APIView):
             legajo.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class EliminarRegistroEnsayo(APIView):
-    permission_classes = [IsAuthenticated, IsAreaUser]
-
-    def delete(self, request, pk):
-        registro = get_object_or_404(RegistroEnsayo, pk=pk)
-        registro.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-class EliminarInformeArea(APIView):
-    permission_classes = [IsAuthenticated, IsAreaUser]
-
-    def delete(self, request, pk):
-        informe = get_object_or_404(InformeArea, pk=pk)
-        informe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class EliminarInformeInterarea(APIView):
     permission_classes = [IsAuthenticated, IsAreaUser]
@@ -974,205 +947,92 @@ class AprobarLabsAdicionales(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# Adminsitracion
-class GuardarAdjuntoInformeServicio(APIView):
-    permission_classes = [IsAuthenticated, IsAdministracion]
+class SubirInformeServicioCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracionOrDireccion]
 
-    def post(self, request):
-        # Obtener el archivo y el nro_circuito del request
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
         archivo = request.FILES.get('archivo')
-        nro_circuito = request.data.get('nro_circuito')
-
-        if not archivo or not nro_circuito:
-            return Response({'error': 'Archivo y nro_circuito son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
-
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             validate_upload_file(archivo)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo.adjunto_informeServicio = archivo
+        ciclo.fecha_informeServicio = timezone.now().date()
+        ciclo.revision_confirmada = False
+        ciclo.firma_responsable_area = False
+        ciclo.firma_direccion = False
+        ciclo.corregir = False
+        ciclo.save()
+        return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
-        try:
-            # Verificar si el circuito existe
-            circuito_instance = Circuito.objects.get(nro_circuito=nro_circuito)
-
-            # Intentar obtener un informe de servicio existente para este circuito
-            try:
-                informe_servicio = InformeServicio.objects.get(nro_circuito=circuito_instance)
-                # Si existe, sobrescribir el archivo y actualizar la fecha
-                informe_servicio.adjunto_informeServicio = archivo
-                informe_servicio.fecha_informeServicio = timezone.now().date()
-                informe_servicio.revision = False
-                informe_servicio.firma_area = False
-                informe_servicio.firma_direccion = False
-                informe_servicio.completo = False
-                informe_servicio.save()
-
-                # Serializar el informe actualizado
-                serializer = InformeServicioSerializer(informe_servicio)
-                return Response({'message': 'Archivo sobrescrito exitosamente', 'data': serializer.data}, status=status.HTTP_200_OK)
-            
-            except InformeServicio.DoesNotExist:
-                # Si no existe un informe previo, crear uno nuevo
-                informe_data = {
-                    'fecha_informeServicio': timezone.now().date(),
-                    'adjunto_informeServicio': archivo,
-                    'revision': False,
-                    'firma_area': False,
-                    'firma_direccion': False,
-                    'completo': False,
-                    'nro_circuito': circuito_instance.pk
-                }
-
-                # Serializar los datos del nuevo informe de servicio
-                serializer = InformeServicioSerializer(data=informe_data)
-
-                if serializer.is_valid():
-                    # Guardar el nuevo informe de servicio
-                    serializer.save()
-                    return Response({'message': 'Archivo guardado exitosamente', 'data': serializer.data}, status=status.HTTP_201_CREATED)
-                else:
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        except Circuito.DoesNotExist:
-            return Response({'error': 'Circuito no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-def obtener_correcciones(request, nro_circuito):
-    try:
-        # Obtener la instancia de Circuito
-        circuito = Circuito.objects.get(nro_circuito=nro_circuito)
-        
-        # Obtener la instancia relacionada de InformeServicio
-        informe_servicio = InformeServicio.objects.get(nro_circuito=circuito)
-        
-        # Extraer las correcciones del InformeServicio
-        correcciones = informe_servicio.correcciones
-        
-        # Devolver la respuesta con las correcciones
-        return Response({'correcciones': correcciones})
-    
-    except Circuito.DoesNotExist:
-        return Response({'error': 'Circuito no encontrado'}, status=404)
-    
-    except InformeServicio.DoesNotExist:
-        return Response({'error': 'InformeServicio no encontrado'}, status=404)
+def obtener_correcciones_ciclo(request, ciclo_id):
+    ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+    return Response({'correcciones': ciclo.correcciones})
 
-class AdvertirCorrecciones(APIView):
-    def put(self, request, nro_circuito, *args, **kwargs):
+
+class AdvertirCorreccionesCiclo(APIView):
+    def put(self, request, ciclo_id, *args, **kwargs):
         correcciones_nuevas = request.data.get('correcciones')
-        
         if not correcciones_nuevas:
             return Response({'error': 'Las correcciones son requeridas.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Obtener la instancia de Circuito
-        circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
-        
-        # Obtener la instancia de InformeServicio utilizando la instancia de Circuito
-        data_informe_servicio = get_object_or_404(InformeServicio, nro_circuito=circuito)
-        
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
         try:
-            # Actualizar el plazo estimado
-            data_informe_servicio.correcciones = correcciones_nuevas
-            data_informe_servicio.corregir = True
-            data_informe_servicio.revision = False
-            data_informe_servicio.save()
-            
-            # Serializar la respuesta
-            serializer = AdvertirCorreccionesSerializer(data_informe_servicio)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            ciclo.correcciones = correcciones_nuevas
+            ciclo.corregir = True
+            ciclo.revision_confirmada = False
+            ciclo.save()
+            return Response(AdvertirCorreccionesCicloSerializer(ciclo).data, status=status.HTTP_200_OK)
         except Exception:
-            logger.exception("Error en AdvertirCorrecciones")
-            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
-
-class CorregirInformeServicio(APIView):
-    def put(self, request, nro_circuito, *args, **kwargs):
-
-        # Obtener la instancia de Circuito
-        circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
-
-        # Obtener la instancia de InformeServicio utilizando la instancia de Circuito
-        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=circuito)
-
-        try:
-            # Actualizar el campo "corregir"
-            informe_servicio.corregir = False
-            informe_servicio.save()
-
-            # Serializar la respuesta
-            serializer = CorregirInformeServicioSerializer(informe_servicio)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception:
-            logger.exception("Error en CorregirInformeServicio")
+            logger.exception("Error en AdvertirCorreccionesCiclo")
             return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Revision Servicios Tecnologicos
-class ConfirmarRevision(APIView):
+class CorregirCiclo(APIView):
+    def put(self, request, ciclo_id, *args, **kwargs):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        try:
+            ciclo.corregir = False
+            ciclo.save()
+            return Response(CorregirCicloSerializer(ciclo).data, status=status.HTTP_200_OK)
+        except Exception:
+            logger.exception("Error en CorregirCiclo")
+            return Response({'error': 'Error interno del servidor.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ConfirmarRevisionCiclo(APIView):
     permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
 
-    def put(self, request, nro_circuito, *args, **kwargs):
-        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
-        informe_servicio.revision = True
-        informe_servicio.save()
+    def put(self, request, ciclo_id, *args, **kwargs):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        ciclo.revision_confirmada = True
+        ciclo.save()
         return JsonResponse({'message': 'Revisión confirmada correctamente.'})
 
-# Firma Responsable Area
-class ConfirmarFirmaResponsableArea(APIView):
+
+class ConfirmarFirmaResponsableAreaCiclo(APIView):
     permission_classes = [IsAuthenticated, IsAreaJefe]
 
-    def put(self, request, nro_circuito, *args, **kwargs):
-        if not user_can_access_circuit(request.user, nro_circuito):
+    def put(self, request, ciclo_id, *args, **kwargs):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
             return JsonResponse({'error': 'No tiene permisos para firmar este circuito.'}, status=403)
-        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
-        informe_servicio.firma_area = True
-        informe_servicio.save()
+        ciclo.firma_responsable_area = True
+        ciclo.save()
         return JsonResponse({'message': 'Firma Responsable Area confirmada correctamente.'})
 
-# Direccion
-class GuardarAdjuntoInformeServicioFirmado(APIView):
+
+class ConfirmarFirmaDireccionCiclo(APIView):
     permission_classes = [IsAuthenticated, IsDireccion]
 
-    def post(self, request):
-        # Obtener el archivo y el nro_circuito del request
-        archivo = request.FILES.get('archivo')
-        nro_circuito = request.data.get('nro_circuito')
-
-        if not archivo or not nro_circuito:
-            return Response({'error': 'Archivo y nro_circuito son requeridos'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            validate_upload_file(archivo)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # Verificar si el circuito existe
-            circuito_instance = Circuito.objects.get(nro_circuito=nro_circuito)
-
-            # Intentar obtener un InformeServicio existente para ese circuito
-            informe_servicio = InformeServicio.objects.filter(nro_circuito=circuito_instance.pk).first()
-
-            if informe_servicio:
-                # Reemplazar el archivo existente
-                informe_servicio.adjunto_informeServicio.save(archivo.name, archivo, save=True)
-                informe_servicio.fecha_informeServicio = timezone.now().date()
-                informe_servicio.save()
-
-                return Response({'message': 'Archivo reemplazado exitosamente', 'data': InformeServicioSerializer(informe_servicio).data}, status=status.HTTP_200_OK)
-
-            else:
-                return Response({'error': 'Informe de servicio no encontrado para el nro_circuito proporcionado'}, status=status.HTTP_404_NOT_FOUND)
-
-        except Circuito.DoesNotExist:
-            return Response({'error': 'Circuito no encontrado'}, status=status.HTTP_400_BAD_REQUEST)
-        
-class ConfirmarFirmaDireccion(APIView):
-    permission_classes = [IsAuthenticated, IsDireccion]
-
-    def put(self, request, nro_circuito, *args, **kwargs):
-        informe_servicio = get_object_or_404(InformeServicio, nro_circuito=nro_circuito)
-        informe_servicio.firma_direccion = True
-        informe_servicio.save()
+    def put(self, request, ciclo_id, *args, **kwargs):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        ciclo.firma_direccion = True
+        ciclo.save()
         return JsonResponse({'message': 'Firma Dirección confirmada correctamente.'})
 
 

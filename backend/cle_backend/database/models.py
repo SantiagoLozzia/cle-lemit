@@ -57,10 +57,9 @@ PAGO_CHOICES = [
         (100, '100%'),
 ]
 
-ESTADO_INFORME_AREA_CHOICES = [
-        ('sin_informe','Sin Informe'),
-        ('parcial', 'Parcial'),
-        ('total', 'Total'),
+TIPO_CICLO_CHOICES = [
+    ('parcial', 'Parcial'),
+    ('complementario', 'Complementario'),
 ]
 
 class UserProfile(models.Model):
@@ -194,47 +193,6 @@ class OrdenServicio(models.Model):
     def __str__(self):
         return f"OrdenServicio #{self.nro_ordenServicio} - Legajo #{self.nro_legajo.nro_legajo}"
 
-class InformeArea(models.Model):
-    nro_informeArea = models.AutoField(primary_key=True)
-    fecha_informeArea = models.DateField()
-    adjunto_informeArea = models.FileField(upload_to='informes_areas/')
-    registros_ensayo = models.FileField(upload_to='registros_ensayo/', null=True)
-    completo = models.BooleanField(default=False)
-    estado_informeArea = models.CharField(choices=ESTADO_INFORME_AREA_CHOICES, default='sin_informe')
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
-
-    def __str__(self):
-        return f"InformeArea #{self.nro_informeArea} - OrdenServicio #{self.nro_ordenServicio.nro_ordenServicio}"
-
-class InformeAreaParcial(models.Model):
-    informe_area = models.ForeignKey(
-        InformeArea,
-        related_name='informes_parciales',
-        on_delete=models.CASCADE  # Borra los informes parciales si se elimina el InformeArea
-    )
-    fecha_parcial = models.DateField(auto_now_add=True)
-    adjunto_parcial = models.FileField(upload_to='informes_parciales/')
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
-
-
-class InformeServicio(models.Model):
-    nro_informeServicio = models.AutoField(primary_key=True)
-    fecha_informeServicio = models.DateField(default=date.today)
-    adjunto_informeServicio = models.FileField(upload_to='informes_servicio/')
-    corregir = revision = models.BooleanField(default=False)
-    revision = models.BooleanField(default=False)
-    correcciones = models.TextField(max_length=2500, null=True, blank=True)
-    # fecha_revision = models.DateField(null=True, blank=True)
-    firma_area = models.BooleanField(default=False)
-    # fecha_firmaArea = models.DateField(null=True, blank=True)
-    firma_direccion = models.BooleanField(default=False)
-    # fecha_firmaDireccion= models.DateField(null=True, blank=True)
-    completo = models.BooleanField(default=False)
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
-    
-
-    def __str__(self):
-        return f"InformeServicio #{self.nro_informeServicio} - InformeArea #{self.nro_informeArea.nro_informeArea}"
 
 class SolicitudInterarea(models.Model):
     nro_solicitudInterarea = models.AutoField(primary_key=True)
@@ -339,8 +297,37 @@ class AdjuntoFactura(models.Model):
         ordering = ['fecha']
 
 
-class RegistroEnsayo(models.Model):
-    circuito = models.ForeignKey('Circuito', on_delete=models.CASCADE, related_name='registros_ensayo_items')
+class CicloInforme(models.Model):
+    nro_circuito = models.ForeignKey('Circuito', on_delete=models.CASCADE, related_name='ciclos')
+    numero = models.PositiveIntegerField(default=1)
+    tipo = models.CharField(choices=TIPO_CICLO_CHOICES, max_length=20, default='parcial')
+
+    # Area uploads
+    adjunto_informeArea = models.FileField(upload_to='informes_area/', null=True, blank=True)
+    fecha_informeArea = models.DateField(null=True, blank=True)
+
+    # Admin uploads
+    adjunto_informeServicio = models.FileField(upload_to='informes_servicio/', null=True, blank=True)
+    fecha_informeServicio = models.DateField(null=True, blank=True)
+
+    # Revision
+    correcciones = models.TextField(max_length=2500, null=True, blank=True)
+    corregir = models.BooleanField(default=False)
+    revision_confirmada = models.BooleanField(default=False)
+
+    # Firmas
+    firma_responsable_area = models.BooleanField(default=False)
+    firma_direccion = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['numero']
+
+    def __str__(self):
+        return f"Ciclo {self.numero} ({self.tipo}) - Circuito #{self.nro_circuito_id}"
+
+
+class RegistroEnsayoCiclo(models.Model):
+    ciclo = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='registros_ensayo')
     archivo = models.FileField(upload_to='registros_ensayo/')
     fecha = models.DateTimeField(auto_now_add=True)
 
