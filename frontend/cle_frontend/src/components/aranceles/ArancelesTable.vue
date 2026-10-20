@@ -13,6 +13,8 @@
       <table class="table aranceles-table">
         <colgroup>
           <col class="col-nro">
+          <col class="col-categoria">
+          <col class="col-subcategoria">
           <col class="col-servicio">
           <col class="col-norma">
           <col class="col-valor">
@@ -21,6 +23,8 @@
         <thead>
           <tr>
             <th class="add-border-right sortable" @click="setSort('nro_servicio')">Nro <span class="sort-icon">{{ sortKey === 'nro_servicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th class="add-border-right text-start">Categoría</th>
+            <th class="add-border-right text-start">Subcategoría</th>
             <th class="add-border-right text-start">Servicio</th>
             <th class="add-border-right">Norma</th>
             <th class="add-border-right sortable" @click="setSort('arancel')">Valor <span class="sort-icon">{{ sortKey === 'arancel' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
@@ -30,6 +34,8 @@
         <tbody>
           <tr v-for="(arancel, index) in sortedData" :key="index">
             <td class="add-border-right">{{ arancel.nro_servicio }}</td>
+            <td class="text-start add-border-right">{{ arancel.categoria }}</td>
+            <td class="text-start add-border-right">{{ arancel.subcategoria }}</td>
             <td class="text-start add-border-right">{{ arancel.servicio }}</td>
             <td class="add-border-right">{{ arancel.norma }}</td>
             <td class="add-border-right">{{ arancel.arancel }}</td>
@@ -124,10 +130,12 @@ export default {
   overflow-wrap: break-word;
 }
 
-.col-nro     { width: 70px; }
-.col-norma   { width: 160px; }
-.col-valor   { width: 90px; }
-.col-area    { width: 22%; }
+.col-nro          { width: 55px; }
+.col-categoria    { width: 18%; }
+.col-subcategoria { width: 18%; }
+.col-norma        { width: 140px; }
+.col-valor        { width: 75px; }
+.col-area         { width: 14%; }
 /* col-servicio toma el espacio restante */
 
 .add-border-right {
