@@ -53,6 +53,7 @@
                         v-model.number="fila.cant"
                         type="number"
                         class="text-end"
+                        :class="{ 'input-required': fila.nro_servicio && !fila.cant }"
                         :title="fila.cant"
                     >
                 </td>
@@ -324,6 +325,11 @@ input {
 .col-cant     { width: 70px; }
 .col-total    { width: 100px; }
 .col-action   { width: 44px; }
+
+.input-required {
+    border-color: #dc3545 !important;
+    background-color: #fff8f8;
+}
 </style>
 
 <!-- Sin scoped: el Teleport renderiza en body, fuera del scope del componente -->

@@ -199,7 +199,7 @@ body {
 }
 
 .modal-dialog-budget {
-  width: min(95vw, 960px);
+  width: min(95vw, 1200px);
   max-height: 90vh;
   margin: auto;
 }
