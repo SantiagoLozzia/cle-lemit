@@ -140,7 +140,7 @@ class DetallePresupuesto(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"Detalle #{self.nro_detalle} - Presupuesto #{self.nro_presup.nro_presup} - Servicio #{self.nro_servicio.nro_servicio}"
+        return f"Detalle #{self.nro_detalle} - Presupuesto #{self.nro_presupuesto.nro_presupuesto} - Servicio #{self.nro_servicio.nro_servicio}"
     
 class DataServicio(models.Model):
     nro_dataServicio = models.AutoField(primary_key=True)
