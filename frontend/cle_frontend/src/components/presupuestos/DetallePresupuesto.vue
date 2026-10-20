@@ -9,7 +9,7 @@
                 <th class="col-precio">Precio Unitario</th>
                 <th class="col-cant">Cant</th>
                 <th class="col-total">Total</th>
-                <th class="col-action">Acción</th> <!-- Columna para el botón de cruz -->
+                <th class="col-action">Acción</th>
             </tr>
         </thead>
         <tbody>
@@ -17,85 +17,90 @@
                 <td>
                     <input v-model.number="fila.nro_servicio" type="text" readonly required class="col-auto">
                 </td>
-
                 <td>
-                    <div class="position-relative">
-                        <input
-                            v-model="fila.servicio"
-                            type="text"
-                            class="form-control"
-                            @input="buscarServicio($event, index)"
-                            @blur="cerrarSugerencias(index)"
-                            :title="fila.servicio"
-                            :readonly="!fila.editable"
-                            required
-                        >
-                        <ul v-if="fila.sugerencias.length > 0" class="sugerencias-lista">
-                            <li
-                                v-for="sugerencia in fila.sugerencias"
-                                :key="sugerencia.nro_servicio"
-                                @mousedown.prevent="seleccionarServicio(sugerencia, index)"
-                            >
-                                <span class="sug-nombre">{{ sugerencia.servicio }}</span>
-                                <span class="sug-meta">Nº{{ sugerencia.nro_servicio }}{{ sugerencia.norma ? ' · ' + sugerencia.norma : '' }}</span>
-                            </li>
-                        </ul>
-                    </div>
+                    <input
+                        v-model="fila.servicio"
+                        type="text"
+                        class="form-control"
+                        @input="buscarServicio($event, index)"
+                        @blur="cerrarSugerencias(index)"
+                        :title="fila.servicio"
+                        :readonly="!fila.editable"
+                        required
+                    >
                 </td>
-
                 <td>
-                    <input 
-                        v-model.number="fila.norma" 
-                        type="text" 
-                        class="text-center" 
-                        readonly 
+                    <input
+                        v-model.number="fila.norma"
+                        type="text"
+                        class="text-center"
+                        readonly
                         required
                         :title="fila.norma"
                     >
-                </td>                 
+                </td>
                 <td>
-                    <input 
-                        v-model.number="fila.precioUnitario" 
-                        type="number" 
-                        class="text-end" 
+                    <input
+                        v-model.number="fila.precioUnitario"
+                        type="number"
+                        class="text-end"
                         readonly
                         :title="fila.precioUnitario"
                     >
                 </td>
                 <td>
-                    <input 
-                        v-model.number="fila.cant" 
-                        type="number" 
+                    <input
+                        v-model.number="fila.cant"
+                        type="number"
                         class="text-end"
                         :title="fila.cant"
                     >
                 </td>
                 <td>
-                    <input 
-                        v-model.number="fila.subtotal" 
-                        type="number" 
-                        class="text-end" 
+                    <input
+                        v-model.number="fila.subtotal"
+                        type="number"
+                        class="text-end"
                         readonly
                         :title="fila.subtotal"
                     >
                 </td>
                 <td>
                     <button
-                      type="button"
-                      class="btn-close"
-                      @click="eliminarFila(index)"
-                      aria-label="Close"
+                        type="button"
+                        class="btn-close"
+                        @click="eliminarFila(index)"
+                        aria-label="Close"
                     ></button>
                 </td>
             </tr>
         </tbody>
     </table>
   </div>
+
+  <!-- Teleport al body para evitar clipping por overflow-x del wrapper -->
+  <Teleport to="body">
+    <ul
+      v-if="dropdownVisible && sugerenciasActivas.length > 0"
+      class="sugerencias-lista-global"
+      :style="dropdownStyle"
+    >
+      <li
+        v-for="sugerencia in sugerenciasActivas"
+        :key="sugerencia.nro_servicio"
+        @mousedown.prevent="seleccionarServicio(sugerencia, activeDropdownIndex)"
+      >
+        <span class="sug-nombre">{{ sugerencia.servicio }}</span>
+        <span class="sug-meta">Nº{{ sugerencia.nro_servicio }}{{ sugerencia.norma ? ' · ' + sugerencia.norma : '' }}</span>
+      </li>
+    </ul>
+  </Teleport>
+
   <button @click="agregarServicio" class="btn btn-sm btn-outline-primary mt-3 mb-2">+ Agregar servicio</button>
 </template>
 
 <script>
-import { ref, watch, getCurrentInstance, onMounted } from 'vue';
+import { ref, computed, watch, getCurrentInstance, onMounted } from 'vue';
 import api from '@/api.js';
 import { debounce } from 'lodash';
 
@@ -114,14 +119,30 @@ export default {
 
         const moduloValor = ref();
         const detallePresupuesto = ref([]);
-        const serviciosSeleccionados = ref(new Set()); // Conjunto para almacenar los servicios seleccionados
+        const serviciosSeleccionados = ref(new Set());
         const { emit } = getCurrentInstance();
+
+        // Estado del dropdown teleportado
+        const activeDropdownIndex = ref(-1);
+        const dropdownVisible = ref(false);
+        const dropdownPosition = ref({ top: 0, left: 0, width: 0 });
+
+        const sugerenciasActivas = computed(() => {
+            if (activeDropdownIndex.value === -1) return [];
+            return filas.value[activeDropdownIndex.value]?.sugerencias || [];
+        });
+
+        const dropdownStyle = computed(() => ({
+            position: 'fixed',
+            top: dropdownPosition.value.top + 'px',
+            left: dropdownPosition.value.left + 'px',
+            minWidth: Math.max(dropdownPosition.value.width, 460) + 'px',
+        }));
 
         const obtenerModulo = async () => {
             try {
                 const response = await api.get('/aranceles/obtener_modulo/');
                 moduloValor.value = response.data.valor;
-                console.log('valor modulo', moduloValor.value);
             } catch (error) {
                 console.error('Error al obtener el valor del módulo:', error);
             }
@@ -129,28 +150,35 @@ export default {
 
         const buscarServicio = debounce((event, index) => {
             const term = event.target.value;
-            console.log('Term de búsqueda:', term);
+            const rect = event.target.getBoundingClientRect();
+            dropdownPosition.value = {
+                top: rect.bottom + 4,
+                left: rect.left,
+                width: rect.width,
+            };
+            activeDropdownIndex.value = index;
+
             if (term && term.trim() !== '') {
-                api.get('/presupuestos/buscar_servicios/', {
-                    params: { q: term }
-                })
+                api.get('/presupuestos/buscar_servicios/', { params: { q: term } })
                 .then(response => {
-                    // Filtrar las sugerencias para eliminar los servicios ya seleccionados
-                    const sugerenciasFiltradas = response.data.filter(sugerencia => 
-                        !serviciosSeleccionados.value.has(sugerencia.nro_servicio)
+                    const sugerenciasFiltradas = response.data.filter(s =>
+                        !serviciosSeleccionados.value.has(s.nro_servicio)
                     );
                     filas.value[index].sugerencias = sugerenciasFiltradas;
-                    console.log('Sugerencias filtradas para fila:', index, sugerenciasFiltradas);
+                    dropdownVisible.value = sugerenciasFiltradas.length > 0;
                 })
                 .catch(error => {
                     console.error('Error al buscar servicios:', error);
                 });
             } else {
                 filas.value[index].sugerencias = [];
+                dropdownVisible.value = false;
             }
         }, 1000);
 
         const seleccionarServicio = (sugerencia, index) => {
+            dropdownVisible.value = false;
+            activeDropdownIndex.value = -1;
             const fila = filas.value[index];
             if (!sugerencia?.nro_servicio) return;
             api.get(`/presupuestos/seleccionar_servicio/${sugerencia.nro_servicio}/`)
@@ -169,38 +197,37 @@ export default {
         };
 
         const cerrarSugerencias = (index) => {
-            setTimeout(() => { filas.value[index].sugerencias = []; }, 200);
+            setTimeout(() => {
+                if (activeDropdownIndex.value === index) {
+                    filas.value[index].sugerencias = [];
+                    dropdownVisible.value = false;
+                    activeDropdownIndex.value = -1;
+                }
+            }, 200);
         };
 
         // Watcher para recalcular el subtotal y emitir los cambios
         watch(filas, (nuevasFilas) => {
             nuevasFilas.forEach(fila => {
                 if (!isNaN(fila.cant) && !isNaN(fila.precioUnitario) && fila.nro_servicio) {
-                fila.subtotal = fila.cant * fila.precioUnitario;
-                console.log('>>>calculando subtotal para fila', fila);
+                    fila.subtotal = fila.cant * fila.precioUnitario;
                 } else {
-                fila.subtotal = null;
-                console.log('>>>subtotal no calculado para fila', fila);
-                }   
+                    fila.subtotal = null;
+                }
             });
-            // Crear un array con solo los campos necesarios para el backend
             const detallesParaBackend = nuevasFilas.map(fila => ({
                 nro_servicio: fila.nro_servicio,
                 cant: fila.cant,
                 subtotal: fila.subtotal
             }));
             detallePresupuesto.value = detallesParaBackend;
-            console.log('Emitiendo detallePresupuesto:', JSON.stringify(detallePresupuesto.value, null, 2));
             emit('detallePresupuesto', detallePresupuesto);
-            }, { deep: true });
-
-        watch(filas, (nuevasFilas) => {
-                const total = nuevasFilas.reduce((acc, fila) => acc + fila.subtotal, 0);
-                // console.log('Calculando subtotal. Filas:', nuevasFilas); 
-                // console.log('Subtotal calculado:', total); 
-                emit('actualizar-subtotal', total);
         }, { deep: true });
 
+        watch(filas, (nuevasFilas) => {
+            const total = nuevasFilas.reduce((acc, fila) => acc + fila.subtotal, 0);
+            emit('actualizar-subtotal', total);
+        }, { deep: true });
 
         const agregarServicio = () => {
             filas.value.push({
@@ -219,7 +246,6 @@ export default {
             if (filas.value.length > 1) {
                 const servicioEliminado = filas.value[index].nro_servicio;
                 if (servicioEliminado) {
-                    // Remover el servicio del conjunto de seleccionados si se elimina
                     serviciosSeleccionados.value.delete(servicioEliminado);
                 }
                 filas.value.splice(index, 1);
@@ -259,6 +285,10 @@ export default {
             agregarServicio,
             detallePresupuesto,
             eliminarFila,
+            dropdownVisible,
+            sugerenciasActivas,
+            dropdownStyle,
+            activeDropdownIndex,
         };
     }
 };
@@ -294,43 +324,38 @@ input {
 .col-cant     { width: 70px; }
 .col-total    { width: 100px; }
 .col-action   { width: 44px; }
+</style>
 
-.position-relative { position: relative; }
-
-/* Lista de sugerencias de servicios */
-.sugerencias-lista {
+<!-- Sin scoped: el Teleport renderiza en body, fuera del scope del componente -->
+<style>
+.sugerencias-lista-global {
     list-style: none;
     margin: 0;
     padding: 0;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    min-width: 560px;
-    max-width: 700px;
-    max-height: 280px;
+    max-height: 300px;
     overflow-y: auto;
     background: white;
     border: 1px solid #c0c7d0;
     border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-    z-index: 1050;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    z-index: 9999;
 }
 
-.sugerencias-lista li {
+.sugerencias-lista-global li {
     padding: 7px 12px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
 }
 
-.sugerencias-lista li:last-child {
+.sugerencias-lista-global li:last-child {
     border-bottom: none;
 }
 
-.sugerencias-lista li:hover {
+.sugerencias-lista-global li:hover {
     background-color: #e8f0fe;
 }
 
-.sug-nombre {
+.sugerencias-lista-global .sug-nombre {
     display: block;
     font-size: 0.83rem;
     font-weight: 500;
@@ -340,7 +365,7 @@ input {
     text-overflow: ellipsis;
 }
 
-.sug-meta {
+.sugerencias-lista-global .sug-meta {
     display: block;
     font-size: 0.72rem;
     color: #6c757d;
