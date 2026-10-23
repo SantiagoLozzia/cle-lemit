@@ -447,7 +447,7 @@
                    :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                 <AttachmentCell
                   :files="ciclo.registros_ensayo"
-                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && ciclo.tipo === 'parcial'"
+                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
                   :can-delete="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
                   :input-id="'registros-ciclo-' + ciclo.id"
                   file-icon="bi bi-folder-check"
