@@ -10,7 +10,7 @@
 
   <!-- Con archivos: speed dial -->
   <div v-else class="att-cell" @click.stop>
-    <button class="att-trigger" @click="toggleSpeedDial" :title="files.length + ' archivo(s)'">
+    <button class="att-trigger" @click="toggleSpeedDial" :title="tooltipLabel ? tooltipLabel + ' — ' + files.length + ' archivo(s)' : files.length + ' archivo(s)'">
       <i :class="fileIcon"></i>
       <span v-if="files.length > 1" class="att-badge">{{ files.length }}</span>
     </button>
@@ -54,12 +54,13 @@ import { ref, onMounted, onUnmounted } from 'vue';
 export default {
   name: 'AttachmentCell',
   props: {
-    files:     { type: Array, default: () => [] },
-    canUpload: { type: Boolean, default: false },
-    canDelete: { type: Boolean, default: false },
-    inputId:   { type: String, required: true },
-    fileIcon:  { type: String, default: 'bi bi-files' },
-    emptyIcon: { type: String, default: 'bi bi-paperclip' },
+    files:        { type: Array, default: () => [] },
+    canUpload:    { type: Boolean, default: false },
+    canDelete:    { type: Boolean, default: false },
+    inputId:      { type: String, required: true },
+    fileIcon:     { type: String, default: 'bi bi-files' },
+    emptyIcon:    { type: String, default: 'bi bi-paperclip' },
+    tooltipLabel: { type: String, default: '' },
   },
   emits: ['upload', 'delete'],
   setup(props, { emit }) {

@@ -392,7 +392,8 @@
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                   <span v-if="ciclo.adjunto_informeArea" class="attachment-wrap">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
-                       @click.stop="togglePopupInformeArea(ciclo.id)" :title="'Informe ciclo ' + ciclo.numero"></i>
+                       @click.stop="togglePopupInformeArea(ciclo.id)"
+                       :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
                     <div v-if="popupInformeAreaId === ciclo.id" class="attach-popup" @click.stop>
                       <button class="attach-popup-item" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)">
                         <i class="bi bi-eye"></i> Ver
@@ -403,6 +404,11 @@
                         <i class="bi bi-trash"></i> Eliminar
                       </button>
                     </div>
+                    <span v-if="(isAreaJefe || isAreaStandard) && ciclo.tipo === 'parcial'"
+                          style="cursor:pointer; margin-left:4px;" title="Agregar otro informe parcial"
+                          @click.stop="crearCiclo(fila)">
+                      <i class="bi bi-paperclip action-icon"></i>
+                    </span>
                   </span>
                   <span v-else-if="isAreaJefe || isAreaStandard">
                     <label :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe área">
@@ -428,11 +434,12 @@
                    :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                 <AttachmentCell
                   :files="ciclo.registros_ensayo"
-                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && ciclo.tipo === 'parcial'"
                   :can-delete="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
                   :input-id="'registros-ciclo-' + ciclo.id"
                   file-icon="bi bi-folder-check"
                   empty-icon="bi bi-folder-plus"
+                  :tooltip-label="(ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"
                   @upload="subirRegistroEnsayoCiclo($event, ciclo)"
                   @delete="eliminarRegistroEnsayoCiclo"
                 />
@@ -3461,8 +3468,9 @@
 
   .attach-popup {
     position: absolute;
-    top: 100%;
-    left: 0;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 1060;
     background: white;
     border: 1px solid #c0c7d0;
