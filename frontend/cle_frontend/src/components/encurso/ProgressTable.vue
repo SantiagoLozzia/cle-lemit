@@ -387,7 +387,7 @@
             <!-- Columna Informe Area (por ciclo) -->
             <td>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
+                <div v-for="(ciclo, idx) in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                   <span v-if="ciclo.adjunto_informeArea" class="attachment-wrap">
@@ -404,7 +404,7 @@
                         <i class="bi bi-trash"></i> Eliminar
                       </button>
                     </div>
-                    <span v-if="(isAreaJefe || isAreaStandard) && ciclo.tipo === 'parcial'" @click.stop>
+                    <span v-if="(isAreaJefe || isAreaStandard) && ciclo.tipo === 'parcial' && idx === fila.ciclos.length - 1" @click.stop>
                       <label :for="'inf-area-nuevo-' + ciclo.id" style="cursor:pointer; margin-left:4px;" title="Agregar otro informe parcial">
                         <i class="bi bi-paperclip action-icon"></i>
                       </label>
@@ -3483,6 +3483,7 @@
     min-height: 26px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
     padding: 1px 0;
   }
