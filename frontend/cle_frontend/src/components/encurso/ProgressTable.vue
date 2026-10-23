@@ -2715,7 +2715,8 @@
         const opening = popupInformeAreaId.value !== cicloId;
         popupInformeAreaId.value = opening ? cicloId : null;
         if (opening) {
-          document.dispatchEvent(new CustomEvent('att-cell-open', { detail: Symbol() }));
+          // speed-dial-open cierra AttachmentCells sin disparar closeAllPopups
+          document.dispatchEvent(new Event('speed-dial-open'));
         }
       };
 
