@@ -388,15 +388,19 @@
             <td>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                  <span v-if="ciclo.adjunto_informeArea">
-                    <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754;"
-                       @click="abrirArchivo(ciclo.adjunto_informeArea)" :title="'Ver informe ciclo ' + ciclo.numero"></i>
-                    <label v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
-                           :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer; margin-left:4px;" title="Reemplazar">
-                      <i class="bi bi-arrow-repeat action-icon"></i>
-                    </label>
-                    <input :id="'inf-area-ciclo-' + ciclo.id" style="display:none;" type="file"
-                           @change="seleccionarArchivoInformeAreaCiclo($event, ciclo)">
+                  <span v-if="ciclo.adjunto_informeArea" class="attachment-wrap">
+                    <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
+                       @click="togglePopupInformeArea(ciclo.id)" :title="'Informe ciclo ' + ciclo.numero"></i>
+                    <div v-if="popupInformeAreaId === ciclo.id" class="attach-popup">
+                      <button class="attach-popup-item" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)">
+                        <i class="bi bi-eye"></i> Ver
+                      </button>
+                      <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                              class="attach-popup-item text-danger"
+                              @mousedown.prevent="eliminarInformeAreaCiclo(ciclo)">
+                        <i class="bi bi-trash"></i> Eliminar
+                      </button>
+                    </div>
                   </span>
                   <span v-else-if="isAreaJefe || isAreaStandard">
                     <label :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe área">
@@ -407,7 +411,7 @@
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
-                <!-- Botón crear nuevo ciclo -->
+                <!-- Botón crear nuevo ciclo (bloqueado si hay uno final) -->
                 <div v-if="(isAreaJefe || isAreaStandard) && puedeCrearNuevoCiclo(fila)" class="mt-1">
                   <i class="bi bi-plus-circle action-icon text-primary" title="Nuevo ciclo" style="cursor:pointer;"
                      @click="crearCiclo(fila)"></i>
@@ -436,9 +440,9 @@
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
                       class="badge"
-                      :class="ciclo.tipo === 'complementario' ? 'bg-success' : 'bg-primary'"
+                      :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
                       style="font-size:10px;">
-                  {{ ciclo.tipo === 'complementario' ? 'Compl.' : 'Parcial' }}
+                  {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
                 </span>
               </div>
             </td>
@@ -1110,11 +1114,17 @@
             <button type="button" class="btn-close" @click="cerrarModalTipoCiclo"></button>
           </div>
           <div class="modal-body">
-            <p>¿Este informe es parcial o complementario?</p>
+            <p>¿Qué tipo de informe es?</p>
+            <small class="text-muted">
+              <strong>Parcial:</strong> hay más informes pendientes.<br>
+              <strong>Complementario:</strong> complementa parciales anteriores.<br>
+              <strong>Final:</strong> es el único informe del circuito.
+            </small>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
             <button type="button" class="btn btn-success" @click="subirInformeAreaCiclo('complementario')">Complementario</button>
+            <button type="button" class="btn btn-dark" @click="subirInformeAreaCiclo('final')">Final</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
           </div>
         </div>
@@ -2626,6 +2636,7 @@
 
       const puedeCrearNuevoCiclo = (fila) => {
         if (!fila.ciclos || fila.ciclos.length === 0) return true;
+        if (fila.ciclos.some(c => c.tipo === 'final')) return false;
         const ultimo = fila.ciclos[fila.ciclos.length - 1];
         return ultimo.firma_direccion === true;
       };
@@ -2638,6 +2649,27 @@
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
           console.error('Error al crear ciclo:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      const popupInformeAreaId = ref(null);
+
+      const togglePopupInformeArea = (cicloId) => {
+        popupInformeAreaId.value = popupInformeAreaId.value === cicloId ? null : cicloId;
+      };
+
+      const eliminarInformeAreaCiclo = async (ciclo) => {
+        if (!confirm('¿Eliminar el informe de área? Esta acción no se puede deshacer.')) return;
+        popupInformeAreaId.value = null;
+        try {
+          await api.delete(`/encurso/informe_area_ciclo/${ciclo.id}/`);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          console.error('Error al eliminar informe área:', error);
           showErrorAlert.value = true;
           setTimeout(() => { showErrorAlert.value = false; }, 3000);
         }
@@ -3289,6 +3321,9 @@
         mostrarModalTipoCiclo,
         puedeCrearNuevoCiclo,
         crearCiclo,
+        popupInformeAreaId,
+        togglePopupInformeArea,
+        eliminarInformeAreaCiclo,
         seleccionarArchivoInformeAreaCiclo,
         subirInformeAreaCiclo,
         cerrarModalTipoCiclo,
@@ -3399,6 +3434,43 @@
     align-items: center;
     gap: 4px;
     padding: 1px 0;
+  }
+
+  .attachment-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .attach-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1060;
+    background: white;
+    border: 1px solid #c0c7d0;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.16);
+    min-width: 110px;
+    padding: 4px 0;
+  }
+
+  .attach-popup-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 5px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .attach-popup-item:hover {
+    background-color: #f0f4f8;
   }
 
   /* Ícono de acción (+ crear) */

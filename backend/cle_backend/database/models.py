@@ -60,6 +60,7 @@ PAGO_CHOICES = [
 TIPO_CICLO_CHOICES = [
     ('parcial', 'Parcial'),
     ('complementario', 'Complementario'),
+    ('final', 'Final'),
 ]
 
 class UserProfile(models.Model):

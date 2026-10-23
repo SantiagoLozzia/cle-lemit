@@ -714,6 +714,22 @@ class EliminarRegistroEnsayoCiclo(APIView):
         registro.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class EliminarInformeAreaCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def delete(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
+            return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        if ciclo.firma_direccion:
+            return Response({'error': 'No se puede eliminar un informe ya firmado.'}, status=status.HTTP_403_FORBIDDEN)
+        ciclo.adjunto_informeArea = None
+        ciclo.fecha_informeArea = None
+        ciclo.tipo = 'parcial'
+        ciclo.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 # Inter Area
 def obtener_servicios(request, nro_circuito):
     try:
