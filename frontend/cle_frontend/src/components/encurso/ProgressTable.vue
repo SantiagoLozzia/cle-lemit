@@ -3508,6 +3508,10 @@
     border-right: 1px solid gainsboro; /* Establece el borde derecho */
   }
 
+  .table tbody td {
+    vertical-align: top;
+  }
+
   .table tbody tr:nth-child(even) {
     background-color: #f0f6fa;
   }
