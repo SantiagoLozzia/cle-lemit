@@ -375,6 +375,7 @@
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Solicitante -->
@@ -453,6 +454,7 @@
                   @delete="eliminarRegistroEnsayoCiclo"
                 />
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Estado/Tipo (por ciclo) -->
@@ -465,6 +467,7 @@
                   {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
                 </span>
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Administracion - Informe Servicio (por ciclo) -->
@@ -502,6 +505,7 @@
                   </template>
                 </template>
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
@@ -519,6 +523,7 @@
                   <i class="bi bi-check-lg" style="color:green;"></i>
                 </template>
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Responsable Área - Firma (por ciclo) -->
@@ -538,6 +543,7 @@
                   <i class="bi bi-check-lg" style="color:green;"></i>
                 </template>
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Dirección - Firma (por ciclo) -->
@@ -555,6 +561,7 @@
                   <i class="bi bi-check-lg" style="color:green;"></i>
                 </template>
               </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Archivo -->
@@ -2669,6 +2676,15 @@
       const esCambioTipo = ref(false);
       const cicloParaCambioTipo = ref(null);
 
+      const mostrarClipParaNuevoParcial = (fila) => {
+        return (isAreaJefe.value || isAreaStandard.value)
+          && fila.ordenServicio_completo === true
+          && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')
+          && fila.ciclos.length > 0
+          && fila.ciclos[fila.ciclos.length - 1].adjunto_informeArea
+          && fila.ciclos[fila.ciclos.length - 1].tipo === 'parcial';
+      };
+
       const puedeCrearNuevoCiclo = (fila) => {
         if (!fila.ciclos || fila.ciclos.length === 0) return true;
         if (fila.ciclos.some(c => c.tipo === 'final')) return false;
@@ -3416,6 +3432,7 @@
         mostrarModalPlazoOrdenServicio,
         // Ciclos de Informe
         mostrarModalTipoCiclo,
+        mostrarClipParaNuevoParcial,
         puedeCrearNuevoCiclo,
         crearCiclo,
         popupInformeAreaId,
@@ -3506,10 +3523,6 @@
   /* Agrega un borde vertical a la derecha de las subcolumnas específicas */
   .add-border-right {
     border-right: 1px solid gainsboro; /* Establece el borde derecho */
-  }
-
-  .table tbody td {
-    vertical-align: top;
   }
 
   .table tbody tr:nth-child(even) {
