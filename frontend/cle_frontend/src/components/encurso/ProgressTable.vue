@@ -404,10 +404,12 @@
                         <i class="bi bi-trash"></i> Eliminar
                       </button>
                     </div>
-                    <span v-if="(isAreaJefe || isAreaStandard) && ciclo.tipo === 'parcial'"
-                          style="cursor:pointer; margin-left:4px;" title="Agregar otro informe parcial"
-                          @click.stop="crearCiclo(fila)">
-                      <i class="bi bi-paperclip action-icon"></i>
+                    <span v-if="(isAreaJefe || isAreaStandard) && ciclo.tipo === 'parcial'" @click.stop>
+                      <label :for="'inf-area-nuevo-' + ciclo.id" style="cursor:pointer; margin-left:4px;" title="Agregar otro informe parcial">
+                        <i class="bi bi-paperclip action-icon"></i>
+                      </label>
+                      <input :id="'inf-area-nuevo-' + ciclo.id" style="display:none;" type="file"
+                             @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
                     </span>
                   </span>
                   <span v-else-if="isAreaJefe || isAreaStandard">
@@ -1134,11 +1136,10 @@
           </div>
           <div class="modal-footer flex-wrap gap-1">
             <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
-            <button type="button" class="btn btn-success"
-                    :disabled="!hayParcialesPrevios"
-                    :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
+            <button v-if="hayParcialesPrevios" type="button" class="btn btn-success"
                     @click="subirInformeAreaCiclo('complementario')">Complementario</button>
-            <button type="button" class="btn btn-dark" @click="subirInformeAreaCiclo('final')">Final</button>
+            <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
+                    @click="subirInformeAreaCiclo('final')">Final</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
           </div>
         </div>
@@ -2648,6 +2649,7 @@
 
       const cicloSeleccionado = ref(null);
       const archivoPendiente = ref(null);
+      const filaParaNuevoCiclo = ref(null);
 
       const puedeCrearNuevoCiclo = (fila) => {
         if (!fila.ciclos || fila.ciclos.length === 0) return true;
@@ -2694,16 +2696,42 @@
       const seleccionarArchivoInformeAreaCiclo = (event, ciclo, fila) => {
         archivoPendiente.value = event.target.files[0];
         cicloSeleccionado.value = ciclo;
+        filaParaNuevoCiclo.value = null;
         hayParcialesPrevios.value = fila
           ? fila.ciclos.some(c => c.tipo === 'parcial' && c.adjunto_informeArea)
           : false;
         mostrarModalTipoCiclo.value = true;
       };
 
+      const seleccionarArchivoParaNuevoCiclo = (event, fila) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        archivoPendiente.value = file;
+        cicloSeleccionado.value = null;
+        filaParaNuevoCiclo.value = fila;
+        hayParcialesPrevios.value = true;
+        mostrarModalTipoCiclo.value = true;
+      };
+
       const subirInformeAreaCiclo = async (tipo) => {
         mostrarModalTipoCiclo.value = false;
         const archivo = archivoPendiente.value;
-        const ciclo = cicloSeleccionado.value;
+        let ciclo = cicloSeleccionado.value;
+
+        if (!ciclo && filaParaNuevoCiclo.value) {
+          try {
+            const resp = await api.post(`/encurso/crear_ciclo/${filaParaNuevoCiclo.value.nro_circuito}/`);
+            ciclo = resp.data;
+          } catch (error) {
+            console.error('Error al crear ciclo:', error);
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 3000);
+            archivoPendiente.value = null;
+            filaParaNuevoCiclo.value = null;
+            return;
+          }
+        }
+
         if (!archivo || !ciclo) return;
         const formData = new FormData();
         formData.append('archivo', archivo);
@@ -2720,6 +2748,7 @@
         } finally {
           archivoPendiente.value = null;
           cicloSeleccionado.value = null;
+          filaParaNuevoCiclo.value = null;
         }
       };
 
@@ -2727,6 +2756,7 @@
         mostrarModalTipoCiclo.value = false;
         archivoPendiente.value = null;
         cicloSeleccionado.value = null;
+        filaParaNuevoCiclo.value = null;
       };
 
       const subirRegistroEnsayoCiclo = async (event, ciclo) => {
@@ -3345,6 +3375,7 @@
         togglePopupInformeArea,
         eliminarInformeAreaCiclo,
         seleccionarArchivoInformeAreaCiclo,
+        seleccionarArchivoParaNuevoCiclo,
         subirInformeAreaCiclo,
         cerrarModalTipoCiclo,
         subirRegistroEnsayoCiclo,
