@@ -396,19 +396,22 @@
                        @click.stop="togglePopupInformeArea(ciclo.id)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
                     <div v-if="popupInformeAreaId === ciclo.id" class="attach-popup" @click.stop>
-                      <button class="attach-popup-item" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)">
-                        <i class="bi bi-eye"></i> Ver
-                      </button>
-                      <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
-                              class="attach-popup-item"
-                              @mousedown.prevent="cambiarTipoCiclo(ciclo, fila)">
-                        <i class="bi bi-tag"></i> Cambiar tipo
-                      </button>
-                      <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
-                              class="attach-popup-item text-danger"
-                              @mousedown.prevent="eliminarInformeAreaCiclo(ciclo)">
-                        <i class="bi bi-trash"></i> Eliminar
-                      </button>
+                      <div class="attach-popup-row">
+                        <span class="attach-popup-label">
+                          {{ ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final' }} {{ ciclo.numero }}
+                        </span>
+                        <button class="ia-btn" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)" title="Ver">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                                class="ia-btn" @mousedown.prevent="cambiarTipoCiclo(ciclo, fila)" title="Cambiar tipo">
+                          <i class="bi bi-tag"></i>
+                        </button>
+                        <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                                class="ia-btn ia-btn-del" @mousedown.prevent="eliminarInformeAreaCiclo(ciclo)" title="Eliminar">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
                     </div>
                   </span>
                   <span v-else-if="isAreaJefe || isAreaStandard">
@@ -2709,7 +2712,11 @@
       const hayParcialesPrevios = ref(false);
 
       const togglePopupInformeArea = (cicloId) => {
-        popupInformeAreaId.value = popupInformeAreaId.value === cicloId ? null : cicloId;
+        const opening = popupInformeAreaId.value !== cicloId;
+        popupInformeAreaId.value = opening ? cicloId : null;
+        if (opening) {
+          document.dispatchEvent(new CustomEvent('att-cell-open', { detail: Symbol() }));
+        }
       };
 
       const eliminarInformeAreaCiclo = async (ciclo) => {
@@ -3573,30 +3580,49 @@
     transform: translateX(-50%);
     z-index: 1060;
     background: white;
-    border: 1px solid #c0c7d0;
+    border: 1px solid #ccc;
     border-radius: 6px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.16);
-    min-width: 110px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    min-width: 180px;
     padding: 4px 0;
   }
 
-  .attach-popup-item {
+  .attach-popup-row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: 100%;
-    padding: 5px 12px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.82rem;
-    white-space: nowrap;
-    text-align: left;
+    padding: 4px 8px;
+    gap: 4px;
   }
 
-  .attach-popup-item:hover {
-    background-color: #f0f4f8;
+  .attach-popup-label {
+    flex: 1;
+    font-size: 11px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+
+  .ia-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    padding: 0;
+    background: transparent;
+    color: #026290;
+    flex-shrink: 0;
+  }
+
+  .ia-btn:hover { background: #e8f4f8; }
+
+  .ia-btn-del { color: #dc3545; }
+  .ia-btn-del:hover { background: #fde8ea; }
 
   /* Ícono de acción (+ crear) */
   .action-icon {
