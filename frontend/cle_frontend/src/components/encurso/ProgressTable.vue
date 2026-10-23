@@ -387,11 +387,13 @@
             <!-- Columna Informe Area (por ciclo) -->
             <td>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
+                     class="ciclo-row"
+                     :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                   <span v-if="ciclo.adjunto_informeArea" class="attachment-wrap">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
-                       @click="togglePopupInformeArea(ciclo.id)" :title="'Informe ciclo ' + ciclo.numero"></i>
-                    <div v-if="popupInformeAreaId === ciclo.id" class="attach-popup">
+                       @click.stop="togglePopupInformeArea(ciclo.id)" :title="'Informe ciclo ' + ciclo.numero"></i>
+                    <div v-if="popupInformeAreaId === ciclo.id" class="attach-popup" @click.stop>
                       <button class="attach-popup-item" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)">
                         <i class="bi bi-eye"></i> Ver
                       </button>
@@ -407,7 +409,7 @@
                       <i class="bi bi-paperclip action-icon"></i>
                     </label>
                     <input :id="'inf-area-ciclo-' + ciclo.id" style="display:none;" type="file"
-                           @change="seleccionarArchivoInformeAreaCiclo($event, ciclo)">
+                           @change="seleccionarArchivoInformeAreaCiclo($event, ciclo, fila)">
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
@@ -421,7 +423,9 @@
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
-              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
+                   class="ciclo-row"
+                   :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                 <AttachmentCell
                   :files="ciclo.registros_ensayo"
                   :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
@@ -1121,9 +1125,12 @@
               <strong>Final:</strong> es el único informe del circuito.
             </small>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer flex-wrap gap-1">
             <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
-            <button type="button" class="btn btn-success" @click="subirInformeAreaCiclo('complementario')">Complementario</button>
+            <button type="button" class="btn btn-success"
+                    :disabled="!hayParcialesPrevios"
+                    :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
+                    @click="subirInformeAreaCiclo('complementario')">Complementario</button>
             <button type="button" class="btn btn-dark" @click="subirInformeAreaCiclo('final')">Final</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
           </div>
@@ -1967,6 +1974,7 @@
         openST02Popup.value = null;
         openST02FileList.value = null;
         filaSeleccionada.value = null;
+        popupInformeAreaId.value = null;
       };
 
       onMounted(() => {
@@ -2655,6 +2663,7 @@
       };
 
       const popupInformeAreaId = ref(null);
+      const hayParcialesPrevios = ref(false);
 
       const togglePopupInformeArea = (cicloId) => {
         popupInformeAreaId.value = popupInformeAreaId.value === cicloId ? null : cicloId;
@@ -2675,9 +2684,12 @@
         }
       };
 
-      const seleccionarArchivoInformeAreaCiclo = (event, ciclo) => {
+      const seleccionarArchivoInformeAreaCiclo = (event, ciclo, fila) => {
         archivoPendiente.value = event.target.files[0];
         cicloSeleccionado.value = ciclo;
+        hayParcialesPrevios.value = fila
+          ? fila.ciclos.some(c => c.tipo === 'parcial' && c.adjunto_informeArea)
+          : false;
         mostrarModalTipoCiclo.value = true;
       };
 
@@ -3322,6 +3334,7 @@
         puedeCrearNuevoCiclo,
         crearCiclo,
         popupInformeAreaId,
+        hayParcialesPrevios,
         togglePopupInformeArea,
         eliminarInformeAreaCiclo,
         seleccionarArchivoInformeAreaCiclo,
@@ -3434,6 +3447,10 @@
     align-items: center;
     gap: 4px;
     padding: 1px 0;
+  }
+
+  .ciclo-row--final {
+    justify-content: center;
   }
 
   .attachment-wrap {
