@@ -730,6 +730,23 @@ class EliminarInformeAreaCiclo(APIView):
         ciclo.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class CambiarTipoCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def patch(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
+            return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        if ciclo.firma_direccion:
+            return Response({'error': 'No se puede cambiar el tipo de un informe ya firmado.'}, status=status.HTTP_403_FORBIDDEN)
+        tipo = request.data.get('tipo')
+        if tipo not in ['parcial', 'complementario', 'final']:
+            return Response({'error': 'Tipo inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo.tipo = tipo
+        ciclo.save()
+        return Response(status=status.HTTP_200_OK)
+
 # Inter Area
 def obtener_servicios(request, nro_circuito):
     try:

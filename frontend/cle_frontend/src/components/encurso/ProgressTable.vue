@@ -387,7 +387,7 @@
             <!-- Columna Informe Area (por ciclo) -->
             <td>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <div v-for="(ciclo, idx) in fila.ciclos" :key="ciclo.id"
+                <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                   <span v-if="ciclo.adjunto_informeArea" class="attachment-wrap">
@@ -399,18 +399,16 @@
                         <i class="bi bi-eye"></i> Ver
                       </button>
                       <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                              class="attach-popup-item"
+                              @mousedown.prevent="cambiarTipoCiclo(ciclo, fila)">
+                        <i class="bi bi-tag"></i> Cambiar tipo
+                      </button>
+                      <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
                               class="attach-popup-item text-danger"
                               @mousedown.prevent="eliminarInformeAreaCiclo(ciclo)">
                         <i class="bi bi-trash"></i> Eliminar
                       </button>
                     </div>
-                    <span v-if="(isAreaJefe || isAreaStandard) && ciclo.tipo === 'parcial' && idx === fila.ciclos.length - 1" @click.stop>
-                      <label :for="'inf-area-nuevo-' + ciclo.id" style="cursor:pointer; margin-left:4px;" title="Agregar otro informe parcial">
-                        <i class="bi bi-paperclip action-icon"></i>
-                      </label>
-                      <input :id="'inf-area-nuevo-' + ciclo.id" style="display:none;" type="file"
-                             @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
-                    </span>
                   </span>
                   <span v-else-if="isAreaJefe || isAreaStandard">
                     <label :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe área">
@@ -421,10 +419,19 @@
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
-                <!-- Botón crear nuevo ciclo (bloqueado si hay uno final) -->
-                <div v-if="(isAreaJefe || isAreaStandard) && puedeCrearNuevoCiclo(fila)" class="mt-1">
-                  <i class="bi bi-plus-circle action-icon text-primary" title="Nuevo ciclo" style="cursor:pointer;"
-                     @click="crearCiclo(fila)"></i>
+                <!-- Clip para agregar otro parcial: fila separada debajo del último -->
+                <div v-if="(isAreaJefe || isAreaStandard)
+                           && fila.ciclos.length > 0
+                           && fila.ciclos[fila.ciclos.length-1].adjunto_informeArea
+                           && fila.ciclos[fila.ciclos.length-1].tipo === 'parcial'"
+                     class="ciclo-row" @click.stop>
+                  <label :for="'inf-area-nuevo-' + fila.ciclos[fila.ciclos.length-1].id"
+                         style="cursor:pointer;" title="Agregar otro informe parcial">
+                    <i class="bi bi-paperclip action-icon"></i>
+                  </label>
+                  <input :id="'inf-area-nuevo-' + fila.ciclos[fila.ciclos.length-1].id"
+                         style="display:none;" type="file"
+                         @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
                 </div>
               </template>
             </td>
@@ -1123,11 +1130,11 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title">Tipo de Informe</h4>
+            <h4 class="modal-title">{{ esCambioTipo ? 'Cambiar tipo de informe' : 'Tipo de Informe' }}</h4>
             <button type="button" class="btn-close" @click="cerrarModalTipoCiclo"></button>
           </div>
           <div class="modal-body">
-            <p>¿Qué tipo de informe es?</p>
+            <p>{{ esCambioTipo ? '¿A qué tipo desea cambiar el informe?' : '¿Qué tipo de informe es?' }}</p>
             <small class="text-muted">
               <strong>Parcial:</strong> hay más informes pendientes.<br>
               <strong>Complementario:</strong> complementa parciales anteriores.<br>
@@ -1135,11 +1142,20 @@
             </small>
           </div>
           <div class="modal-footer flex-wrap gap-1">
-            <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
-            <button v-if="hayParcialesPrevios" type="button" class="btn btn-success"
-                    @click="subirInformeAreaCiclo('complementario')">Complementario</button>
-            <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
-                    @click="subirInformeAreaCiclo('final')">Final</button>
+            <template v-if="esCambioTipo">
+              <button type="button" class="btn btn-primary" @click="confirmarCambioTipo('parcial')">Parcial</button>
+              <button v-if="hayParcialesPrevios" type="button" class="btn btn-success"
+                      @click="confirmarCambioTipo('complementario')">Complementario</button>
+              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
+                      @click="confirmarCambioTipo('final')">Final</button>
+            </template>
+            <template v-else>
+              <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
+              <button v-if="hayParcialesPrevios" type="button" class="btn btn-success"
+                      @click="subirInformeAreaCiclo('complementario')">Complementario</button>
+              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
+                      @click="subirInformeAreaCiclo('final')">Final</button>
+            </template>
             <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
           </div>
         </div>
@@ -2650,6 +2666,8 @@
       const cicloSeleccionado = ref(null);
       const archivoPendiente = ref(null);
       const filaParaNuevoCiclo = ref(null);
+      const esCambioTipo = ref(false);
+      const cicloParaCambioTipo = ref(null);
 
       const puedeCrearNuevoCiclo = (fila) => {
         if (!fila.ciclos || fila.ciclos.length === 0) return true;
@@ -2752,11 +2770,41 @@
         }
       };
 
+      const cambiarTipoCiclo = (ciclo, fila) => {
+        popupInformeAreaId.value = null;
+        cicloParaCambioTipo.value = ciclo;
+        esCambioTipo.value = true;
+        hayParcialesPrevios.value = fila
+          ? fila.ciclos.some(c => c.id !== ciclo.id && c.tipo === 'parcial' && c.adjunto_informeArea)
+          : false;
+        mostrarModalTipoCiclo.value = true;
+      };
+
+      const confirmarCambioTipo = async (tipo) => {
+        mostrarModalTipoCiclo.value = false;
+        esCambioTipo.value = false;
+        const ciclo = cicloParaCambioTipo.value;
+        cicloParaCambioTipo.value = null;
+        if (!ciclo) return;
+        try {
+          await api.patch(`/encurso/cambiar_tipo_ciclo/${ciclo.id}/`, { tipo });
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          console.error('Error al cambiar tipo:', error);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
       const cerrarModalTipoCiclo = () => {
         mostrarModalTipoCiclo.value = false;
         archivoPendiente.value = null;
         cicloSeleccionado.value = null;
         filaParaNuevoCiclo.value = null;
+        esCambioTipo.value = false;
+        cicloParaCambioTipo.value = null;
       };
 
       const subirRegistroEnsayoCiclo = async (event, ciclo) => {
@@ -3377,6 +3425,9 @@
         seleccionarArchivoInformeAreaCiclo,
         seleccionarArchivoParaNuevoCiclo,
         subirInformeAreaCiclo,
+        cambiarTipoCiclo,
+        confirmarCambioTipo,
+        esCambioTipo,
         cerrarModalTipoCiclo,
         subirRegistroEnsayoCiclo,
         eliminarRegistroEnsayoCiclo,
