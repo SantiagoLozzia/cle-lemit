@@ -101,7 +101,7 @@ export default {
       if (!archivo) return;
       const s = String(archivo);
       if (/^https?:\/\//i.test(s)) { window.open(s, '_blank'); return; }
-      const cleanPath = s.replace(/^\//, '').replace(/^(media\/)+/, '');
+      const cleanPath = s.replace(/^\/?(media\/)+/, '');
       window.open(window.location.origin + '/media/' + cleanPath, '_blank');
     };
     const onUpload = (e) => { emit('upload', e); close(); };
