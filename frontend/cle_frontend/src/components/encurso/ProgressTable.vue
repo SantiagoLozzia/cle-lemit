@@ -2378,7 +2378,9 @@
       };
 
       const abrirArchivo = (adjunto) => {
-        window.open(window.location.origin + '/media/' + adjunto, '_blank');
+        if (!adjunto) return;
+        const cleanPath = String(adjunto).replace(/^\//, '').replace(/^media\//, '');
+        window.open(window.location.origin + '/media/' + cleanPath, '_blank');
       };
 
       const abrirVistaPreliminar = (adjunto) => {

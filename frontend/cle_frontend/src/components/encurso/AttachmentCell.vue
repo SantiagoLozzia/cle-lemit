@@ -98,7 +98,9 @@ export default {
       return name.length > 28 ? name.slice(0, 25) + '...' : name;
     };
     const viewFile = (archivo) => {
-      window.open(window.location.origin + '/media/' + archivo, '_blank');
+      if (!archivo) return;
+      const cleanPath = String(archivo).replace(/^\//, '').replace(/^media\//, '');
+      window.open(window.location.origin + '/media/' + cleanPath, '_blank');
     };
     const onUpload = (e) => { emit('upload', e); close(); };
     const onDelete = (id) => { emit('delete', id); close(); };
