@@ -86,7 +86,11 @@ export default {
 
     const toggleFileList = () => {
       isSpeedDialOpen.value = false;
-      isFileListOpen.value = !isFileListOpen.value;
+      if (props.files.length === 1) {
+        viewFile(props.files[0].archivo);
+      } else {
+        isFileListOpen.value = !isFileListOpen.value;
+      }
     };
 
     const shortName = (archivo) => {

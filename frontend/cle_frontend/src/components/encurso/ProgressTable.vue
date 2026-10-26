@@ -1396,15 +1396,14 @@
 
     <!-- Modal Registrar Corrección ST -->
     <div class="modal" :class="{ 'show': mostrarModalCorreccionST }" id="modalCorreccionST">
-      <div class="modal-dialog modal-sm">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">¿Registrar corrección?</h5>
             <button type="button" class="btn-close" @click="cerrarModalCorreccionST"></button>
           </div>
           <div class="modal-body">
-            <p class="small text-muted mb-2">Describí qué corregiste en el informe.</p>
-            <textarea v-model="textoCorreccionST" class="form-control form-control-sm" rows="3" placeholder="Ej: Se corrigió mayúscula en nombre de empresa..."></textarea>
+            <textarea v-model="textoCorreccionST" class="form-control" rows="6"></textarea>
           </div>
           <div class="modal-footer flex-wrap gap-1">
             <button type="button" class="btn btn-warning btn-sm" @click="registrarCorreccionST" :disabled="!textoCorreccionST.trim()">
