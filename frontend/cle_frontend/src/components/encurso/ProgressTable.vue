@@ -526,36 +526,26 @@
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
-                  <span v-if="isServiciosTecnologicos" class="attachment-wrap">
-                    <span style="position:relative; display:inline-flex; align-items:center;">
-                      <i class="bi bi-filetype-pdf action-icon" @click.stop="togglePopupST(ciclo.id)" title="Informe Servicio"></i>
-                      <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
-                         class="bi bi-chat-text-fill"
-                         style="font-size:9px; color:#fd7e14; position:absolute; top:-4px; right:-8px; pointer-events:none;"></i>
-                    </span>
-                    <div v-if="popupSTId === ciclo.id" class="attach-popup" @click.stop>
-                      <div class="attach-popup-row">
-                        <span class="attach-popup-label">Informe ST {{ ciclo.numero }}</span>
-                        <button class="ia-btn" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
-                          <i class="bi bi-eye"></i>
-                        </button>
-                        <label :for="'st-reemplazar-' + ciclo.id" class="ia-btn" title="Reemplazar archivo" style="cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0; padding:0;">
+                  <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0" class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupSTId === ciclo.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -120deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion" style="--rotation: -90deg" title="Reemplazar archivo">
+                        <label :for="'st-reemplazar-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
                           <i class="bi bi-arrow-repeat"></i>
                         </label>
                         <input :id="'st-reemplazar-' + ciclo.id" type="file" style="display:none;" @change="seleccionarArchivoSTCorregido($event, ciclo)">
-                        <button class="ia-btn" style="color:#198754;" @mousedown.prevent="confirmarRevisionST(ciclo)" title="Confirmar OK">
-                          <i class="bi bi-check-circle"></i>
-                        </button>
                       </div>
-                      <template v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0">
-                        <div class="attach-popup-corr-divider"></div>
-                        <div v-for="corr in ciclo.correcciones_st" :key="corr.id" class="attach-popup-corr-item">
-                          <i class="bi bi-chat-text" style="color:#fd7e14; font-size:11px; flex-shrink:0;"></i>
-                          <span style="font-size:10px; color:#555; flex:1;">{{ corr.descripcion }}</span>
-                        </div>
-                      </template>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="confirmarRevisionST(ciclo)" title="Confirmar OK">
+                        <i class="bi bi-check-lg"></i>
+                      </div>
                     </div>
-                  </span>
+                  </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
@@ -1396,14 +1386,14 @@
 
     <!-- Modal Registrar Corrección ST -->
     <div class="modal" :class="{ 'show': mostrarModalCorreccionST }" id="modalCorreccionST">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">¿Registrar corrección?</h5>
             <button type="button" class="btn-close" @click="cerrarModalCorreccionST"></button>
           </div>
           <div class="modal-body">
-            <textarea v-model="textoCorreccionST" class="form-control" rows="6"></textarea>
+            <textarea v-model="textoCorreccionST" class="form-control" rows="10"></textarea>
           </div>
           <div class="modal-footer flex-wrap gap-1">
             <button type="button" class="btn btn-warning btn-sm" @click="registrarCorreccionST" :disabled="!textoCorreccionST.trim()">
@@ -3721,6 +3711,72 @@
     padding: 3px 8px;
     gap: 4px;
   }
+
+  /* Speed dial ST revisión */
+  .st-sd-cell {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .st-sd-trigger {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid #026290;
+    background: white;
+    color: #026290;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  .st-sd-trigger:hover { background: #026290; color: white; }
+  .st-sd-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #fd7e14;
+  }
+  .st-sd-dial {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    z-index: 200;
+  }
+  .st-sd-opcion {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    border: 2px solid #026290;
+    border-radius: 50%;
+    color: #026290;
+    cursor: pointer;
+    transform: rotate(var(--rotation)) translate(50px) rotate(calc(-1 * var(--rotation)));
+    transition: transform 0.25s ease, background-color 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .st-sd-opcion i { font-size: 14px; cursor: pointer; }
+  .st-sd-opcion:hover {
+    background-color: #026290;
+    color: white;
+    transform: rotate(var(--rotation)) translate(58px) rotate(calc(-1 * var(--rotation)));
+  }
+  .st-sd-opcion--ok { border-color: #198754; color: #198754; }
+  .st-sd-opcion--ok:hover { background-color: #198754; color: white; }
 
   /* Ícono de acción (+ crear) */
   .action-icon {
