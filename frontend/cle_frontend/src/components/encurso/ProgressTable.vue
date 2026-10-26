@@ -526,15 +526,45 @@
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
-                  <div v-if="isServiciosTecnologicos">
-                    <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
-                    <i class="bi bi-check-circle action-icon text-primary" style="cursor:pointer; margin-left:4px;"
-                       @click="abrirModalRevisionCiclo(ciclo)" title="Confirmar revisión"></i>
-                  </div>
+                  <span v-if="isServiciosTecnologicos" class="attachment-wrap">
+                    <span style="position:relative; display:inline-flex; align-items:center;">
+                      <i class="bi bi-filetype-pdf action-icon" @click.stop="togglePopupST(ciclo.id)" title="Informe Servicio"></i>
+                      <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
+                         class="bi bi-chat-text-fill"
+                         style="font-size:9px; color:#fd7e14; position:absolute; top:-4px; right:-8px; pointer-events:none;"></i>
+                    </span>
+                    <div v-if="popupSTId === ciclo.id" class="attach-popup" @click.stop>
+                      <div class="attach-popup-row">
+                        <span class="attach-popup-label">Informe ST {{ ciclo.numero }}</span>
+                        <button class="ia-btn" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <label :for="'st-reemplazar-' + ciclo.id" class="ia-btn" title="Reemplazar archivo" style="cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0; padding:0;">
+                          <i class="bi bi-arrow-repeat"></i>
+                        </label>
+                        <input :id="'st-reemplazar-' + ciclo.id" type="file" style="display:none;" @change="seleccionarArchivoSTCorregido($event, ciclo)">
+                        <button class="ia-btn" style="color:#198754;" @mousedown.prevent="confirmarRevisionST(ciclo)" title="Confirmar OK">
+                          <i class="bi bi-check-circle"></i>
+                        </button>
+                      </div>
+                      <template v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0">
+                        <div class="attach-popup-corr-divider"></div>
+                        <div v-for="corr in ciclo.correcciones_st" :key="corr.id" class="attach-popup-corr-item">
+                          <i class="bi bi-chat-text" style="color:#fd7e14; font-size:11px; flex-shrink:0;"></i>
+                          <span style="font-size:10px; color:#555; flex:1;">{{ corr.descripcion }}</span>
+                        </div>
+                      </template>
+                    </div>
+                  </span>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
-                  <i class="bi bi-check-lg" style="color:green;"></i>
+                  <span style="position:relative; display:inline-flex; align-items:center;">
+                    <i class="bi bi-check-lg" style="color:green;"></i>
+                    <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
+                       class="bi bi-chat-text-fill"
+                       style="font-size:9px; color:#fd7e14; position:absolute; top:-4px; right:-8px; pointer-events:none;"></i>
+                  </span>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
@@ -1364,27 +1394,25 @@
     </div>
 
 
-    <!-- Modales Revision -->
-    <div class="modal" :class="{ 'show': mostrarModalRevision }" id="mostrarModalRevision">
-      <div class="modal-dialog">
+    <!-- Modal Registrar Corrección ST -->
+    <div class="modal" :class="{ 'show': mostrarModalCorreccionST }" id="modalCorreccionST">
+      <div class="modal-dialog modal-sm">
         <div class="modal-content">
-          <!-- Modal Header -->
           <div class="modal-header">
-            <h4 class="modal-title">Revision</h4>
-            <button type="button" class="btn-close" @click="cerrarModalRevision"></button>
+            <h5 class="modal-title">¿Registrar corrección?</h5>
+            <button type="button" class="btn-close" @click="cerrarModalCorreccionST"></button>
           </div>
-
-          <!-- Modal Body -->
           <div class="modal-body">
-            <div>
-              Revision correcta?
-            </div>
+            <p class="small text-muted mb-2">Describí qué corregiste en el informe.</p>
+            <textarea v-model="textoCorreccionST" class="form-control form-control-sm" rows="3" placeholder="Ej: Se corrigió mayúscula en nombre de empresa..."></textarea>
           </div>
-
-          <!-- Modal Footer -->
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarRevisionCiclo()">Si</button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalRevision">Cancelar</button>
+          <div class="modal-footer flex-wrap gap-1">
+            <button type="button" class="btn btn-warning btn-sm" @click="registrarCorreccionST" :disabled="!textoCorreccionST.trim()">
+              Registrar
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="cerrarModalCorreccionST">
+              No registrar
+            </button>
           </div>
         </div>
       </div>
@@ -1856,9 +1884,12 @@
       const correcciones = ref(null);
 
       // Setup Servicios Tecnologicos - Revision
-      const mostrarModalRevision = ref(false);
-      const mostrarOpciones = ref(false); // Ref para controlar la visibilidad de las opciones
-      const filaSeleccionada = ref(null); // Ref para controlar la fila que muestra opciones
+      const popupSTId = ref(null);
+      const mostrarModalCorreccionST = ref(false);
+      const textoCorreccionST = ref('');
+      const cicloParaCorreccionST = ref(null);
+      const mostrarOpciones = ref(false);
+      const filaSeleccionada = ref(null);
 
       // Setup Responsable del Area - Firma
       const mostrarModalAdvertirCorrecciones = ref(false);
@@ -2020,6 +2051,7 @@
         openST02FileList.value = null;
         filaSeleccionada.value = null;
         popupInformeAreaId.value = null;
+        popupSTId.value = null;
       };
 
       onMounted(() => {
@@ -2726,8 +2758,8 @@
         const opening = popupInformeAreaId.value !== cicloId;
         popupInformeAreaId.value = opening ? cicloId : null;
         if (opening) {
-          // speed-dial-open cierra AttachmentCells sin disparar closeAllPopups
           document.dispatchEvent(new Event('speed-dial-open'));
+          popupSTId.value = null;
         }
       };
 
@@ -3128,26 +3160,66 @@
       };
 
       // Servicios Tecnológicos - Revisión por Ciclo
-      const abrirModalRevisionCiclo = (ciclo) => {
-        cicloSeleccionado.value = ciclo;
-        mostrarModalRevision.value = true;
+      const togglePopupST = (cicloId) => {
+        const opening = popupSTId.value !== cicloId;
+        popupSTId.value = opening ? cicloId : null;
+        if (opening) {
+          document.dispatchEvent(new Event('speed-dial-open'));
+          popupInformeAreaId.value = null;
+        }
       };
 
-      const cerrarModalRevision = () => {
-        mostrarModalRevision.value = false;
+      const seleccionarArchivoSTCorregido = async (event, ciclo) => {
+        const file = event.target.files[0];
+        event.target.value = '';
+        if (!file) return;
+        popupSTId.value = null;
+        const formData = new FormData();
+        formData.append('archivo', file);
+        try {
+          await api.post(`/encurso/subir_informe_st_corregido/${ciclo.id}/`, formData);
+          fetchData();
+          cicloParaCorreccionST.value = ciclo;
+          textoCorreccionST.value = '';
+          mostrarModalCorreccionST.value = true;
+        } catch (error) {
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        }
       };
 
-      const confirmarRevisionCiclo = async () => {
-        const ciclo = cicloSeleccionado.value;
-        if (!ciclo) return;
+      const registrarCorreccionST = async () => {
+        const ciclo = cicloParaCorreccionST.value;
+        if (!ciclo || !textoCorreccionST.value.trim()) return;
+        try {
+          await api.post(`/encurso/registrar_correccion_st/${ciclo.id}/`, {
+            descripcion: textoCorreccionST.value.trim()
+          });
+          fetchData();
+        } catch (error) {
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        } finally {
+          mostrarModalCorreccionST.value = false;
+          textoCorreccionST.value = '';
+          cicloParaCorreccionST.value = null;
+        }
+      };
+
+      const cerrarModalCorreccionST = () => {
+        mostrarModalCorreccionST.value = false;
+        textoCorreccionST.value = '';
+        cicloParaCorreccionST.value = null;
+      };
+
+      const confirmarRevisionST = async (ciclo) => {
+        popupSTId.value = null;
         try {
           await api.put(`/encurso/confirmar_revision_ciclo/${ciclo.id}/`);
-          mostrarModalRevision.value = false;
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
-          mostrarModalRevision.value = false;
           showErrorAlert.value = true;
           setTimeout(() => { showErrorAlert.value = false; }, 5000);
         }
@@ -3502,10 +3574,14 @@
         correcciones,
         corregirCiclo,
         // Servicios Tecnologicos - Revision
-        abrirModalRevisionCiclo,
-        cerrarModalRevision,
-        mostrarModalRevision,
-        confirmarRevisionCiclo,
+        popupSTId,
+        togglePopupST,
+        seleccionarArchivoSTCorregido,
+        registrarCorreccionST,
+        cerrarModalCorreccionST,
+        confirmarRevisionST,
+        mostrarModalCorreccionST,
+        textoCorreccionST,
         mostrarOpciones,
         filaSeleccionada,
         toggleOpciones,
@@ -3634,6 +3710,18 @@
 
   .ia-btn-del { color: #dc3545; }
   .ia-btn-del:hover { background: #fde8ea; }
+
+  .attach-popup-corr-divider {
+    height: 1px;
+    background: #e8e8e8;
+    margin: 2px 0;
+  }
+  .attach-popup-corr-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 3px 8px;
+    gap: 4px;
+  }
 
   /* Ícono de acción (+ crear) */
   .action-icon {

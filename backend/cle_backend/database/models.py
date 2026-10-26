@@ -338,6 +338,15 @@ class RegistroEnsayoCiclo(models.Model):
         ordering = ['fecha']
 
 
+class CorreccionST(models.Model):
+    ciclo = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='correcciones_st')
+    descripcion = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['fecha']
+
+
 # Clases singleton que podria borrar
 # class UltimoNumeroSingleton:
 #     _instance = None

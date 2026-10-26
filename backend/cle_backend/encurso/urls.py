@@ -38,6 +38,8 @@ urlpatterns = [
     path('advertir_correcciones_ciclo/<int:ciclo_id>/', AdvertirCorreccionesCiclo.as_view(), name='advertir-correcciones-ciclo'),
     path('corregir_ciclo/<int:ciclo_id>/', CorregirCiclo.as_view(), name='corregir-ciclo'),
     path('confirmar_revision_ciclo/<int:ciclo_id>/', ConfirmarRevisionCiclo.as_view(), name='confirmar-revision-ciclo'),
+    path('subir_informe_st_corregido/<int:ciclo_id>/', SubirInformeSTCorregido.as_view(), name='subir-informe-st-corregido'),
+    path('registrar_correccion_st/<int:ciclo_id>/', RegistrarCorreccionST.as_view(), name='registrar-correccion-st'),
     path('confirmar_firma_responsable_area_ciclo/<int:ciclo_id>/', ConfirmarFirmaResponsableAreaCiclo.as_view(), name='confirmar-firma-responsable-area-ciclo'),
     path('confirmar_firma_direccion_ciclo/<int:ciclo_id>/', ConfirmarFirmaDireccionCiclo.as_view(), name='confirmar-firma-direccion-ciclo'),
     # Editar Data Servicio

@@ -1047,6 +1047,35 @@ class ConfirmarRevisionCiclo(APIView):
         return JsonResponse({'message': 'Revisión confirmada correctamente.'})
 
 
+class SubirInformeSTCorregido(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_upload_file(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo.adjunto_informeServicio = archivo
+        ciclo.save()
+        return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
+
+
+class RegistrarCorreccionST(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        descripcion = request.data.get('descripcion', '').strip()
+        if not descripcion:
+            return Response({'error': 'Descripción requerida.'}, status=status.HTTP_400_BAD_REQUEST)
+        CorreccionST.objects.create(ciclo=ciclo, descripcion=descripcion)
+        return Response(status=status.HTTP_201_CREATED)
+
+
 class ConfirmarFirmaResponsableAreaCiclo(APIView):
     permission_classes = [IsAuthenticated, IsAreaJefe]
 
