@@ -3554,14 +3554,13 @@
   }
   .table tbody tr.row-urgente:hover { background-color: #f5c2c7 !important; }
 
-  /* Fila de ciclo - espacio mínimo entre ciclos */
+  /* Fila de ciclo - altura fija para alinear iconos entre columnas */
   .ciclo-row {
-    min-height: 26px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    padding: 1px 0;
   }
 
   .ciclo-row--final {
