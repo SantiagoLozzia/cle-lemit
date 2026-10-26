@@ -423,6 +423,17 @@
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
+                <!-- Sin ciclos: clip para área, reloj para otros -->
+                <div v-if="fila.ciclos.length === 0" class="ciclo-row">
+                  <span v-if="isAreaJefe || isAreaStandard">
+                    <label :for="'inf-area-primer-' + fila.nro_circuito" style="cursor:pointer;" title="Subir primer informe área">
+                      <i class="bi bi-paperclip action-icon"></i>
+                    </label>
+                    <input :id="'inf-area-primer-' + fila.nro_circuito" style="display:none;" type="file"
+                           @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
+                  </span>
+                  <span v-else><i class="bi bi-stopwatch"></i></span>
+                </div>
                 <!-- Clip para agregar otro parcial: fila separada debajo del último -->
                 <div v-if="(isAreaJefe || isAreaStandard)
                            && fila.ciclos.length > 0
@@ -2751,7 +2762,7 @@
         archivoPendiente.value = file;
         cicloSeleccionado.value = null;
         filaParaNuevoCiclo.value = fila;
-        hayParcialesPrevios.value = true;
+        hayParcialesPrevios.value = fila.ciclos.some(c => c.tipo === 'parcial' && c.adjunto_informeArea);
         mostrarModalTipoCiclo.value = true;
       };
 
