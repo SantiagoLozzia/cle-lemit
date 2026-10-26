@@ -99,7 +99,9 @@ export default {
     };
     const viewFile = (archivo) => {
       if (!archivo) return;
-      const cleanPath = String(archivo).replace(/^\//, '').replace(/^media\//, '');
+      const s = String(archivo);
+      if (/^https?:\/\//i.test(s)) { window.open(s, '_blank'); return; }
+      const cleanPath = s.replace(/^\//, '').replace(/^(media\/)+/, '');
       window.open(window.location.origin + '/media/' + cleanPath, '_blank');
     };
     const onUpload = (e) => { emit('upload', e); close(); };

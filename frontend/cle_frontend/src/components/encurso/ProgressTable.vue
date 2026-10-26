@@ -2379,7 +2379,9 @@
 
       const abrirArchivo = (adjunto) => {
         if (!adjunto) return;
-        const cleanPath = String(adjunto).replace(/^\//, '').replace(/^media\//, '');
+        const s = String(adjunto);
+        if (/^https?:\/\//i.test(s)) { window.open(s, '_blank'); return; }
+        const cleanPath = s.replace(/^\//, '').replace(/^(media\/)+/, '');
         window.open(window.location.origin + '/media/' + cleanPath, '_blank');
       };
 
