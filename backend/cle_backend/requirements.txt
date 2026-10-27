@@ -39,6 +39,7 @@ txaio==26.6.1
 typing-extensions==4.16.0
 ujson==6.0.0
 weasyprint==70.0
+PyMuPDF==1.25.3
 webencodings==0.5.1
 zope-interface==8.6
 zopfli==0.2.3.post1

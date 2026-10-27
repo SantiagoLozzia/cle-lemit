@@ -13,6 +13,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from weasyprint import HTML
+import fitz
+import base64 as b64lib
+from datetime import datetime
+from io import BytesIO
 
 from cle_backend.permissions import (
     IsAdministracion,
@@ -1075,6 +1079,41 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
         if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
             return JsonResponse({'error': 'No tiene permisos para firmar este circuito.'}, status=403)
+
+        firma_b64 = request.data.get('firma_imagen', '')
+        if firma_b64 and ciclo.adjunto_informeServicio:
+            try:
+                _, data = firma_b64.split(',', 1)
+                sig_bytes = b64lib.b64decode(data)
+
+                pdf_path = ciclo.adjunto_informeServicio.path
+                doc = fitz.open(pdf_path)
+                page = doc[-1]
+                pw, ph = page.rect.width, page.rect.height
+
+                # Imagen de la firma (esquina inferior derecha)
+                sig_rect = fitz.Rect(pw - 205, ph - 80, pw - 15, ph - 32)
+                page.insert_image(sig_rect, stream=sig_bytes)
+
+                # Texto debajo: nombre + fecha
+                signer = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+                fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
+                page.insert_textbox(
+                    fitz.Rect(pw - 205, ph - 30, pw - 15, ph - 8),
+                    f"Firmado por: {signer}  —  {fecha}",
+                    fontsize=7,
+                    align=fitz.TEXT_ALIGN_CENTER,
+                )
+
+                buf = BytesIO()
+                doc.save(buf)
+                doc.close()
+                buf.seek(0)
+                with open(pdf_path, 'wb') as f:
+                    f.write(buf.read())
+            except Exception:
+                logger.exception("Error al insertar firma en PDF")
+
         ciclo.firma_responsable_area = True
         ciclo.save()
         return JsonResponse({'message': 'Firma Responsable Area confirmada correctamente.'})

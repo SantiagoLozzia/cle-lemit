@@ -1471,24 +1471,35 @@
     </div>
 
     <div class="modal" :class="{ 'show': mostrarModalFirmaResponsableArea }" id="mostrarModalFirmaResponsableArea">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
-          <!-- Modal Header -->
           <div class="modal-header">
-            <h4 class="modal-title">Firma Responsable del Area</h4>
+            <h4 class="modal-title">Firma Responsable del Área</h4>
             <button type="button" class="btn-close" @click="cerrarModalFirmaResponsableArea"></button>
           </div>
-
-          <!-- Modal Body -->
           <div class="modal-body">
-            <div>
-              Firmar?
+            <p class="text-muted small mb-2">Dibujá tu firma en el recuadro:</p>
+            <div class="firma-canvas-wrapper">
+              <canvas
+                ref="signatureCanvas"
+                width="1120" height="300"
+                @mousedown="startSignature"
+                @mousemove="drawSignature"
+                @mouseup="stopSignature"
+                @mouseleave="stopSignature"
+                @touchstart.prevent="startSignatureTouch"
+                @touchmove.prevent="drawSignatureTouch"
+                @touchend="stopSignature">
+              </canvas>
             </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @click="limpiarFirma">
+              <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+            </button>
           </div>
-
-          <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarFirmaResponsableAreaCiclo()">Si</button>
+            <button type="button" class="btn btn-primary" @click="confirmarFirmaResponsableAreaCiclo" :disabled="!firmaHecha">
+              <i class="bi bi-pen"></i> Firmar
+            </button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalFirmaResponsableArea">Cancelar</button>
           </div>
         </div>
@@ -1551,7 +1562,7 @@
 </template>
   
 <script>
-  import { onMounted, onUnmounted, ref, computed } from 'vue';
+  import { onMounted, onUnmounted, ref, computed, nextTick } from 'vue';
   import api from '@/api.js';
   import { AREAS_TEMATICAS } from '@/constants/areas.js';
   import AttachmentCell from './AttachmentCell.vue';
@@ -1914,6 +1925,28 @@
       const mostrarModalAdvertirCorrecciones = ref(false);
       const correccionesNuevas = ref('');
       const mostrarModalFirmaResponsableArea = ref(false);
+      const signatureCanvas = ref(null);
+      const firmaHecha = ref(false);
+      let _sigDrawing = false, _sigLastX = 0, _sigLastY = 0;
+
+      const _sigGetPos = (clientX, clientY) => {
+        const c = signatureCanvas.value;
+        const r = c.getBoundingClientRect();
+        return { x: (clientX - r.left) * c.width / r.width, y: (clientY - r.top) * c.height / r.height };
+      };
+      const _sigStroke = (x, y) => {
+        const ctx = signatureCanvas.value.getContext('2d');
+        ctx.beginPath(); ctx.moveTo(_sigLastX, _sigLastY); ctx.lineTo(x, y);
+        ctx.strokeStyle = '#00008b'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.stroke();
+        _sigLastX = x; _sigLastY = y; firmaHecha.value = true;
+      };
+      const startSignature = (e) => { _sigDrawing = true; const p = _sigGetPos(e.clientX, e.clientY); _sigLastX = p.x; _sigLastY = p.y; };
+      const drawSignature = (e) => { if (!_sigDrawing) return; const p = _sigGetPos(e.clientX, e.clientY); _sigStroke(p.x, p.y); };
+      const stopSignature = () => { _sigDrawing = false; };
+      const startSignatureTouch = (e) => { _sigDrawing = true; const t = e.touches[0]; const p = _sigGetPos(t.clientX, t.clientY); _sigLastX = p.x; _sigLastY = p.y; };
+      const drawSignatureTouch = (e) => { if (!_sigDrawing) return; const t = e.touches[0]; const p = _sigGetPos(t.clientX, t.clientY); _sigStroke(p.x, p.y); };
+      const limpiarFirma = () => { const c = signatureCanvas.value; if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); firmaHecha.value = false; };
 
       // Setup Direccion - Firma
       const mostrarModalFirmaDireccion = ref(false);
@@ -3299,6 +3332,7 @@
       const abrirModalFirmaResponsableAreaCiclo = (ciclo) => {
         cicloSeleccionado.value = ciclo;
         mostrarModalFirmaResponsableArea.value = true;
+        nextTick(() => limpiarFirma());
       };
 
       const cerrarModalFirmaResponsableArea = () => {
@@ -3307,10 +3341,12 @@
 
       const confirmarFirmaResponsableAreaCiclo = async () => {
         const ciclo = cicloSeleccionado.value;
-        if (!ciclo) return;
+        if (!ciclo || !firmaHecha.value) return;
+        const firmaBase64 = signatureCanvas.value.toDataURL('image/png');
         try {
-          await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${ciclo.id}/`);
+          await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${ciclo.id}/`, { firma_imagen: firmaBase64 });
           mostrarModalFirmaResponsableArea.value = false;
+          firmaHecha.value = false;
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
@@ -3632,6 +3668,9 @@
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
         confirmarFirmaResponsableAreaCiclo,
+        signatureCanvas, firmaHecha,
+        startSignature, drawSignature, stopSignature,
+        startSignatureTouch, drawSignatureTouch, limpiarFirma,
         // Direccion - Firma
         abrirModalFirmaDireccionCiclo,
         cerrarModalFirmaDireccion,
@@ -3827,6 +3866,19 @@
   .st-sd-opcion--ok:hover { background-color: #198754; color: white; }
   .st-nota-correcciones { font-size: 16px; color: #ffc107; cursor: pointer; }
   .st-nota-correcciones:hover { color: #e0a800; }
+  .firma-canvas-wrapper {
+    border: 2px solid #ced4da;
+    border-radius: 6px;
+    background: #fafafa;
+    cursor: crosshair;
+    overflow: hidden;
+  }
+  .firma-canvas-wrapper canvas {
+    display: block;
+    width: 100%;
+    height: 160px;
+    touch-action: none;
+  }
 
   /* Ícono de acción (+ crear) */
   .action-icon {
