@@ -214,14 +214,17 @@
                 </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
-                <div v-if="isAdministracion">
-                  <span @click="abrirModalPlazoPago(fila)" style="cursor: pointer;">
+                <template v-if="fila.pago === 100">-</template>
+                <template v-else>
+                  <div v-if="isAdministracion">
+                    <span @click="abrirModalPlazoPago(fila)" style="cursor: pointer;">
+                      {{ fila.plazo_pago }}
+                    </span>
+                  </div>
+                  <div v-else>
                     {{ fila.plazo_pago }}
-                  </span>
-                </div>
-                <div v-else>
-                  {{ fila.plazo_pago }}
-                </div>
+                  </div>
+                </template>
             </td>
 
             <!-- Columna Recepcion -->
@@ -261,22 +264,19 @@
               </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
-              <div v-if="isServiciosTecnologicos">
-                <span v-if="fila.legajo_completo" @click="abrirModalPlazoMuestras(fila)" style="cursor: pointer;">
-                  {{ fila.plazo_muestras }}
-                </span>
-                <span v-else>
-                  <!-- Este span estará vacío -->
-                </span>
-              </div>
-              <div v-else>
-                <span v-if="fila.legajo_completo">
-                  {{ fila.plazo_muestras }}
-                </span>
-                <span v-else>
-                  <!-- Este span estará vacío -->
-                </span>
-              </div>  
+              <template v-if="fila.estado_recepcion === 'total'">-</template>
+              <template v-else>
+                <div v-if="isServiciosTecnologicos">
+                  <span v-if="fila.legajo_completo" @click="abrirModalPlazoMuestras(fila)" style="cursor: pointer;">
+                    {{ fila.plazo_muestras }}
+                  </span>
+                </div>
+                <div v-else>
+                  <span v-if="fila.legajo_completo">
+                    {{ fila.plazo_muestras }}
+                  </span>
+                </div>
+              </template>
             </td>
 
             <!-- Columna Orden de Servicio -->
@@ -305,7 +305,8 @@
               </template>
             </td>
             <td class="add-border-right">
-              <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <template v-if="fila.ciclos && fila.ciclos.some(c => c.firma_direccion)">-</template>
+              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-if="isServiciosTecnologicos">
                   <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor: pointer;" :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
                     {{ diasRestantesOS(fila) }}
@@ -316,9 +317,6 @@
                     {{ diasRestantesOS(fila) }}
                   </span>
                 </div>
-              </template>
-              <template v-else>
-                
               </template>
             </td>
 
