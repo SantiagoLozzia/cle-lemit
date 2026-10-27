@@ -45,6 +45,7 @@ import api from '@/api.js';
 import logo from '@/assets/logo_L.png';
 
 export default {
+  inheritAttrs: false,
   setup() {
     const logoPath = ref(logo);
     const userLoaded = ref(false);
@@ -135,6 +136,8 @@ export default {
 <style scoped>
 .header-container {
   position: fixed;
+  top: 0;
+  left: 0;
   background-color: #026290;
   padding: 10px;
   display: flex;
