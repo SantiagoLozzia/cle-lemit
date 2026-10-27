@@ -532,7 +532,7 @@
                       <span v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0" class="st-sd-badge"></span>
                     </button>
                     <div v-if="popupSTId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -120deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
+                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion" style="--rotation: -90deg" title="Reemplazar archivo">
@@ -541,7 +541,7 @@
                         </label>
                         <input :id="'st-reemplazar-' + ciclo.id" type="file" style="display:none;" @change="seleccionarArchivoSTCorregido($event, ciclo)">
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="confirmarRevisionST(ciclo)" title="Confirmar OK">
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -45deg" @click.stop="confirmarRevisionST(ciclo)" title="Confirmar OK">
                         <i class="bi bi-check-lg"></i>
                       </div>
                     </div>
@@ -549,11 +549,12 @@
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
-                  <span style="position:relative; display:inline-flex; align-items:center;">
+                  <span style="display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-check-lg" style="color:green;"></i>
                     <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
-                       class="bi bi-chat-text-fill"
-                       style="font-size:9px; color:#fd7e14; position:absolute; top:-4px; right:-8px; pointer-events:none;"></i>
+                       class="bi bi-sticky-fill st-nota-correcciones"
+                       @click.stop="abrirModalVerCorrecciones(ciclo)"
+                       :title="ciclo.correcciones_st.length + ' corrección(es) registrada(s)'"></i>
                   </span>
                 </template>
               </div>
@@ -1407,6 +1408,33 @@
       </div>
     </div>
 
+    <!-- Modal Ver Correcciones ST -->
+    <div class="modal" :class="{ 'show': mostrarModalVerCorrecciones }" id="modalVerCorrecciones">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Correcciones registradas</h5>
+            <button type="button" class="btn-close" @click="cerrarModalVerCorrecciones"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.correcciones_st && cicloVerCorrecciones.correcciones_st.length > 0">
+              <div v-for="(c, idx) in cicloVerCorrecciones.correcciones_st" :key="c.id"
+                   class="border rounded p-3 mb-2" style="background:#fffdf0;">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                  <strong style="font-size:12px; color:#888;">Corrección {{ idx + 1 }}</strong>
+                  <small class="text-muted">{{ new Date(c.fecha).toLocaleString('es-AR') }}</small>
+                </div>
+                <p class="mb-0" style="white-space:pre-wrap;">{{ c.descripcion }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" @click="cerrarModalVerCorrecciones">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modales Firma Responsable Area -->
 
     <div class="modal" :class="{ 'show': mostrarModalAdvertirCorrecciones }" id="mostrarModalAdvertirCorrecciones">
@@ -1878,6 +1906,8 @@
       const textoCorreccionST = ref('');
       const cicloParaCorreccionST = ref(null);
       const mostrarOpciones = ref(false);
+      const mostrarModalVerCorrecciones = ref(false);
+      const cicloVerCorrecciones = ref(null);
       const filaSeleccionada = ref(null);
 
       // Setup Responsable del Area - Firma
@@ -3205,6 +3235,16 @@
         cicloParaCorreccionST.value = null;
       };
 
+      const abrirModalVerCorrecciones = (ciclo) => {
+        cicloVerCorrecciones.value = ciclo;
+        mostrarModalVerCorrecciones.value = true;
+      };
+
+      const cerrarModalVerCorrecciones = () => {
+        mostrarModalVerCorrecciones.value = false;
+        cicloVerCorrecciones.value = null;
+      };
+
       const confirmarRevisionST = async (ciclo) => {
         popupSTId.value = null;
         try {
@@ -3575,6 +3615,10 @@
         confirmarRevisionST,
         mostrarModalCorreccionST,
         textoCorreccionST,
+        abrirModalVerCorrecciones,
+        cerrarModalVerCorrecciones,
+        mostrarModalVerCorrecciones,
+        cicloVerCorrecciones,
         mostrarOpciones,
         filaSeleccionada,
         toggleOpciones,
@@ -3769,7 +3813,7 @@
     border-radius: 50%;
     color: #026290;
     cursor: pointer;
-    transform: rotate(var(--rotation)) translate(50px) rotate(calc(-1 * var(--rotation)));
+    transform: rotate(var(--rotation)) translate(62px) rotate(calc(-1 * var(--rotation)));
     transition: transform 0.25s ease, background-color 0.15s ease;
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   }
@@ -3777,10 +3821,12 @@
   .st-sd-opcion:hover {
     background-color: #026290;
     color: white;
-    transform: rotate(var(--rotation)) translate(58px) rotate(calc(-1 * var(--rotation)));
+    transform: rotate(var(--rotation)) translate(70px) rotate(calc(-1 * var(--rotation)));
   }
   .st-sd-opcion--ok { border-color: #198754; color: #198754; }
   .st-sd-opcion--ok:hover { background-color: #198754; color: white; }
+  .st-nota-correcciones { font-size: 16px; color: #ffc107; cursor: pointer; }
+  .st-nota-correcciones:hover { color: #e0a800; }
 
   /* Ícono de acción (+ crear) */
   .action-icon {

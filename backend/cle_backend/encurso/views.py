@@ -675,10 +675,6 @@ class SubirInformeAreaCiclo(APIView):
         tipo = request.data.get('tipo', 'parcial')
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            validate_upload_file(archivo)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         ciclo.adjunto_informeArea = archivo
         ciclo.fecha_informeArea = timezone.now().date()
         ciclo.tipo = tipo
@@ -696,10 +692,6 @@ class SubirRegistroEnsayoCiclo(APIView):
         archivo = request.FILES.get('archivo')
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            validate_upload_file(archivo)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         registro = RegistroEnsayoCiclo.objects.create(ciclo=ciclo, archivo=archivo)
         return Response({'id': registro.id, 'archivo': str(registro.archivo)}, status=status.HTTP_201_CREATED)
 
