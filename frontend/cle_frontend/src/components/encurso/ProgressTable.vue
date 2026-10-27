@@ -1486,26 +1486,35 @@
             <button type="button" class="btn-close" @click="cerrarModalFirmaResponsableArea"></button>
           </div>
           <div class="modal-body">
-            <p class="text-muted small mb-2">Dibujá tu firma en el recuadro:</p>
-            <div class="firma-canvas-wrapper">
-              <canvas
-                ref="signatureCanvas"
-                width="1120" height="300"
-                @mousedown="startSignature"
-                @mousemove="drawSignature"
-                @mouseup="stopSignature"
-                @mouseleave="stopSignature"
-                @touchstart.prevent="startSignatureTouch"
-                @touchmove.prevent="drawSignatureTouch"
-                @touchend="stopSignature">
-              </canvas>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @click="limpiarFirma">
-              <i class="bi bi-arrow-counterclockwise"></i> Limpiar
-            </button>
+            <template v-if="firmaUsuarioUrl">
+              <p class="text-muted small mb-2">Se usará tu firma guardada:</p>
+              <div class="text-center">
+                <img :src="firmaUsuarioUrl" alt="Firma" style="max-width:100%; max-height:120px; border:1px solid #dee2e6; border-radius:4px; background:#fafafa; padding:8px;">
+              </div>
+            </template>
+            <template v-else>
+              <p class="text-muted small mb-2">Dibujá tu firma en el recuadro:</p>
+              <div class="firma-canvas-wrapper">
+                <canvas
+                  ref="signatureCanvas"
+                  width="1120" height="300"
+                  @mousedown="startSignature"
+                  @mousemove="drawSignature"
+                  @mouseup="stopSignature"
+                  @mouseleave="stopSignature"
+                  @touchstart.prevent="startSignatureTouch"
+                  @touchmove.prevent="drawSignatureTouch"
+                  @touchend="stopSignature">
+                </canvas>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @click="limpiarFirma">
+                <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+              </button>
+            </template>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarFirmaResponsableAreaCiclo" :disabled="!firmaHecha">
+            <button type="button" class="btn btn-primary" @click="confirmarFirmaResponsableAreaCiclo"
+                    :disabled="!firmaUsuarioUrl && !firmaHecha">
               <i class="bi bi-pen"></i> Firmar
             </button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalFirmaResponsableArea">Cancelar</button>
@@ -1523,26 +1532,35 @@
             <button type="button" class="btn-close" @click="cerrarModalFirmaDireccion"></button>
           </div>
           <div class="modal-body">
-            <p class="text-muted small mb-2">Dibujá tu firma en el recuadro:</p>
-            <div class="firma-canvas-wrapper">
-              <canvas
-                ref="signatureCanvasDir"
-                width="1120" height="300"
-                @mousedown="startSignatureDir"
-                @mousemove="drawSignatureDir"
-                @mouseup="stopSignatureDir"
-                @mouseleave="stopSignatureDir"
-                @touchstart.prevent="startSignatureDirTouch"
-                @touchmove.prevent="drawSignatureDirTouch"
-                @touchend="stopSignatureDir">
-              </canvas>
-            </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @click="limpiarFirmaDir">
-              <i class="bi bi-arrow-counterclockwise"></i> Limpiar
-            </button>
+            <template v-if="firmaUsuarioUrl">
+              <p class="text-muted small mb-2">Se usará tu firma guardada:</p>
+              <div class="text-center">
+                <img :src="firmaUsuarioUrl" alt="Firma" style="max-width:100%; max-height:120px; border:1px solid #dee2e6; border-radius:4px; background:#fafafa; padding:8px;">
+              </div>
+            </template>
+            <template v-else>
+              <p class="text-muted small mb-2">Dibujá tu firma en el recuadro:</p>
+              <div class="firma-canvas-wrapper">
+                <canvas
+                  ref="signatureCanvasDir"
+                  width="1120" height="300"
+                  @mousedown="startSignatureDir"
+                  @mousemove="drawSignatureDir"
+                  @mouseup="stopSignatureDir"
+                  @mouseleave="stopSignatureDir"
+                  @touchstart.prevent="startSignatureDirTouch"
+                  @touchmove.prevent="drawSignatureDirTouch"
+                  @touchend="stopSignatureDir">
+                </canvas>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @click="limpiarFirmaDir">
+                <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+              </button>
+            </template>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarFirmaDireccionCiclo" :disabled="!firmaHechaDir">
+            <button type="button" class="btn btn-primary" @click="confirmarFirmaDireccionCiclo"
+                    :disabled="!firmaUsuarioUrl && !firmaHechaDir">
               <i class="bi bi-pen"></i> Firmar
             </button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalFirmaDireccion">Cancelar</button>
@@ -1940,6 +1958,15 @@
       const cicloVerCorrecciones = ref(null);
       const filaSeleccionada = ref(null);
 
+      // Firma guardada del usuario
+      const firmaUsuarioUrl = ref(null);
+      const cargarFirmaUsuario = async () => {
+        try {
+          const res = await api.get('/authentication/firma_usuario/');
+          firmaUsuarioUrl.value = res.data.firma_url || null;
+        } catch {}
+      };
+
       // Setup Responsable del Area - Firma
       const mostrarModalAdvertirCorrecciones = ref(false);
       const correccionesNuevas = ref('');
@@ -2150,17 +2177,22 @@
         popupSTId.value = null;
       };
 
+      const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
+
       onMounted(() => {
         fetchData();
+        cargarFirmaUsuario();
         document.addEventListener('click', closeAllPopups);
         document.addEventListener('att-cell-open', closeAllPopups);
         document.addEventListener('encurso-refresh', fetchData);
+        window.addEventListener('firma-usuario-actualizada', onFirmaActualizada);
       });
 
       onUnmounted(() => {
         document.removeEventListener('click', closeAllPopups);
         document.removeEventListener('att-cell-open', closeAllPopups);
         document.removeEventListener('encurso-refresh', fetchData);
+        window.removeEventListener('firma-usuario-actualizada', onFirmaActualizada);
       });
 
       const triggerFileInput = () => {
@@ -3711,6 +3743,7 @@
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
         confirmarFirmaResponsableAreaCiclo,
+        firmaUsuarioUrl,
         signatureCanvas, firmaHecha,
         startSignature, drawSignature, stopSignature,
         startSignatureTouch, drawSignatureTouch, limpiarFirma,

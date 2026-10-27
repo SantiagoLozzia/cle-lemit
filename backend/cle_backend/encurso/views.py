@@ -1080,12 +1080,19 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
         if not user_can_access_circuit(request.user, ciclo.nro_circuito_id):
             return JsonResponse({'error': 'No tiene permisos para firmar este circuito.'}, status=403)
 
-        firma_b64 = request.data.get('firma_imagen', '')
-        if firma_b64 and ciclo.adjunto_informeServicio:
-            try:
+        # Obtener bytes de firma: primero del perfil, si no del canvas
+        sig_bytes = None
+        profile = getattr(request.user, 'userprofile', None)
+        if profile and profile.firma:
+            sig_bytes = profile.firma.read()
+        else:
+            firma_b64 = request.data.get('firma_imagen', '')
+            if firma_b64:
                 _, data = firma_b64.split(',', 1)
                 sig_bytes = b64lib.b64decode(data)
 
+        if sig_bytes and ciclo.adjunto_informeServicio:
+            try:
                 # Leer el PDF original sin modificarlo
                 pdf_path = ciclo.adjunto_informeServicio.path
                 doc = fitz.open(pdf_path)
@@ -1135,14 +1142,21 @@ class ConfirmarFirmaDireccionCiclo(APIView):
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
 
-        firma_b64 = request.data.get('firma_imagen', '')
-        # Base: PDF firmado por área si existe, sino el original de ST
-        fuente = ciclo.adjunto_firmado_area or ciclo.adjunto_informeServicio
-        if firma_b64 and fuente:
-            try:
+        # Obtener bytes de firma: primero del perfil, si no del canvas
+        sig_bytes = None
+        profile = getattr(request.user, 'userprofile', None)
+        if profile and profile.firma:
+            sig_bytes = profile.firma.read()
+        else:
+            firma_b64 = request.data.get('firma_imagen', '')
+            if firma_b64:
                 _, data = firma_b64.split(',', 1)
                 sig_bytes = b64lib.b64decode(data)
 
+        # Base: PDF firmado por área si existe, sino el original de ST
+        fuente = ciclo.adjunto_firmado_area or ciclo.adjunto_informeServicio
+        if sig_bytes and fuente:
+            try:
                 doc = fitz.open(fuente.path)
                 page = doc[-1]
                 pw, ph = page.rect.width, page.rect.height

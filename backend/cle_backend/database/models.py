@@ -67,6 +67,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES, max_length=50)
     rol = models.CharField(max_length=50)
+    firma = models.ImageField(upload_to='firmas_usuarios/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.get_area_tematica_display()} - {self.rol}"
