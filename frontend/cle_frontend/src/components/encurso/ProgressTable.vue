@@ -3417,10 +3417,13 @@
 
       const confirmarFirmaResponsableAreaCiclo = async () => {
         const ciclo = cicloSeleccionado.value;
-        if (!ciclo || !firmaHecha.value) return;
-        const firmaBase64 = signatureCanvas.value.toDataURL('image/png');
+        if (!ciclo || (!firmaUsuarioUrl.value && !firmaHecha.value)) return;
+        const payload = {};
+        if (!firmaUsuarioUrl.value && firmaHecha.value) {
+          payload.firma_imagen = signatureCanvas.value.toDataURL('image/png');
+        }
         try {
-          await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${ciclo.id}/`, { firma_imagen: firmaBase64 });
+          await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${ciclo.id}/`, payload);
           mostrarModalFirmaResponsableArea.value = false;
           firmaHecha.value = false;
           fetchData();
@@ -3446,10 +3449,13 @@
 
       const confirmarFirmaDireccionCiclo = async () => {
         const ciclo = cicloSeleccionado.value;
-        if (!ciclo || !firmaHechaDir.value) return;
-        const firmaBase64 = signatureCanvasDir.value.toDataURL('image/png');
+        if (!ciclo || (!firmaUsuarioUrl.value && !firmaHechaDir.value)) return;
+        const payload = {};
+        if (!firmaUsuarioUrl.value && firmaHechaDir.value) {
+          payload.firma_imagen = signatureCanvasDir.value.toDataURL('image/png');
+        }
         try {
-          await api.put(`/encurso/confirmar_firma_direccion_ciclo/${ciclo.id}/`, { firma_imagen: firmaBase64 });
+          await api.put(`/encurso/confirmar_firma_direccion_ciclo/${ciclo.id}/`, payload);
           mostrarModalFirmaDireccion.value = false;
           firmaHechaDir.value = false;
           fetchData();
