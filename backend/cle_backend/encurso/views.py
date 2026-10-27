@@ -1092,15 +1092,15 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
                 page = doc[-1]
                 pw, ph = page.rect.width, page.rect.height
 
-                # Imagen de la firma (esquina superior izquierda)
-                sig_rect = fitz.Rect(15, 15, 205, 63)
+                # Imagen de la firma (esquina inferior izquierda)
+                sig_rect = fitz.Rect(15, ph - 80, 205, ph - 32)
                 page.insert_image(sig_rect, stream=sig_bytes)
 
                 # Texto debajo: nombre + fecha
                 signer = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
                 fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
                 page.insert_textbox(
-                    fitz.Rect(15, 65, 205, 82),
+                    fitz.Rect(15, ph - 30, 205, ph - 8),
                     f"Firmado por: {signer}  —  {fecha}",
                     fontsize=7,
                     align=fitz.TEXT_ALIGN_CENTER,
@@ -1147,14 +1147,14 @@ class ConfirmarFirmaDireccionCiclo(APIView):
                 page = doc[-1]
                 pw, ph = page.rect.width, page.rect.height
 
-                # Imagen de la firma (esquina superior derecha)
-                sig_rect = fitz.Rect(pw - 205, 15, pw - 15, 63)
+                # Imagen de la firma (esquina inferior derecha)
+                sig_rect = fitz.Rect(pw - 205, ph - 80, pw - 15, ph - 32)
                 page.insert_image(sig_rect, stream=sig_bytes)
 
                 signer = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
                 fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
                 page.insert_textbox(
-                    fitz.Rect(pw - 205, 65, pw - 15, 82),
+                    fitz.Rect(pw - 205, ph - 30, pw - 15, ph - 8),
                     f"Firmado por: {signer}  —  {fecha}",
                     fontsize=7,
                     align=fitz.TEXT_ALIGN_CENTER,
