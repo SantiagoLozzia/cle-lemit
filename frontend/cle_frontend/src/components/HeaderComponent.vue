@@ -85,11 +85,15 @@ export default {
       const formData = new FormData();
       formData.append('firma', archivo);
       try {
-        const res = await api.post('/authentication/firma_usuario/', formData);
+        const res = await api.post('/authentication/firma_usuario/', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
         firmaUrl.value = res.data.firma_url;
-        // Notificar a otros componentes
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: res.data.firma_url } }));
-      } catch (e) { /* silenciar error de red */ }
+      } catch (err) {
+        console.error('Error al subir firma:', err.response?.data || err.message);
+        alert('Error al subir la firma: ' + (err.response?.data?.error || err.message));
+      }
       e.target.value = '';
     };
 

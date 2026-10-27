@@ -25,8 +25,13 @@ class NombreYApellidoUser(APIView):
 class FirmaUsuario(APIView):
     permission_classes = [IsAuthenticated]
 
+    def _get_profile(self, user):
+        from database.models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        return profile
+
     def get(self, request):
-        profile = request.user.userprofile
+        profile = self._get_profile(request.user)
         if profile.firma:
             url = request.build_absolute_uri(profile.firma.url)
             return Response({'tiene_firma': True, 'firma_url': url})
@@ -36,7 +41,7 @@ class FirmaUsuario(APIView):
         archivo = request.FILES.get('firma')
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
-        profile = request.user.userprofile
+        profile = self._get_profile(request.user)
         if profile.firma:
             profile.firma.delete(save=False)
         profile.firma = archivo
@@ -45,7 +50,7 @@ class FirmaUsuario(APIView):
         return Response({'tiene_firma': True, 'firma_url': url})
 
     def delete(self, request):
-        profile = request.user.userprofile
+        profile = self._get_profile(request.user)
         if profile.firma:
             profile.firma.delete(save=False)
             profile.firma = None
