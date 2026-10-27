@@ -552,7 +552,7 @@
                   <span style="display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
-                       title="Ver informe ST"></i>
+                       title="Ver informe (ST)"></i>
                     <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
                        class="bi bi-sticky-fill st-nota-correcciones"
                        @click.stop="abrirModalVerCorrecciones(ciclo)"
@@ -578,8 +578,8 @@
                 </template>
                 <template v-else-if="ciclo.firma_responsable_area">
                   <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                     @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
-                     title="Ver informe firmado"></i>
+                     @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                     title="Ver informe firmado por responsable de área"></i>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
@@ -590,14 +590,18 @@
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.firma_responsable_area && !ciclo.firma_direccion">
                   <div v-if="isDireccion">
-                    <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                    <i class="bi bi-filetype-pdf action-icon"
+                       @click="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                       title="Ver informe firmado por área"></i>
                     <i class="bi bi-pen action-icon text-primary" style="cursor:pointer; margin-left:4px;"
                        @click="abrirModalFirmaDireccionCiclo(ciclo)" title="Firmar"></i>
                   </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.firma_direccion">
-                  <i class="bi bi-check-lg" style="color:green;"></i>
+                  <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                     @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                     title="Ver informe firmado por dirección"></i>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
@@ -1512,24 +1516,35 @@
 
     <!-- Modales Firma Dirección -->
     <div class="modal" :class="{ 'show': mostrarModalFirmaDireccion }" id="mostrarModalFirmaDireccion">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
-          <!-- Modal Header -->
           <div class="modal-header">
             <h4 class="modal-title">Firma Dirección</h4>
             <button type="button" class="btn-close" @click="cerrarModalFirmaDireccion"></button>
           </div>
-
-          <!-- Modal Body -->
           <div class="modal-body">
-            <div>
-              Firmar?
+            <p class="text-muted small mb-2">Dibujá tu firma en el recuadro:</p>
+            <div class="firma-canvas-wrapper">
+              <canvas
+                ref="signatureCanvasDir"
+                width="1120" height="300"
+                @mousedown="startSignatureDir"
+                @mousemove="drawSignatureDir"
+                @mouseup="stopSignatureDir"
+                @mouseleave="stopSignatureDir"
+                @touchstart.prevent="startSignatureDirTouch"
+                @touchmove.prevent="drawSignatureDirTouch"
+                @touchend="stopSignatureDir">
+              </canvas>
             </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" @click="limpiarFirmaDir">
+              <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+            </button>
           </div>
-
-          <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="confirmarFirmaDireccionCiclo()">Si</button>
+            <button type="button" class="btn btn-primary" @click="confirmarFirmaDireccionCiclo" :disabled="!firmaHechaDir">
+              <i class="bi bi-pen"></i> Firmar
+            </button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalFirmaDireccion">Cancelar</button>
           </div>
         </div>
@@ -1954,6 +1969,28 @@
 
       // Setup Direccion - Firma
       const mostrarModalFirmaDireccion = ref(false);
+      const signatureCanvasDir = ref(null);
+      const firmaHechaDir = ref(false);
+      let _sigDirDrawing = false, _sigDirLastX = 0, _sigDirLastY = 0;
+
+      const _sigDirGetPos = (clientX, clientY) => {
+        const c = signatureCanvasDir.value;
+        const r = c.getBoundingClientRect();
+        return { x: (clientX - r.left) * c.width / r.width, y: (clientY - r.top) * c.height / r.height };
+      };
+      const _sigDirStroke = (x, y) => {
+        const ctx = signatureCanvasDir.value.getContext('2d');
+        ctx.beginPath(); ctx.moveTo(_sigDirLastX, _sigDirLastY); ctx.lineTo(x, y);
+        ctx.strokeStyle = '#00008b'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.stroke();
+        _sigDirLastX = x; _sigDirLastY = y; firmaHechaDir.value = true;
+      };
+      const startSignatureDir = (e) => { _sigDirDrawing = true; const p = _sigDirGetPos(e.clientX, e.clientY); _sigDirLastX = p.x; _sigDirLastY = p.y; };
+      const drawSignatureDir = (e) => { if (!_sigDirDrawing) return; const p = _sigDirGetPos(e.clientX, e.clientY); _sigDirStroke(p.x, p.y); };
+      const stopSignatureDir = () => { _sigDirDrawing = false; };
+      const startSignatureDirTouch = (e) => { _sigDirDrawing = true; const t = e.touches[0]; const p = _sigDirGetPos(t.clientX, t.clientY); _sigDirLastX = p.x; _sigDirLastY = p.y; };
+      const drawSignatureDirTouch = (e) => { if (!_sigDirDrawing) return; const t = e.touches[0]; const p = _sigDirGetPos(t.clientX, t.clientY); _sigDirStroke(p.x, p.y); };
+      const limpiarFirmaDir = () => { const c = signatureCanvasDir.value; if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); firmaHechaDir.value = false; };
 
       // Setup Archivar
       const mostrarModalArchivar = ref(false);
@@ -2006,7 +2043,9 @@
                     revision_confirmada: c.revision_confirmada,
                     correcciones_st: c.correcciones_st || [],
                     firma_responsable_area: c.firma_responsable_area,
+                    adjunto_firmado_area: c.adjunto_firmado_area || null,
                     firma_direccion: c.firma_direccion,
+                    adjunto_firmado_direccion: c.adjunto_firmado_direccion || null,
                   }));
 
                 const informes_interarea = (data.informes_inter_area || [])
@@ -3366,6 +3405,7 @@
       const abrirModalFirmaDireccionCiclo = (ciclo) => {
         cicloSeleccionado.value = ciclo;
         mostrarModalFirmaDireccion.value = true;
+        nextTick(() => limpiarFirmaDir());
       };
 
       const cerrarModalFirmaDireccion = () => {
@@ -3374,23 +3414,21 @@
 
       const confirmarFirmaDireccionCiclo = async () => {
         const ciclo = cicloSeleccionado.value;
-        if (!ciclo) return;
+        if (!ciclo || !firmaHechaDir.value) return;
+        const firmaBase64 = signatureCanvasDir.value.toDataURL('image/png');
         try {
-          await api.put(`/encurso/confirmar_firma_direccion_ciclo/${ciclo.id}/`);
+          await api.put(`/encurso/confirmar_firma_direccion_ciclo/${ciclo.id}/`, { firma_imagen: firmaBase64 });
           mostrarModalFirmaDireccion.value = false;
+          firmaHechaDir.value = false;
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
           mostrarModalFirmaDireccion.value = false;
-          console.error('Error al confirmar Firma Dirección:', error);
-              mostrarModalFirmaDireccion.value = false;
-              showErrorAlert.value = true; 
-                setTimeout(() => {
-                    showErrorAlert.value = false;
-                }, 5000);
-          }
-        };
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        }
+      };
 
         // Archivar
         const abrirModalArchivar = (fila) => {
@@ -3681,6 +3719,9 @@
         cerrarModalFirmaDireccion,
         mostrarModalFirmaDireccion,
         confirmarFirmaDireccionCiclo,
+        signatureCanvasDir, firmaHechaDir,
+        startSignatureDir, drawSignatureDir, stopSignatureDir,
+        startSignatureDirTouch, drawSignatureDirTouch, limpiarFirmaDir,
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,

@@ -1086,6 +1086,7 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
                 _, data = firma_b64.split(',', 1)
                 sig_bytes = b64lib.b64decode(data)
 
+                # Leer el PDF original sin modificarlo
                 pdf_path = ciclo.adjunto_informeServicio.path
                 doc = fitz.open(pdf_path)
                 page = doc[-1]
@@ -1109,10 +1110,19 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
                 doc.save(buf)
                 doc.close()
                 buf.seek(0)
-                with open(pdf_path, 'wb') as f:
-                    f.write(buf.read())
+
+                # Guardar en campo separado, sin tocar el original
+                import os
+                original_name = os.path.basename(ciclo.adjunto_informeServicio.name)
+                nombre_base, ext = os.path.splitext(original_name)
+                from django.core.files.base import ContentFile
+                ciclo.adjunto_firmado_area.save(
+                    f"{nombre_base}_firmado_area{ext}",
+                    ContentFile(buf.read()),
+                    save=False,
+                )
             except Exception:
-                logger.exception("Error al insertar firma en PDF")
+                logger.exception("Error al insertar firma de área en PDF")
 
         ciclo.firma_responsable_area = True
         ciclo.save()
@@ -1124,6 +1134,49 @@ class ConfirmarFirmaDireccionCiclo(APIView):
 
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+
+        firma_b64 = request.data.get('firma_imagen', '')
+        # Base: PDF firmado por área si existe, sino el original de ST
+        fuente = ciclo.adjunto_firmado_area or ciclo.adjunto_informeServicio
+        if firma_b64 and fuente:
+            try:
+                _, data = firma_b64.split(',', 1)
+                sig_bytes = b64lib.b64decode(data)
+
+                doc = fitz.open(fuente.path)
+                page = doc[-1]
+                pw, ph = page.rect.width, page.rect.height
+
+                # Firma a la izquierda de la firma de área
+                sig_rect = fitz.Rect(pw - 420, ph - 80, pw - 230, ph - 32)
+                page.insert_image(sig_rect, stream=sig_bytes)
+
+                signer = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
+                fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
+                page.insert_textbox(
+                    fitz.Rect(pw - 420, ph - 30, pw - 230, ph - 8),
+                    f"Firmado por: {signer}  —  {fecha}",
+                    fontsize=7,
+                    align=fitz.TEXT_ALIGN_CENTER,
+                )
+
+                buf = BytesIO()
+                doc.save(buf)
+                doc.close()
+                buf.seek(0)
+
+                import os
+                from django.core.files.base import ContentFile
+                original_name = os.path.basename(ciclo.adjunto_informeServicio.name)
+                nombre_base, ext = os.path.splitext(original_name)
+                ciclo.adjunto_firmado_direccion.save(
+                    f"{nombre_base}_firmado_dir{ext}",
+                    ContentFile(buf.read()),
+                    save=False,
+                )
+            except Exception:
+                logger.exception("Error al insertar firma de dirección en PDF")
+
         ciclo.firma_direccion = True
         ciclo.save()
         return JsonResponse({'message': 'Firma Dirección confirmada correctamente.'})

@@ -320,7 +320,9 @@ class CicloInforme(models.Model):
 
     # Firmas
     firma_responsable_area = models.BooleanField(default=False)
+    adjunto_firmado_area = models.FileField(upload_to='informes_firmados/', null=True, blank=True)
     firma_direccion = models.BooleanField(default=False)
+    adjunto_firmado_direccion = models.FileField(upload_to='informes_firmados/', null=True, blank=True)
 
     class Meta:
         ordering = ['numero']
