@@ -549,12 +549,13 @@
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
-                  <div style="display:inline-flex; align-items:center; gap:4px;">
+                  <div style="position:relative; display:inline-flex; align-items:center;">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
                        title="Ver informe (ST)"></i>
                     <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
                        class="bi bi-sticky-fill st-nota-correcciones"
+                       style="position:absolute; top:-5px; right:-12px; font-size:13px;"
                        @click.stop="abrirModalVerCorrecciones(ciclo)"
                        :title="ciclo.correcciones_st.length + ' corrección(es) registrada(s)'"></i>
                   </div>
