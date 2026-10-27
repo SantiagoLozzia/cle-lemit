@@ -2004,6 +2004,7 @@
                     correcciones: c.correcciones,
                     corregir: c.corregir,
                     revision_confirmada: c.revision_confirmada,
+                    correcciones_st: c.correcciones_st || [],
                     firma_responsable_area: c.firma_responsable_area,
                     firma_direccion: c.firma_direccion,
                   }));
