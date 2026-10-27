@@ -67,7 +67,7 @@ export default {
       try {
         const res = await api.get('/authentication/firma_usuario/');
         firmaUrl.value = res.data.firma_url || null;
-      } catch {}
+      } catch (e) { /* silenciar error de red */ }
     };
 
     const abrirModalFirma = async () => {
@@ -89,7 +89,7 @@ export default {
         firmaUrl.value = res.data.firma_url;
         // Notificar a otros componentes
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: res.data.firma_url } }));
-      } catch {}
+      } catch (e) { /* silenciar error de red */ }
       e.target.value = '';
     };
 
@@ -98,7 +98,7 @@ export default {
         await api.delete('/authentication/firma_usuario/');
         firmaUrl.value = null;
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: null } }));
-      } catch {}
+      } catch (e) { /* silenciar error de red */ }
     };
 
     const logout = () => {

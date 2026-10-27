@@ -1964,7 +1964,7 @@
         try {
           const res = await api.get('/authentication/firma_usuario/');
           firmaUsuarioUrl.value = res.data.firma_url || null;
-        } catch {}
+        } catch (e) { /* silenciar error de red */ }
       };
 
       // Setup Responsable del Area - Firma
