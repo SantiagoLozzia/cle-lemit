@@ -549,7 +549,7 @@
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
-                  <span style="display:inline-flex; align-items:center; gap:4px;">
+                  <div style="display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
                        title="Ver informe (ST)"></i>
@@ -557,7 +557,7 @@
                        class="bi bi-sticky-fill st-nota-correcciones"
                        @click.stop="abrirModalVerCorrecciones(ciclo)"
                        :title="ciclo.correcciones_st.length + ' corrección(es) registrada(s)'"></i>
-                  </span>
+                  </div>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
@@ -567,12 +567,21 @@
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
-                  <div v-if="isAreaJefe">
-                    <i class="bi bi-filetype-pdf action-icon" @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
-                    <i class="bi bi-exclamation-triangle action-icon text-warning" style="cursor:pointer; margin-left:4px;"
-                       @click="abrirModalAdvertirCorreccionesCiclo(ciclo)" title="Advertir correcciones"></i>
-                    <i class="bi bi-pen action-icon text-primary" style="cursor:pointer; margin-left:4px;"
-                       @click="abrirModalFirmaResponsableAreaCiclo(ciclo)" title="Firmar"></i>
+                  <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupArea(ciclo.id)" title="Opciones">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                    </button>
+                    <div v-if="popupAreaId === ciclo.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupAreaId = null" title="Ver informe">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--warn" style="--rotation: -90deg" @click.stop="abrirModalAdvertirCorreccionesCiclo(ciclo); popupAreaId = null" title="Advertir correcciones">
+                        <i class="bi bi-exclamation-triangle"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -45deg" @click.stop="abrirModalFirmaResponsableAreaCiclo(ciclo); popupAreaId = null" title="Firmar">
+                        <i class="bi bi-pen"></i>
+                      </div>
+                    </div>
                   </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
@@ -589,12 +598,18 @@
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.firma_responsable_area && !ciclo.firma_direccion">
-                  <div v-if="isDireccion">
-                    <i class="bi bi-filetype-pdf action-icon"
-                       @click="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
-                       title="Ver informe firmado por área"></i>
-                    <i class="bi bi-pen action-icon text-primary" style="cursor:pointer; margin-left:4px;"
-                       @click="abrirModalFirmaDireccionCiclo(ciclo)" title="Firmar"></i>
+                  <div v-if="isDireccion" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupDir(ciclo.id)" title="Opciones">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                    </button>
+                    <div v-if="popupDirId === ciclo.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio); popupDirId = null" title="Ver informe">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaDireccionCiclo(ciclo); popupDirId = null" title="Firmar">
+                        <i class="bi bi-pen"></i>
+                      </div>
+                    </div>
                   </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
@@ -1950,6 +1965,8 @@
 
       // Setup Servicios Tecnologicos - Revision
       const popupSTId = ref(null);
+      const popupAreaId = ref(null);
+      const popupDirId = ref(null);
       const mostrarModalCorreccionST = ref(false);
       const textoCorreccionST = ref('');
       const cicloParaCorreccionST = ref(null);
@@ -2175,6 +2192,8 @@
         filaSeleccionada.value = null;
         popupInformeAreaId.value = null;
         popupSTId.value = null;
+        popupAreaId.value = null;
+        popupDirId.value = null;
       };
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
@@ -2892,6 +2911,8 @@
         if (opening) {
           document.dispatchEvent(new Event('speed-dial-open'));
           popupSTId.value = null;
+          popupAreaId.value = null;
+          popupDirId.value = null;
         }
       };
 
@@ -3295,10 +3316,28 @@
       const togglePopupST = (cicloId) => {
         const opening = popupSTId.value !== cicloId;
         popupSTId.value = opening ? cicloId : null;
+        popupAreaId.value = null;
+        popupDirId.value = null;
         if (opening) {
           document.dispatchEvent(new Event('speed-dial-open'));
           popupInformeAreaId.value = null;
         }
+      };
+
+      const togglePopupArea = (cicloId) => {
+        const opening = popupAreaId.value !== cicloId;
+        popupAreaId.value = opening ? cicloId : null;
+        popupSTId.value = null;
+        popupDirId.value = null;
+        if (opening) document.dispatchEvent(new Event('speed-dial-open'));
+      };
+
+      const togglePopupDir = (cicloId) => {
+        const opening = popupDirId.value !== cicloId;
+        popupDirId.value = opening ? cicloId : null;
+        popupSTId.value = null;
+        popupAreaId.value = null;
+        if (opening) document.dispatchEvent(new Event('speed-dial-open'));
       };
 
       const seleccionarArchivoSTCorregido = async (event, ciclo) => {
@@ -3726,6 +3765,10 @@
         // Servicios Tecnologicos - Revision
         popupSTId,
         togglePopupST,
+        popupAreaId,
+        togglePopupArea,
+        popupDirId,
+        togglePopupDir,
         seleccionarArchivoSTCorregido,
         registrarCorreccionST,
         cerrarModalCorreccionST,
@@ -3949,6 +3992,8 @@
   }
   .st-sd-opcion--ok { border-color: #198754; color: #198754; }
   .st-sd-opcion--ok:hover { background-color: #198754; color: white; }
+  .st-sd-opcion--warn { border-color: #ffc107; color: #b57a00; }
+  .st-sd-opcion--warn:hover { background-color: #ffc107; color: white; }
   .st-nota-correcciones { font-size: 16px; color: #ffc107; cursor: pointer; }
   .st-nota-correcciones:hover { color: #e0a800; }
   .firma-canvas-wrapper {
