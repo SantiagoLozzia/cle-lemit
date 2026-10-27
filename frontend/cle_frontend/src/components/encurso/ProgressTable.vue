@@ -550,7 +550,9 @@
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
                   <span style="display:inline-flex; align-items:center; gap:4px;">
-                    <i class="bi bi-check-lg" style="color:green;"></i>
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
+                       title="Ver informe ST"></i>
                     <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
                        class="bi bi-sticky-fill st-nota-correcciones"
                        @click.stop="abrirModalVerCorrecciones(ciclo)"
@@ -575,7 +577,9 @@
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.firma_responsable_area">
-                  <i class="bi bi-check-lg" style="color:green;"></i>
+                  <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                     @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
+                     title="Ver informe firmado"></i>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
