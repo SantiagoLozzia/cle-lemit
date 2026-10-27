@@ -587,9 +587,12 @@
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.firma_responsable_area">
-                  <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                     @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
-                     title="Ver informe firmado por responsable de área"></i>
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                       title="Ver informe firmado por responsable de área">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
+                  </div>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
@@ -615,9 +618,12 @@
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.firma_direccion">
-                  <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                     @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
-                     title="Ver informe firmado por dirección"></i>
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                       title="Ver informe firmado por dirección">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
+                  </div>
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
