@@ -65,7 +65,7 @@ export default {
 
     const cargarFirma = async () => {
       try {
-        const res = await api.get('/authentication/firma_usuario/');
+        const res = await api.get('/auth/firma_usuario/');
         firmaUrl.value = res.data.firma_url || null;
       } catch (e) { /* silenciar error de red */ }
     };
@@ -85,7 +85,7 @@ export default {
       const formData = new FormData();
       formData.append('firma', archivo);
       try {
-        const res = await api.post('/authentication/firma_usuario/', formData, {
+        const res = await api.post('/auth/firma_usuario/', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         firmaUrl.value = res.data.firma_url;
@@ -99,7 +99,7 @@ export default {
 
     const eliminarFirma = async () => {
       try {
-        await api.delete('/authentication/firma_usuario/');
+        await api.delete('/auth/firma_usuario/');
         firmaUrl.value = null;
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: null } }));
       } catch (e) { /* silenciar error de red */ }

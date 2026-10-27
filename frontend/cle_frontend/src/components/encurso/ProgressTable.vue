@@ -1962,7 +1962,7 @@
       const firmaUsuarioUrl = ref(null);
       const cargarFirmaUsuario = async () => {
         try {
-          const res = await api.get('/authentication/firma_usuario/');
+          const res = await api.get('/auth/firma_usuario/');
           firmaUsuarioUrl.value = res.data.firma_url || null;
         } catch (e) { /* silenciar error de red */ }
       };
