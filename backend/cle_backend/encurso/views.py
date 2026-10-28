@@ -1242,7 +1242,7 @@ class RechazarFirmaResponsableAreaCiclo(APIView):
 
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
-        destino = request.data.get('destino', 'st')  # 'st' o 'administracion'
+        destino = request.data.get('destino', 'st')  # 'st', 'administracion' o 'area'
         nota = request.data.get('nota_rechazo', '')
 
         # Borrar PDF firmado por área y dirección
@@ -1256,7 +1256,12 @@ class RechazarFirmaResponsableAreaCiclo(APIView):
         # Resetear firmas
         ciclo.firma_responsable_area = False
         ciclo.firma_direccion = False
-        ciclo.revision_confirmada = False
+
+        # Si vuelve al área, el informe de Admin/ST se conserva y revision_confirmada queda True
+        # para que el jefe vuelva a la etapa de firma con el mismo informe disponible.
+        # Si va a ST o Administración, se desactiva revision_confirmada para volver al paso anterior.
+        if destino != 'area':
+            ciclo.revision_confirmada = False
 
         # Guardar nota de rechazo de área
         ciclo.nota_rechazo_area = nota

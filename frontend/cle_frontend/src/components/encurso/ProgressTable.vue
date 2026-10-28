@@ -1640,7 +1640,9 @@
             <button type="button" class="btn-close" @click="cerrarModalRechazoArea"></button>
           </div>
           <div class="modal-body">
-            <p class="text-muted small mb-3">El informe volverá al paso seleccionado para su corrección.</p>
+            <p class="text-muted small mb-3">
+              El informe volverá al paso seleccionado. Si elegís <strong>Área</strong>, el informe de Administración/ST se conserva y podrás volver a firmarlo o rechazarlo nuevamente.
+            </p>
             <div class="mb-3">
               <label class="form-label fw-semibold">Enviar de vuelta a:</label>
               <div class="d-flex gap-3">
@@ -1649,6 +1651,9 @@
                 </label>
                 <label style="cursor:pointer;">
                   <input type="radio" v-model="rechazoAreaDestino" value="administracion"> &nbsp;Administración
+                </label>
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoAreaDestino" value="area"> &nbsp;Área
                 </label>
               </div>
             </div>
@@ -1659,11 +1664,11 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-warning" @click="confirmarRechazoArea"
+            <button type="button" class="btn btn-sm btn-warning" @click="confirmarRechazoArea"
                     :disabled="!rechazoAreaDestino || !rechazoAreaNota.trim()">
               <i class="bi bi-x-circle"></i> Rechazar
             </button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoArea">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModalRechazoArea">Cancelar</button>
           </div>
         </div>
       </div>
@@ -1718,11 +1723,11 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-danger" @click="confirmarRechazoDireccion"
+            <button type="button" class="btn btn-sm btn-danger" @click="confirmarRechazoDireccion"
                     :disabled="!rechazoDireccionDestino || !rechazoDireccionNota.trim()">
               <i class="bi bi-x-circle"></i> Rechazar
             </button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoDireccion">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModalRechazoDireccion">Cancelar</button>
           </div>
         </div>
       </div>
