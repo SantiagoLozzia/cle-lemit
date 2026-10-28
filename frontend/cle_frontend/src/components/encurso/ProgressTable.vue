@@ -389,7 +389,15 @@
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
-                  <span v-if="ciclo.adjunto_informeArea" class="attachment-wrap">
+                  <!-- Rechazo del jefe de área: mostrar informe de servicio (con formato institucional) en esta columna -->
+                  <span v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada && ciclo.adjunto_informeServicio"
+                        style="display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe con formato institucional"></i>
+                    <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:14px;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
+                  </span>
+                  <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
                        @click.stop="togglePopupInformeArea(ciclo.id)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
@@ -511,15 +519,6 @@
                          @click="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
-                  </template>
-                  <!-- Con informe servicio, rechazado al área por el responsable de área -->
-                  <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada">
-                    <div style="display:inline-flex; align-items:center; gap:4px;">
-                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
-                      <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:14px;"
-                         @click="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
-                    </div>
                   </template>
                   <!-- Con informe servicio, sin corrección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
