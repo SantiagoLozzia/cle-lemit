@@ -42,6 +42,7 @@ urlpatterns = [
     path('registrar_correccion_st/<int:ciclo_id>/', RegistrarCorreccionST.as_view(), name='registrar-correccion-st'),
     path('confirmar_firma_responsable_area_ciclo/<int:ciclo_id>/', ConfirmarFirmaResponsableAreaCiclo.as_view(), name='confirmar-firma-responsable-area-ciclo'),
     path('confirmar_firma_direccion_ciclo/<int:ciclo_id>/', ConfirmarFirmaDireccionCiclo.as_view(), name='confirmar-firma-direccion-ciclo'),
+    path('rechazar_firma_direccion_ciclo/<int:ciclo_id>/', RechazarFirmaDireccionCiclo.as_view(), name='rechazar-firma-direccion-ciclo'),
     # Editar Data Servicio
     path('editar_dataservicio/<int:nro_dataServicio>/', EditarDataServicio.as_view(), name='editar-dataservicio'),
     path('aprobar_labs_adicionales/<int:nro_circuito>/', AprobarLabsAdicionales.as_view(), name='aprobar-labs-adicionales'),

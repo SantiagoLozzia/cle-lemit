@@ -325,6 +325,10 @@ class CicloInforme(models.Model):
     firma_direccion = models.BooleanField(default=False)
     adjunto_firmado_direccion = models.FileField(upload_to='informes_firmados/', null=True, blank=True)
 
+    # Rechazo de dirección
+    nota_rechazo_direccion = models.TextField(null=True, blank=True)
+    rechazo_destino = models.CharField(max_length=20, null=True, blank=True)  # 'st' o 'administracion'
+
     class Meta:
         ordering = ['numero']
 

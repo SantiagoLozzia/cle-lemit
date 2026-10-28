@@ -497,6 +497,21 @@
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
+                  <!-- Con informe servicio, rechazado a administración -->
+                  <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_destino === 'administracion'">
+                    <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                      <label :for="'inf-rechazado-' + ciclo.id" style="cursor:pointer;" title="Reemplazar informe">
+                        <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
+                      </label>
+                      <input :id="'inf-rechazado-' + ciclo.id" style="display:none;" type="file"
+                             @change="subirInformeServicioCiclo($event, ciclo)">
+                      <i class="bi bi-sticky-fill" style="color:#dc3545; cursor:pointer; font-size:16px;"
+                         @click="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                    </div>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
                   <!-- Con informe servicio, sin corrección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
                     <i class="bi bi-check-lg" style="color:green;"></i>
@@ -528,7 +543,12 @@
                     <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                       <span v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0" class="st-sd-badge"></span>
+                      <span v-if="ciclo.rechazo_destino === 'st'" class="st-sd-badge st-sd-badge--rechazo"></span>
                     </button>
+                    <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
+                       style="position:absolute; top:-6px; left:calc(100% - 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
+                       @click.stop="abrirModalVerRechazo(ciclo)"
+                       title="Ver nota de rechazo de Dirección"></i>
                     <div v-if="popupSTId === ciclo.id" class="st-sd-dial">
                       <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
                         <i class="bi bi-eye"></i>
@@ -605,11 +625,14 @@
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                     </button>
                     <div v-if="popupDirId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio); popupDirId = null" title="Ver informe">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio); popupDirId = null" title="Ver informe">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaDireccionCiclo(ciclo); popupDirId = null" title="Firmar">
                         <i class="bi bi-pen"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoDireccion(ciclo); popupDirId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
@@ -1589,6 +1612,62 @@
       </div>
     </div>
 
+    <!-- Modal Rechazo Dirección -->
+    <div class="modal" :class="{ 'show': mostrarModalRechazoDireccion }" id="mostrarModalRechazoDireccion">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" style="color:#dc3545;">Rechazar Informe</h5>
+            <button type="button" class="btn-close" @click="cerrarModalRechazoDireccion"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-3">El informe volverá al paso seleccionado para su corrección.</p>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Enviar de vuelta a:</label>
+              <div class="d-flex gap-3">
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoDireccionDestino" value="st"> &nbsp;Servicios Tecnológicos
+                </label>
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoDireccionDestino" value="administracion"> &nbsp;Administración
+                </label>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold">Nota de corrección:</label>
+              <textarea v-model="rechazoDireccionNota" class="form-control" rows="4"
+                        placeholder="Describí los cambios necesarios..." style="border-color:#dc3545;"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" @click="confirmarRechazoDireccion"
+                    :disabled="!rechazoDireccionDestino || !rechazoDireccionNota.trim()">
+              <i class="bi bi-x-circle"></i> Rechazar
+            </button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoDireccion">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ver Nota Rechazo Dirección -->
+    <div class="modal" :class="{ 'show': mostrarModalVerRechazo }" id="mostrarModalVerRechazo">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#dc3545;">
+            <h5 class="modal-title" style="color:#dc3545;">Nota de Rechazo — Dirección</h5>
+            <button type="button" class="btn-close" @click="mostrarModalVerRechazo = false"></button>
+          </div>
+          <div class="modal-body">
+            <p style="white-space:pre-line;">{{ cicloVerRechazo?.nota_rechazo_direccion }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="mostrarModalVerRechazo = false">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modales Archivo -->
     <div class="modal" :class="{ 'show': mostrarModalArchivar }" id="mostrarModalArchivar">
       <div class="modal-dialog">
@@ -2016,6 +2095,13 @@
       const drawSignatureTouch = (e) => { if (!_sigDrawing) return; const t = e.touches[0]; const p = _sigGetPos(t.clientX, t.clientY); _sigStroke(p.x, p.y); };
       const limpiarFirma = () => { const c = signatureCanvas.value; if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); firmaHecha.value = false; };
 
+      // Setup Rechazo Dirección
+      const mostrarModalRechazoDireccion = ref(false);
+      const mostrarModalVerRechazo = ref(false);
+      const cicloVerRechazo = ref(null);
+      const rechazoDireccionDestino = ref('st');
+      const rechazoDireccionNota = ref('');
+
       // Setup Direccion - Firma
       const mostrarModalFirmaDireccion = ref(false);
       const signatureCanvasDir = ref(null);
@@ -2095,6 +2181,8 @@
                     adjunto_firmado_area: c.adjunto_firmado_area || null,
                     firma_direccion: c.firma_direccion,
                     adjunto_firmado_direccion: c.adjunto_firmado_direccion || null,
+                    nota_rechazo_direccion: c.nota_rechazo_direccion || null,
+                    rechazo_destino: c.rechazo_destino || null,
                   }));
 
                 const informes_interarea = (data.informes_inter_area || [])
@@ -3512,6 +3600,39 @@
         }
       };
 
+        // Rechazo Dirección
+        const abrirModalRechazoDireccion = (ciclo) => {
+          cicloSeleccionado.value = ciclo;
+          rechazoDireccionDestino.value = 'st';
+          rechazoDireccionNota.value = '';
+          mostrarModalRechazoDireccion.value = true;
+        };
+        const cerrarModalRechazoDireccion = () => {
+          mostrarModalRechazoDireccion.value = false;
+        };
+        const abrirModalVerRechazo = (ciclo) => {
+          cicloVerRechazo.value = ciclo;
+          mostrarModalVerRechazo.value = true;
+        };
+        const confirmarRechazoDireccion = async () => {
+          const ciclo = cicloSeleccionado.value;
+          if (!ciclo) return;
+          try {
+            await api.put(`/encurso/rechazar_firma_direccion_ciclo/${ciclo.id}/`, {
+              destino: rechazoDireccionDestino.value,
+              nota_rechazo: rechazoDireccionNota.value,
+            });
+            mostrarModalRechazoDireccion.value = false;
+            fetchData();
+            showSuccessAlert.value = true;
+            setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+          } catch (error) {
+            mostrarModalRechazoDireccion.value = false;
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 5000);
+          }
+        };
+
         // Archivar
         const abrirModalArchivar = (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
@@ -3809,6 +3930,11 @@
         signatureCanvasDir, firmaHechaDir,
         startSignatureDir, drawSignatureDir, stopSignatureDir,
         startSignatureDirTouch, drawSignatureDirTouch, limpiarFirmaDir,
+        // Rechazo Dirección
+        mostrarModalRechazoDireccion, mostrarModalVerRechazo, cicloVerRechazo,
+        rechazoDireccionDestino, rechazoDireccionNota,
+        abrirModalRechazoDireccion, cerrarModalRechazoDireccion,
+        abrirModalVerRechazo, confirmarRechazoDireccion,
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,
@@ -3999,6 +4125,9 @@
   .st-sd-opcion--ok:hover { background-color: #198754; color: white; }
   .st-sd-opcion--warn { border-color: #ffc107; color: #b57a00; }
   .st-sd-opcion--warn:hover { background-color: #ffc107; color: white; }
+  .st-sd-opcion--danger { border-color: #dc3545; color: #dc3545; }
+  .st-sd-opcion--danger:hover { background-color: #dc3545; color: white; }
+  .st-sd-badge--rechazo { background: #dc3545; }
   .st-nota-correcciones { font-size: 16px; color: #ffc107; cursor: pointer; }
   .st-nota-correcciones:hover { color: #e0a800; }
   .firma-canvas-wrapper {

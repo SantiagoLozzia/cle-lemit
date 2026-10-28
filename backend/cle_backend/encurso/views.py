@@ -1196,6 +1196,35 @@ class ConfirmarFirmaDireccionCiclo(APIView):
         return JsonResponse({'message': 'Firma Dirección confirmada correctamente.'})
 
 
+class RechazarFirmaDireccionCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsDireccion]
+
+    def put(self, request, ciclo_id, *args, **kwargs):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        destino = request.data.get('destino', 'st')  # 'st' o 'administracion'
+        nota = request.data.get('nota_rechazo', '')
+
+        # Borrar PDF firmado por área y dirección
+        if ciclo.adjunto_firmado_area:
+            ciclo.adjunto_firmado_area.delete(save=False)
+            ciclo.adjunto_firmado_area = None
+        if ciclo.adjunto_firmado_direccion:
+            ciclo.adjunto_firmado_direccion.delete(save=False)
+            ciclo.adjunto_firmado_direccion = None
+
+        # Resetear firmas
+        ciclo.firma_direccion = False
+        ciclo.firma_responsable_area = False
+        ciclo.revision_confirmada = False
+
+        # Guardar nota de rechazo y destino
+        ciclo.nota_rechazo_direccion = nota
+        ciclo.rechazo_destino = destino
+
+        ciclo.save()
+        return JsonResponse({'message': 'Informe rechazado correctamente.'})
+
+
 class ArchivarCircuito(APIView):
     permission_classes = [IsAuthenticated, IsAdministracionOrDireccion]
 
