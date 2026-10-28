@@ -550,7 +550,7 @@
                        @click.stop="abrirModalVerRechazo(ciclo)"
                        title="Ver nota de rechazo de Dirección"></i>
                     <i v-if="ciclo.rechazo_area_destino === 'st'" class="bi bi-sticky-fill"
-                       style="position:absolute; top:-6px; left:calc(100% + 8px); font-size:13px; color:#fd7e14; cursor:pointer; z-index:10;"
+                       style="position:absolute; top:-6px; left:calc(100% + 8px); font-size:13px; color:#ffc107; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazoArea(ciclo)"
                        title="Ver nota de rechazo de Área"></i>
                     <div v-if="popupSTId === ciclo.id" class="st-sd-dial">
@@ -574,7 +574,7 @@
                        style="font-size:14px; color:#dc3545; cursor:pointer;"
                        @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
                     <i v-if="ciclo.rechazo_area_destino === 'st'" class="bi bi-sticky-fill"
-                       style="font-size:14px; color:#fd7e14; cursor:pointer;"
+                       style="font-size:14px; color:#ffc107; cursor:pointer;"
                        @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
                   </div>
                 </template>
@@ -603,16 +603,13 @@
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                     </button>
                     <div v-if="popupAreaId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupAreaId = null" title="Ver informe">
+                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupAreaId = null" title="Ver informe">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--warn" style="--rotation: -105deg" @click.stop="abrirModalAdvertirCorreccionesCiclo(ciclo); popupAreaId = null" title="Advertir correcciones">
-                        <i class="bi bi-exclamation-triangle"></i>
-                      </div>
-                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="abrirModalFirmaResponsableAreaCiclo(ciclo); popupAreaId = null" title="Firmar">
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaResponsableAreaCiclo(ciclo); popupAreaId = null" title="Firmar">
                         <i class="bi bi-pen"></i>
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -15deg" @click.stop="abrirModalRechazoArea(ciclo); popupAreaId = null" title="Rechazar">
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -45deg" @click.stop="abrirModalRechazoArea(ciclo); popupAreaId = null" title="Rechazar">
                         <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
@@ -621,7 +618,7 @@
                     <i class="bi bi-stopwatch"></i>
                     <i v-if="ciclo.rechazo_destino === 'administracion' || ciclo.rechazo_area_destino === 'administracion'"
                        class="bi bi-sticky-fill"
-                       :style="'font-size:14px; cursor:pointer; color:' + (ciclo.rechazo_destino === 'administracion' ? '#dc3545' : '#fd7e14') + ';'"
+                       :style="'font-size:14px; cursor:pointer; color:' + (ciclo.rechazo_destino === 'administracion' ? '#dc3545' : '#ffc107') + ';'"
                        @click.stop="ciclo.rechazo_destino === 'administracion' ? abrirModalVerRechazo(ciclo) : abrirModalVerRechazoArea(ciclo)"
                        title="Ver nota de rechazo"></i>
                   </div>
@@ -1638,8 +1635,8 @@
     <div class="modal" :class="{ 'show': mostrarModalRechazoArea }" id="mostrarModalRechazoArea">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header" style="border-bottom-color:#fd7e14;">
-            <h5 class="modal-title" style="color:#fd7e14;">Rechazar Informe — Responsable Área</h5>
+          <div class="modal-header" style="border-bottom-color:#ffc107;">
+            <h5 class="modal-title" style="color:#b8860b;">Rechazar Informe — Responsable Área</h5>
             <button type="button" class="btn-close" @click="cerrarModalRechazoArea"></button>
           </div>
           <div class="modal-body">
@@ -1658,7 +1655,7 @@
             <div class="mb-2">
               <label class="form-label fw-semibold">Nota de corrección:</label>
               <textarea v-model="rechazoAreaNota" class="form-control" rows="4"
-                        placeholder="Describí los cambios necesarios..." style="border-color:#fd7e14;"></textarea>
+                        placeholder="Describí los cambios necesarios..." style="border-color:#ffc107;"></textarea>
             </div>
           </div>
           <div class="modal-footer">
@@ -1676,8 +1673,8 @@
     <div class="modal" :class="{ 'show': mostrarModalVerRechazoArea }" id="mostrarModalVerRechazoArea">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header" style="border-bottom-color:#fd7e14;">
-            <h5 class="modal-title" style="color:#fd7e14;">Nota de Rechazo — Responsable Área</h5>
+          <div class="modal-header" style="border-bottom-color:#ffc107;">
+            <h5 class="modal-title" style="color:#b8860b;">Nota de Rechazo — Responsable Área</h5>
             <button type="button" class="btn-close" @click="mostrarModalVerRechazoArea = false"></button>
           </div>
           <div class="modal-body">
@@ -4216,7 +4213,7 @@
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: #fd7e14;
+    background: #9c7cc7;
   }
   .st-sd-dial {
     position: absolute;
@@ -4256,8 +4253,8 @@
   .st-sd-opcion--danger { border-color: #dc3545; color: #dc3545; }
   .st-sd-opcion--danger:hover { background-color: #dc3545; color: white; }
   .st-sd-badge--rechazo { background: #dc3545; }
-  .st-nota-correcciones { font-size: 16px; color: #ffc107; cursor: pointer; }
-  .st-nota-correcciones:hover { color: #e0a800; }
+  .st-nota-correcciones { font-size: 16px; color: #9c7cc7; cursor: pointer; }
+  .st-nota-correcciones:hover { color: #7b5fa0; }
   .firma-canvas-wrapper {
     border: 2px solid #ced4da;
     border-radius: 6px;
