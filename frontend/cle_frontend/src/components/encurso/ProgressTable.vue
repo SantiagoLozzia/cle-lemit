@@ -512,6 +512,15 @@
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
+                  <!-- Con informe servicio, rechazado al área por el responsable de área -->
+                  <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada">
+                    <div style="display:inline-flex; align-items:center; gap:4px;">
+                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
+                      <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:14px;"
+                         @click="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
+                    </div>
+                  </template>
                   <!-- Con informe servicio, sin corrección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
                     <i class="bi bi-check-lg" style="color:green;"></i>
@@ -538,7 +547,7 @@
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
+                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && ciclo.rechazo_area_destino !== 'area'">
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
