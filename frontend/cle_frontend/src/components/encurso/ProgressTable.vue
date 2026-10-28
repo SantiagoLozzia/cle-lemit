@@ -549,6 +549,10 @@
                        style="position:absolute; top:-6px; left:calc(100% - 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazo(ciclo)"
                        title="Ver nota de rechazo de Dirección"></i>
+                    <i v-if="ciclo.rechazo_area_destino === 'st'" class="bi bi-sticky-fill"
+                       style="position:absolute; top:-6px; left:calc(100% + 8px); font-size:13px; color:#fd7e14; cursor:pointer; z-index:10;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)"
+                       title="Ver nota de rechazo de Área"></i>
                     <div v-if="popupSTId === ciclo.id" class="st-sd-dial">
                       <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
                         <i class="bi bi-eye"></i>
@@ -564,7 +568,15 @@
                       </div>
                     </div>
                   </div>
-                  <i v-else class="bi bi-stopwatch"></i>
+                  <div v-else style="display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-stopwatch"></i>
+                    <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
+                       style="font-size:14px; color:#dc3545; cursor:pointer;"
+                       @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                    <i v-if="ciclo.rechazo_area_destino === 'st'" class="bi bi-sticky-fill"
+                       style="font-size:14px; color:#fd7e14; cursor:pointer;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                  </div>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
                   <div style="position:relative; display:inline-flex; align-items:center;">
@@ -591,18 +603,28 @@
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                     </button>
                     <div v-if="popupAreaId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupAreaId = null" title="Ver informe">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupAreaId = null" title="Ver informe">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--warn" style="--rotation: -90deg" @click.stop="abrirModalAdvertirCorreccionesCiclo(ciclo); popupAreaId = null" title="Advertir correcciones">
+                      <div class="st-sd-opcion st-sd-opcion--warn" style="--rotation: -105deg" @click.stop="abrirModalAdvertirCorreccionesCiclo(ciclo); popupAreaId = null" title="Advertir correcciones">
                         <i class="bi bi-exclamation-triangle"></i>
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -45deg" @click.stop="abrirModalFirmaResponsableAreaCiclo(ciclo); popupAreaId = null" title="Firmar">
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="abrirModalFirmaResponsableAreaCiclo(ciclo); popupAreaId = null" title="Firmar">
                         <i class="bi bi-pen"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -15deg" @click.stop="abrirModalRechazoArea(ciclo); popupAreaId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
-                  <i v-else class="bi bi-stopwatch"></i>
+                  <div v-else style="display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-stopwatch"></i>
+                    <i v-if="ciclo.rechazo_destino === 'administracion' || ciclo.rechazo_area_destino === 'administracion'"
+                       class="bi bi-sticky-fill"
+                       :style="'font-size:14px; cursor:pointer; color:' + (ciclo.rechazo_destino === 'administracion' ? '#dc3545' : '#fd7e14') + ';'"
+                       @click.stop="ciclo.rechazo_destino === 'administracion' ? abrirModalVerRechazo(ciclo) : abrirModalVerRechazoArea(ciclo)"
+                       title="Ver nota de rechazo"></i>
+                  </div>
                 </template>
                 <template v-else-if="ciclo.firma_responsable_area">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
@@ -1612,6 +1634,62 @@
       </div>
     </div>
 
+    <!-- Modal Rechazo Responsable Área -->
+    <div class="modal" :class="{ 'show': mostrarModalRechazoArea }" id="mostrarModalRechazoArea">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#fd7e14;">
+            <h5 class="modal-title" style="color:#fd7e14;">Rechazar Informe — Responsable Área</h5>
+            <button type="button" class="btn-close" @click="cerrarModalRechazoArea"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-3">El informe volverá al paso seleccionado para su corrección.</p>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Enviar de vuelta a:</label>
+              <div class="d-flex gap-3">
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoAreaDestino" value="st"> &nbsp;Servicios Tecnológicos
+                </label>
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoAreaDestino" value="administracion"> &nbsp;Administración
+                </label>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold">Nota de corrección:</label>
+              <textarea v-model="rechazoAreaNota" class="form-control" rows="4"
+                        placeholder="Describí los cambios necesarios..." style="border-color:#fd7e14;"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-warning" @click="confirmarRechazoArea"
+                    :disabled="!rechazoAreaDestino || !rechazoAreaNota.trim()">
+              <i class="bi bi-x-circle"></i> Rechazar
+            </button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoArea">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ver Nota Rechazo Área -->
+    <div class="modal" :class="{ 'show': mostrarModalVerRechazoArea }" id="mostrarModalVerRechazoArea">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#fd7e14;">
+            <h5 class="modal-title" style="color:#fd7e14;">Nota de Rechazo — Responsable Área</h5>
+            <button type="button" class="btn-close" @click="mostrarModalVerRechazoArea = false"></button>
+          </div>
+          <div class="modal-body">
+            <p style="white-space:pre-line;">{{ cicloVerRechazoArea?.nota_rechazo_area }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="mostrarModalVerRechazoArea = false">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Rechazo Dirección -->
     <div class="modal" :class="{ 'show': mostrarModalRechazoDireccion }" id="mostrarModalRechazoDireccion">
       <div class="modal-dialog">
@@ -1630,6 +1708,9 @@
                 </label>
                 <label style="cursor:pointer;">
                   <input type="radio" v-model="rechazoDireccionDestino" value="administracion"> &nbsp;Administración
+                </label>
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoDireccionDestino" value="area"> &nbsp;Área
                 </label>
               </div>
             </div>
@@ -2102,6 +2183,13 @@
       const rechazoDireccionDestino = ref('st');
       const rechazoDireccionNota = ref('');
 
+      // Setup Rechazo Área
+      const mostrarModalRechazoArea = ref(false);
+      const mostrarModalVerRechazoArea = ref(false);
+      const cicloVerRechazoArea = ref(null);
+      const rechazoAreaDestino = ref('st');
+      const rechazoAreaNota = ref('');
+
       // Setup Direccion - Firma
       const mostrarModalFirmaDireccion = ref(false);
       const signatureCanvasDir = ref(null);
@@ -2183,6 +2271,8 @@
                     adjunto_firmado_direccion: c.adjunto_firmado_direccion || null,
                     nota_rechazo_direccion: c.nota_rechazo_direccion || null,
                     rechazo_destino: c.rechazo_destino || null,
+                    nota_rechazo_area: c.nota_rechazo_area || null,
+                    rechazo_area_destino: c.rechazo_area_destino || null,
                   }));
 
                 const informes_interarea = (data.informes_inter_area || [])
@@ -3633,6 +3723,39 @@
           }
         };
 
+        // Rechazo Área
+        const abrirModalRechazoArea = (ciclo) => {
+          cicloSeleccionado.value = ciclo;
+          rechazoAreaDestino.value = 'st';
+          rechazoAreaNota.value = '';
+          mostrarModalRechazoArea.value = true;
+        };
+        const cerrarModalRechazoArea = () => {
+          mostrarModalRechazoArea.value = false;
+        };
+        const abrirModalVerRechazoArea = (ciclo) => {
+          cicloVerRechazoArea.value = ciclo;
+          mostrarModalVerRechazoArea.value = true;
+        };
+        const confirmarRechazoArea = async () => {
+          const ciclo = cicloSeleccionado.value;
+          if (!ciclo) return;
+          try {
+            await api.put(`/encurso/rechazar_firma_area_ciclo/${ciclo.id}/`, {
+              destino: rechazoAreaDestino.value,
+              nota_rechazo: rechazoAreaNota.value,
+            });
+            mostrarModalRechazoArea.value = false;
+            fetchData();
+            showSuccessAlert.value = true;
+            setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+          } catch (error) {
+            mostrarModalRechazoArea.value = false;
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 5000);
+          }
+        };
+
         // Archivar
         const abrirModalArchivar = (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
@@ -3935,6 +4058,11 @@
         rechazoDireccionDestino, rechazoDireccionNota,
         abrirModalRechazoDireccion, cerrarModalRechazoDireccion,
         abrirModalVerRechazo, confirmarRechazoDireccion,
+        // Rechazo Área
+        mostrarModalRechazoArea, mostrarModalVerRechazoArea, cicloVerRechazoArea,
+        rechazoAreaDestino, rechazoAreaNota,
+        abrirModalRechazoArea, cerrarModalRechazoArea,
+        abrirModalVerRechazoArea, confirmarRechazoArea,
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,

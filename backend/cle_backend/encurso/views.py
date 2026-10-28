@@ -1201,7 +1201,7 @@ class RechazarFirmaDireccionCiclo(APIView):
 
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
-        destino = request.data.get('destino', 'st')  # 'st' o 'administracion'
+        destino = request.data.get('destino', 'st')  # 'st', 'administracion' o 'area'
         nota = request.data.get('nota_rechazo', '')
 
         # Borrar PDF firmado por área y dirección
@@ -1217,12 +1217,57 @@ class RechazarFirmaDireccionCiclo(APIView):
         ciclo.firma_responsable_area = False
         ciclo.revision_confirmada = False
 
+        # Si vuelve al área, borrar también informe de servicio e informe de área
+        if destino == 'area':
+            if ciclo.adjunto_informeServicio:
+                ciclo.adjunto_informeServicio.delete(save=False)
+                ciclo.adjunto_informeServicio = None
+            if ciclo.adjunto_informeArea:
+                ciclo.adjunto_informeArea.delete(save=False)
+                ciclo.adjunto_informeArea = None
+            for registro in ciclo.registros_ensayo.all():
+                registro.archivo.delete(save=False)
+                registro.delete()
+
         # Guardar nota de rechazo y destino
         ciclo.nota_rechazo_direccion = nota
         ciclo.rechazo_destino = destino
 
         ciclo.save()
         return JsonResponse({'message': 'Informe rechazado correctamente.'})
+
+
+class RechazarFirmaResponsableAreaCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def put(self, request, ciclo_id, *args, **kwargs):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        destino = request.data.get('destino', 'st')  # 'st' o 'administracion'
+        nota = request.data.get('nota_rechazo', '')
+
+        # Borrar PDF firmado por área y dirección
+        if ciclo.adjunto_firmado_area:
+            ciclo.adjunto_firmado_area.delete(save=False)
+            ciclo.adjunto_firmado_area = None
+        if ciclo.adjunto_firmado_direccion:
+            ciclo.adjunto_firmado_direccion.delete(save=False)
+            ciclo.adjunto_firmado_direccion = None
+
+        # Resetear firmas
+        ciclo.firma_responsable_area = False
+        ciclo.firma_direccion = False
+        ciclo.revision_confirmada = False
+
+        # Guardar nota de rechazo de área
+        ciclo.nota_rechazo_area = nota
+        ciclo.rechazo_area_destino = destino
+
+        # Limpiar nota de rechazo de dirección si la había
+        ciclo.nota_rechazo_direccion = None
+        ciclo.rechazo_destino = None
+
+        ciclo.save()
+        return JsonResponse({'message': 'Informe rechazado por responsable de área correctamente.'})
 
 
 class ArchivarCircuito(APIView):
