@@ -544,12 +544,13 @@
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                       <span v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0" class="st-sd-badge"></span>
                       <span v-if="ciclo.rechazo_destino === 'st'" class="st-sd-badge st-sd-badge--rechazo"></span>
+                      <span v-if="ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area'" class="st-sd-badge st-sd-badge--rechazo-area"></span>
                     </button>
                     <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
                        style="position:absolute; top:-6px; left:calc(100% - 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazo(ciclo)"
                        title="Ver nota de rechazo de Dirección"></i>
-                    <i v-if="ciclo.rechazo_area_destino === 'st'" class="bi bi-sticky-fill"
+                    <i v-if="ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area'" class="bi bi-sticky-fill"
                        style="position:absolute; top:-6px; left:calc(100% + 8px); font-size:13px; color:#ffc107; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazoArea(ciclo)"
                        title="Ver nota de rechazo de Área"></i>
@@ -573,7 +574,7 @@
                     <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
                        style="font-size:14px; color:#dc3545; cursor:pointer;"
                        @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
-                    <i v-if="ciclo.rechazo_area_destino === 'st'" class="bi bi-sticky-fill"
+                    <i v-if="ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area'" class="bi bi-sticky-fill"
                        style="font-size:14px; color:#ffc107; cursor:pointer;"
                        @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
                   </div>
@@ -4258,6 +4259,7 @@
   .st-sd-opcion--danger { border-color: #dc3545; color: #dc3545; }
   .st-sd-opcion--danger:hover { background-color: #dc3545; color: white; }
   .st-sd-badge--rechazo { background: #dc3545; }
+  .st-sd-badge--rechazo-area { background: #ffc107; }
   .st-nota-correcciones { font-size: 16px; color: #9c7cc7; cursor: pointer; }
   .st-nota-correcciones:hover { color: #7b5fa0; }
   .firma-canvas-wrapper {

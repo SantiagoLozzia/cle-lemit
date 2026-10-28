@@ -1257,11 +1257,9 @@ class RechazarFirmaResponsableAreaCiclo(APIView):
         ciclo.firma_responsable_area = False
         ciclo.firma_direccion = False
 
-        # Si vuelve al área, el informe de Admin/ST se conserva y revision_confirmada queda True
-        # para que el jefe vuelva a la etapa de firma con el mismo informe disponible.
-        # Si va a ST o Administración, se desactiva revision_confirmada para volver al paso anterior.
-        if destino != 'area':
-            ciclo.revision_confirmada = False
+        # Para todos los destinos: revision_confirmada=False para volver al paso del informe de servicio.
+        # El adjunto_informeServicio nunca se borra aquí — siempre se conserva el trabajo de Admin/ST.
+        ciclo.revision_confirmada = False
 
         # Guardar nota de rechazo de área
         ciclo.nota_rechazo_area = nota
