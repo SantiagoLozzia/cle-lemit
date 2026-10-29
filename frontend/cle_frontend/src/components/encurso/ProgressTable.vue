@@ -582,7 +582,9 @@
                       <span v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0" class="st-sd-badge"></span>
                       <span v-if="ciclo.rechazo_destino === 'st'" class="st-sd-badge st-sd-badge--rechazo"></span>
                       <span v-if="ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area'" class="st-sd-badge st-sd-badge--rechazo-area"></span>
+                      <span v-if="stReemplazadoIds.has(ciclo.id)" class="st-sd-badge st-sd-badge--confirmar"></span>
                     </button>
+                    <span v-if="stReemplazadoIds.has(ciclo.id)" class="st-confirmar-hint">↑ Confirmar</span>
                     <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
                        style="position:absolute; top:-6px; left:calc(100% - 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazo(ciclo)"
@@ -609,14 +611,17 @@
                       </div>
                     </div>
                   </div>
-                  <div v-else style="display:inline-flex; align-items:center; gap:4px;">
-                    <i class="bi bi-stopwatch"></i>
-                    <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
-                       style="font-size:14px; color:#dc3545; cursor:pointer;"
-                       @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
-                    <i v-if="ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area'" class="bi bi-sticky-fill"
-                       style="font-size:14px; color:#ffc107; cursor:pointer;"
-                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                  <div v-else style="display:inline-flex; flex-direction:column; align-items:center; gap:2px;">
+                    <div style="display:inline-flex; align-items:center; gap:4px;">
+                      <i class="bi bi-stopwatch"></i>
+                      <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
+                         style="font-size:14px; color:#dc3545; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                      <i v-if="ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area'" class="bi bi-sticky-fill"
+                         style="font-size:14px; color:#ffc107; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                    </div>
+                    <span class="st-pend-label">Pend. confirmación</span>
                   </div>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
@@ -2267,6 +2272,7 @@
       // Setup Servicios Tecnologicos - Revision
       const popupSTId = ref(null);
       const popupAreaId = ref(null);
+      const stReemplazadoIds = ref(new Set());
       const popupDirId = ref(null);
       const mostrarModalCorreccionST = ref(false);
       const textoCorreccionST = ref('');
@@ -3699,6 +3705,9 @@
         try {
           await api.post(`/encurso/subir_informe_st_corregido/${ciclo.id}/`, formData);
           fetchData();
+          const updatedReemplazados = new Set(stReemplazadoIds.value);
+          updatedReemplazados.add(ciclo.id);
+          stReemplazadoIds.value = updatedReemplazados;
           cicloParaCorreccionST.value = ciclo;
           textoCorreccionST.value = '';
           mostrarModalCorreccionST.value = true;
@@ -3747,6 +3756,9 @@
         try {
           await api.put(`/encurso/confirmar_revision_ciclo/${ciclo.id}/`);
           fetchData();
+          const updatedReemplazados = new Set(stReemplazadoIds.value);
+          updatedReemplazados.delete(ciclo.id);
+          stReemplazadoIds.value = updatedReemplazados;
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
@@ -4223,6 +4235,7 @@
         registrarCorreccionST,
         cerrarModalCorreccionST,
         confirmarRevisionST,
+        stReemplazadoIds,
         mostrarModalCorreccionST,
         textoCorreccionST,
         abrirModalVerCorrecciones,
@@ -4485,6 +4498,32 @@
   .st-sd-opcion--danger:hover { background-color: #dc3545; color: white; }
   .st-sd-badge--rechazo { background: #dc3545; }
   .st-sd-badge--rechazo-area { background: #ffc107; }
+  .st-sd-badge--confirmar {
+    background: #198754;
+    animation: pulse-confirmar 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-confirmar {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(1.5); }
+  }
+  /* Texto "↑ Confirmar" bajo el trigger para ST */
+  .st-confirmar-hint {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #198754;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  /* Texto "Pend. confirmación" bajo el reloj para no-ST */
+  .st-pend-label {
+    font-size: 9px;
+    color: #6c757d;
+    white-space: nowrap;
+  }
   .st-nota-correcciones { font-size: 16px; color: #9c7cc7; cursor: pointer; }
   .st-nota-correcciones:hover { color: #7b5fa0; }
   .firma-canvas-wrapper {
