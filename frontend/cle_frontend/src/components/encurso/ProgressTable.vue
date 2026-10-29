@@ -644,16 +644,23 @@
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
-                  <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
-                    <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a; cursor:pointer;"
-                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver Word editable"></i>
-                    <button class="btn btn-sm btn-outline-danger" style="padding:1px 6px; font-size:11px;"
-                            @click.stop="generarPDFServicioCiclo(ciclo)"
-                            :disabled="generandoPDFId === ciclo.id"
-                            title="Convertir a PDF">
-                      <i v-if="generandoPDFId === ciclo.id" class="bi bi-hourglass-split"></i>
-                      <i v-else class="bi bi-filetype-pdf"></i>
+                  <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupPDFAdmin(ciclo.id)" title="Ver / Convertir a PDF"
+                            style="border-color:#2b579a; color:#2b579a;">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
                     </button>
+                    <div v-if="popupPDFAdminId === ciclo.id" class="st-sd-dial" @click.stop>
+                      <div class="st-sd-opcion" style="--rotation: -120deg"
+                           @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupPDFAdminId = null" title="Ver Word editable">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion" style="--rotation: -60deg; border-color:#dc3545; color:#dc3545;"
+                           :style="generandoPDFId === ciclo.id ? '--rotation: -60deg; border-color:#dc3545; color:#dc3545; opacity:0.5; pointer-events:none;' : '--rotation: -60deg; border-color:#dc3545; color:#dc3545;'"
+                           @click.stop="generarPDFServicioCiclo(ciclo); popupPDFAdminId = null" title="Convertir a PDF">
+                        <i v-if="generandoPDFId === ciclo.id" class="bi bi-hourglass-split"></i>
+                        <i v-else class="bi bi-filetype-pdf"></i>
+                      </div>
+                    </div>
                   </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
@@ -2274,6 +2281,7 @@
       const popupAreaId = ref(null);
       const stReemplazadoIds = ref(new Set());
       const popupDirId = ref(null);
+      const popupPDFAdminId = ref(null);
       const mostrarModalCorreccionST = ref(false);
       const textoCorreccionST = ref('');
       const cicloParaCorreccionST = ref(null);
@@ -3673,6 +3681,7 @@
         popupSTId.value = opening ? cicloId : null;
         popupAreaId.value = null;
         popupDirId.value = null;
+        popupPDFAdminId.value = null;
         if (opening) {
           document.dispatchEvent(new Event('speed-dial-open'));
           popupInformeAreaId.value = null;
@@ -3684,6 +3693,7 @@
         popupAreaId.value = opening ? cicloId : null;
         popupSTId.value = null;
         popupDirId.value = null;
+        popupPDFAdminId.value = null;
         if (opening) document.dispatchEvent(new Event('speed-dial-open'));
       };
 
@@ -3692,6 +3702,16 @@
         popupDirId.value = opening ? cicloId : null;
         popupSTId.value = null;
         popupAreaId.value = null;
+        popupPDFAdminId.value = null;
+        if (opening) document.dispatchEvent(new Event('speed-dial-open'));
+      };
+
+      const togglePopupPDFAdmin = (cicloId) => {
+        const opening = popupPDFAdminId.value !== cicloId;
+        popupPDFAdminId.value = opening ? cicloId : null;
+        popupSTId.value = null;
+        popupAreaId.value = null;
+        popupDirId.value = null;
         if (opening) document.dispatchEvent(new Event('speed-dial-open'));
       };
 
@@ -4231,6 +4251,8 @@
         togglePopupArea,
         popupDirId,
         togglePopupDir,
+        popupPDFAdminId,
+        togglePopupPDFAdmin,
         seleccionarArchivoSTCorregido,
         registrarCorreccionST,
         cerrarModalCorreccionST,
