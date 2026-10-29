@@ -17,7 +17,7 @@ import HeaderComponent from './components/HeaderComponent.vue';
 import HorizontalMenu from './components/HorizontalMenu.vue';
 
 // Minutos de inactividad antes de cerrar sesión automáticamente
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutos
 
 export default {
   name: 'App',
