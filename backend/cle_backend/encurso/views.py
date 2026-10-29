@@ -1,6 +1,10 @@
 import json
 import logging
+import os
+import subprocess
+import tempfile
 
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import F
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -1065,19 +1069,52 @@ class SubirInformeSTCorregido(APIView):
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
-class SubirPDFServicioCiclo(APIView):
+def _convertir_docx_a_pdf_bytes(ruta_docx):
+    """Convierte un docx a PDF usando LibreOffice headless. Retorna bytes del PDF."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        subprocess.run(
+            [
+                r'C:\Program Files\LibreOffice\program\soffice.exe',
+                '--headless', '--convert-to', 'pdf',
+                '--outdir', tmpdir,
+                ruta_docx,
+            ],
+            timeout=60,
+            check=True,
+            capture_output=True,
+        )
+        nombre_base = os.path.splitext(os.path.basename(ruta_docx))[0]
+        pdf_path = os.path.join(tmpdir, nombre_base + '.pdf')
+        with open(pdf_path, 'rb') as f:
+            return f.read()
+
+
+class GenerarPDFServicioCiclo(APIView):
     permission_classes = [IsAuthenticated, IsAdministracion]
 
     def post(self, request, ciclo_id):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
-        archivo = request.FILES.get('archivo')
-        if not archivo:
-            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
-        if archivo.content_type != 'application/pdf':
-            return Response({'error': 'Solo se permite subir un archivo PDF.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not ciclo.adjunto_informeServicio:
+            return Response({'error': 'No hay informe de servicio para convertir.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            pdf_bytes = _convertir_docx_a_pdf_bytes(ciclo.adjunto_informeServicio.path)
+        except subprocess.CalledProcessError:
+            return Response(
+                {'error': 'Error al convertir el archivo. Verificá que LibreOffice esté instalado en el servidor.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except subprocess.TimeoutExpired:
+            return Response({'error': 'Tiempo de conversión agotado.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         if ciclo.adjunto_informeServicio_pdf:
             ciclo.adjunto_informeServicio_pdf.delete(save=False)
-        ciclo.adjunto_informeServicio_pdf = archivo
+
+        nombre_base = os.path.splitext(os.path.basename(ciclo.adjunto_informeServicio.name))[0]
+        ciclo.adjunto_informeServicio_pdf.save(
+            f'{nombre_base}.pdf',
+            ContentFile(pdf_bytes),
+            save=False,
+        )
         ciclo.pdf_confirmado_admin = True
         ciclo.save()
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)

@@ -616,15 +616,16 @@
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
-                  <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:4px;">
+                  <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
                     <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a; cursor:pointer;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver Word editable"></i>
-                    <label :for="'pdf-admin-' + ciclo.id" style="cursor:pointer;" title="Subir PDF convertido">
-                      <i class="bi bi-filetype-pdf action-icon" style="color:#dc3545;"></i>
-                    </label>
-                    <input :id="'pdf-admin-' + ciclo.id" style="display:none;" type="file"
-                           accept="application/pdf,.pdf"
-                           @change="subirPDFServicioCiclo($event, ciclo)">
+                    <button class="btn btn-sm btn-outline-danger" style="padding:1px 6px; font-size:11px;"
+                            @click.stop="generarPDFServicioCiclo(ciclo)"
+                            :disabled="generandoPDFId === ciclo.id"
+                            title="Convertir a PDF">
+                      <i v-if="generandoPDFId === ciclo.id" class="bi bi-hourglass-split"></i>
+                      <i v-else class="bi bi-filetype-pdf"></i>
+                    </button>
                   </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
@@ -3502,24 +3503,23 @@
               });
         };
       
-      // Administracion - PDF Servicio (Word convertido a PDF)
-      const subirPDFServicioCiclo = async (event, ciclo) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('archivo', file);
+      // Administracion - Generar PDF desde Word (LibreOffice server-side)
+      const generandoPDFId = ref(null);
+      const generarPDFServicioCiclo = async (ciclo) => {
+        generandoPDFId.value = ciclo.id;
         try {
-          await api.post(`/encurso/subir_pdf_servicio_ciclo/${ciclo.id}/`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          });
+          await api.post(`/encurso/generar_pdf_servicio_ciclo/${ciclo.id}/`);
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (error) {
+          const msg = error?.response?.data?.error || 'Error al generar PDF.';
+          alert(msg);
           showErrorAlert.value = true;
           setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        } finally {
+          generandoPDFId.value = null;
         }
-        event.target.value = '';
       };
 
       // Administracion - Informe Servicio por Ciclo
@@ -4076,7 +4076,8 @@
         eliminarAdjuntoInformeInterarea,
         // Administracion - Informe Servicio
         subirInformeServicioCiclo,
-        subirPDFServicioCiclo,
+        generarPDFServicioCiclo,
+        generandoPDFId,
         abrirModalCorreccionesCiclo,
         cerrarModalCorreccionesInformeServicio,
         mostrarModalCorreccionesInformeServicio,
