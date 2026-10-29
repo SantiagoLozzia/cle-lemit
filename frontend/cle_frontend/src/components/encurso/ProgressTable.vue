@@ -410,24 +410,17 @@
                   </span>
                   <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
-                       @click.stop="togglePopupInformeArea(ciclo.id)"
+                       @click.stop="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion ? togglePopupInformeArea(ciclo.id) : abrirArchivo(ciclo.adjunto_informeArea)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
-                    <div v-if="popupInformeAreaId === ciclo.id" class="attach-popup" @click.stop>
-                      <div class="attach-popup-row">
-                        <span class="attach-popup-label">
-                          {{ ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final' }} {{ ciclo.numero }}
-                        </span>
-                        <button class="ia-btn" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)" title="Ver">
-                          <i class="bi bi-eye"></i>
-                        </button>
-                        <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio"
-                                class="ia-btn" @mousedown.prevent="cambiarTipoCiclo(ciclo, fila)" title="Cambiar tipo">
-                          <i class="bi bi-tag"></i>
-                        </button>
-                        <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
-                                class="ia-btn ia-btn-del" @mousedown.prevent="eliminarInformeAreaCiclo(ciclo)" title="Eliminar">
-                          <i class="bi bi-trash"></i>
-                        </button>
+                    <div v-if="popupInformeAreaId === ciclo.id && (isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                         class="st-sd-dial" @click.stop>
+                      <div class="st-sd-opcion" style="--rotation: -120deg"
+                           @click.stop="abrirArchivo(ciclo.adjunto_informeArea); popupInformeAreaId = null" title="Ver">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -60deg"
+                           @click.stop="eliminarInformeAreaCiclo(ciclo); popupInformeAreaId = null" title="Eliminar">
+                        <i class="bi bi-trash"></i>
                       </div>
                     </div>
                   </span>
@@ -497,7 +490,9 @@
                 <span v-if="ciclo.adjunto_informeArea"
                       class="badge"
                       :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
-                      style="font-size:10px;">
+                      :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
+                      :title="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
+                      @click.stop="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
                   {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
                 </span>
               </div>
