@@ -26,8 +26,9 @@
         </div>
         <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
       </div>
+      <div class="table-scroll-wrapper">
       <table class="table table-hover">
-        <thead class="text-center">
+        <thead class="text-center sticky-thead">
           <tr>
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Solicitud de Servicio</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Legajo</th>
@@ -746,6 +747,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- Modales Data Servicio -->
@@ -4281,6 +4283,20 @@
 </script>
   
 <style scoped>
+
+  /* Contenedor de tabla con scrollbar siempre visible en el viewport */
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 215px); /* 130px navbar+menu + 20px padding + ~65px filtros */
+  }
+
+  /* Headers pegados al tope al hacer scroll vertical */
+  .sticky-thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
 
   /* Agrega un borde vertical a la derecha de las subcolumnas específicas */
   .add-border-right {
