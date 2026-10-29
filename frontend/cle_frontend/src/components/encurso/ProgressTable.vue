@@ -4288,7 +4288,7 @@
   .table-scroll-wrapper {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 215px); /* 130px navbar+menu + 20px padding + ~65px filtros */
+    height: calc(100vh - 215px); /* 130px navbar+menu + 20px padding + ~65px filtros */
   }
 
   /* Headers pegados al tope al hacer scroll vertical */
