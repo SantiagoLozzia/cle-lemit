@@ -420,7 +420,7 @@
                         <button class="ia-btn" @mousedown.prevent="abrirArchivo(ciclo.adjunto_informeArea)" title="Ver">
                           <i class="bi bi-eye"></i>
                         </button>
-                        <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                        <button v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio"
                                 class="ia-btn" @mousedown.prevent="cambiarTipoCiclo(ciclo, fila)" title="Cambiar tipo">
                           <i class="bi bi-tag"></i>
                         </button>
@@ -1330,15 +1330,19 @@
           <div class="modal-footer flex-wrap gap-1">
             <template v-if="esCambioTipo">
               <button type="button" class="btn btn-primary" @click="confirmarCambioTipo('parcial')">Parcial</button>
-              <button v-if="hayParcialesPrevios" type="button" class="btn btn-success"
-                      @click="confirmarCambioTipo('complementario')">Complementario</button>
+              <button type="button" class="btn btn-success"
+                      :disabled="!hayParcialesPrevios"
+                      :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
+                      @click="hayParcialesPrevios && confirmarCambioTipo('complementario')">Complementario</button>
               <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
                       @click="confirmarCambioTipo('final')">Final</button>
             </template>
             <template v-else>
               <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
-              <button v-if="hayParcialesPrevios" type="button" class="btn btn-success"
-                      @click="subirInformeAreaCiclo('complementario')">Complementario</button>
+              <button type="button" class="btn btn-success"
+                      :disabled="!hayParcialesPrevios"
+                      :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
+                      @click="hayParcialesPrevios && subirInformeAreaCiclo('complementario')">Complementario</button>
               <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
                       @click="subirInformeAreaCiclo('final')">Final</button>
             </template>

@@ -748,6 +748,8 @@ class CambiarTipoCiclo(APIView):
             return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
         if ciclo.firma_direccion:
             return Response({'error': 'No se puede cambiar el tipo de un informe ya firmado.'}, status=status.HTTP_403_FORBIDDEN)
+        if ciclo.adjunto_informeServicio:
+            return Response({'error': 'No se puede cambiar el tipo: Administración ya subió el informe de servicio.'}, status=status.HTTP_403_FORBIDDEN)
         tipo = request.data.get('tipo')
         if tipo not in ['parcial', 'complementario', 'final']:
             return Response({'error': 'Tipo inválido.'}, status=status.HTTP_400_BAD_REQUEST)
