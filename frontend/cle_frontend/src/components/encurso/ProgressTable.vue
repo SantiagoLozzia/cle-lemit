@@ -38,6 +38,7 @@
             <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
             <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
             <th colspan="1" class="add-border-right align-middle text-center">Servicios Tecnologicos</th>
+            <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
             <th colspan="1" class="add-border-right align-middle text-center">Responsable Area</th>
             <th colspan="1" class="add-border-right align-middle text-center">Direccion</th>
             <th  v-if="isAdminOrTecnologicoOrDireccion" colspan="1" class="align-middle text-center">Archivo</th>
@@ -80,6 +81,8 @@
             <th class="add-border-right align-middle text-center">Formato</th>
             <!-- Subcolumnas de Servicios Tecnologicos -->
             <th class="add-border-right align-middle text-center">Revision</th>
+            <!-- Subcolumnas de Administracion PDF -->
+            <th class="add-border-right align-middle text-center">PDF</th>
             <!-- Subcolumnas de Responsable Area -->
             <th class="add-border-right align-middle text-center">Firma</th>
             <!-- Subcolumnas de Direccion -->
@@ -609,16 +612,44 @@
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
+            <!-- Columna PDF Admin (por ciclo) -->
+            <td class="add-border-right">
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
+                  <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a; cursor:pointer;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver Word editable"></i>
+                    <label :for="'pdf-admin-' + ciclo.id" style="cursor:pointer;" title="Subir PDF convertido">
+                      <i class="bi bi-filetype-pdf action-icon" style="color:#dc3545;"></i>
+                    </label>
+                    <input :id="'pdf-admin-' + ciclo.id" style="display:none;" type="file"
+                           accept="application/pdf,.pdf"
+                           @change="subirPDFServicioCiclo($event, ciclo)">
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <template v-else-if="ciclo.pdf_confirmado_admin && !ciclo.corregir">
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio_pdf)"
+                       title="Ver PDF confirmado por Administración">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
+                  </div>
+                </template>
+              </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+            </td>
+
             <!-- Columna Responsable Área - Firma (por ciclo) -->
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <template v-if="ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
+                <template v-if="ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupArea(ciclo.id)" title="Opciones">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                     </button>
                     <div v-if="popupAreaId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupAreaId = null" title="Ver informe">
+                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio_pdf); popupAreaId = null" title="Ver informe PDF">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaResponsableAreaCiclo(ciclo); popupAreaId = null" title="Firmar">
@@ -640,7 +671,7 @@
                 </template>
                 <template v-else-if="ciclo.firma_responsable_area">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
-                       @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                       @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por responsable de área">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
@@ -659,7 +690,7 @@
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                     </button>
                     <div v-if="popupDirId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio); popupDirId = null" title="Ver informe">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf); popupDirId = null" title="Ver informe PDF firmado por área">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaDireccionCiclo(ciclo); popupDirId = null" title="Firmar">
@@ -674,7 +705,7 @@
                 </template>
                 <template v-else-if="ciclo.firma_direccion">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
-                       @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio)"
+                       @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por dirección">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
@@ -2290,6 +2321,8 @@
                     rechazo_destino: c.rechazo_destino || null,
                     nota_rechazo_area: c.nota_rechazo_area || null,
                     rechazo_area_destino: c.rechazo_area_destino || null,
+                    adjunto_informeServicio_pdf: c.adjunto_informeServicio_pdf || null,
+                    pdf_confirmado_admin: c.pdf_confirmado_admin || false,
                   }));
 
                 const informes_interarea = (data.informes_inter_area || [])
@@ -3469,6 +3502,26 @@
               });
         };
       
+      // Administracion - PDF Servicio (Word convertido a PDF)
+      const subirPDFServicioCiclo = async (event, ciclo) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('archivo', file);
+        try {
+          await api.post(`/encurso/subir_pdf_servicio_ciclo/${ciclo.id}/`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        }
+        event.target.value = '';
+      };
+
       // Administracion - Informe Servicio por Ciclo
       const subirInformeServicioCiclo = async (event, ciclo) => {
         const archivo = event.target.files[0];
@@ -4023,6 +4076,7 @@
         eliminarAdjuntoInformeInterarea,
         // Administracion - Informe Servicio
         subirInformeServicioCiclo,
+        subirPDFServicioCiclo,
         abrirModalCorreccionesCiclo,
         cerrarModalCorreccionesInformeServicio,
         mostrarModalCorreccionesInformeServicio,

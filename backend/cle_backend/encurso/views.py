@@ -1065,6 +1065,24 @@ class SubirInformeSTCorregido(APIView):
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
+class SubirPDFServicioCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if archivo.content_type != 'application/pdf':
+            return Response({'error': 'Solo se permite subir un archivo PDF.'}, status=status.HTTP_400_BAD_REQUEST)
+        if ciclo.adjunto_informeServicio_pdf:
+            ciclo.adjunto_informeServicio_pdf.delete(save=False)
+        ciclo.adjunto_informeServicio_pdf = archivo
+        ciclo.pdf_confirmado_admin = True
+        ciclo.save()
+        return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
+
+
 class RegistrarCorreccionST(APIView):
     permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
 
@@ -1096,10 +1114,10 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
                 _, data = firma_b64.split(',', 1)
                 sig_bytes = b64lib.b64decode(data)
 
-        if sig_bytes and ciclo.adjunto_informeServicio:
+        if sig_bytes and ciclo.adjunto_informeServicio_pdf:
             try:
-                # Leer el PDF original sin modificarlo
-                pdf_path = ciclo.adjunto_informeServicio.path
+                # Leer el PDF generado por Administración
+                pdf_path = ciclo.adjunto_informeServicio_pdf.path
                 doc = fitz.open(pdf_path)
                 page = doc[-1]
                 pw, ph = page.rect.width, page.rect.height
@@ -1123,9 +1141,9 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
                 doc.close()
                 buf.seek(0)
 
-                # Guardar en campo separado, sin tocar el original
+                # Guardar en campo separado, sin tocar el PDF de Admin
                 import os
-                original_name = os.path.basename(ciclo.adjunto_informeServicio.name)
+                original_name = os.path.basename(ciclo.adjunto_informeServicio_pdf.name)
                 nombre_base, ext = os.path.splitext(original_name)
                 from django.core.files.base import ContentFile
                 ciclo.adjunto_firmado_area.save(
@@ -1217,6 +1235,12 @@ class RechazarFirmaDireccionCiclo(APIView):
             ciclo.adjunto_firmado_direccion.delete(save=False)
             ciclo.adjunto_firmado_direccion = None
 
+        # Borrar PDF de Administración (siempre que se rechace)
+        if ciclo.adjunto_informeServicio_pdf:
+            ciclo.adjunto_informeServicio_pdf.delete(save=False)
+            ciclo.adjunto_informeServicio_pdf = None
+        ciclo.pdf_confirmado_admin = False
+
         # Resetear firmas
         ciclo.firma_direccion = False
         ciclo.firma_responsable_area = False
@@ -1257,6 +1281,12 @@ class RechazarFirmaResponsableAreaCiclo(APIView):
         if ciclo.adjunto_firmado_direccion:
             ciclo.adjunto_firmado_direccion.delete(save=False)
             ciclo.adjunto_firmado_direccion = None
+
+        # Borrar PDF de Administración (siempre que se rechace)
+        if ciclo.adjunto_informeServicio_pdf:
+            ciclo.adjunto_informeServicio_pdf.delete(save=False)
+            ciclo.adjunto_informeServicio_pdf = None
+        ciclo.pdf_confirmado_admin = False
 
         # Resetear firmas
         ciclo.firma_responsable_area = False

@@ -329,9 +329,13 @@ class CicloInforme(models.Model):
     nota_rechazo_direccion = models.TextField(null=True, blank=True)
     rechazo_destino = models.CharField(max_length=20, null=True, blank=True)  # 'st', 'administracion', 'area'
 
+    # PDF generado por Administración (conversión del Word editable a PDF)
+    adjunto_informeServicio_pdf = models.FileField(upload_to='informes_servicio_pdf/', null=True, blank=True)
+    pdf_confirmado_admin = models.BooleanField(default=False)
+
     # Rechazo de responsable de área
     nota_rechazo_area = models.TextField(null=True, blank=True)
-    rechazo_area_destino = models.CharField(max_length=20, null=True, blank=True)  # 'st' o 'administracion'
+    rechazo_area_destino = models.CharField(max_length=20, null=True, blank=True)  # 'st', 'administracion' o 'area'
 
     class Meta:
         ordering = ['numero']
