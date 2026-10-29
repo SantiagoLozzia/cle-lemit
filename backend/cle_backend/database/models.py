@@ -337,6 +337,10 @@ class CicloInforme(models.Model):
     nota_rechazo_area = models.TextField(null=True, blank=True)
     rechazo_area_destino = models.CharField(max_length=20, null=True, blank=True)  # 'st', 'administracion' o 'area'
 
+    # Rechazo de Servicios Tecnológicos
+    nota_rechazo_st = models.TextField(null=True, blank=True)
+    rechazo_st_destino = models.CharField(max_length=20, null=True, blank=True)  # 'administracion' o 'area'
+
     class Meta:
         ordering = ['numero']
 

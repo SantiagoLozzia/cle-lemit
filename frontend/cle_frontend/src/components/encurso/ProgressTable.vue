@@ -392,13 +392,21 @@
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
-                  <!-- Rechazo del jefe de área: mostrar informe de servicio (con formato institucional) en esta columna -->
+                  <!-- Rechazo del jefe de área: mostrar informe de servicio en esta columna -->
                   <span v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada && ciclo.adjunto_informeServicio"
                         style="display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe con formato institucional"></i>
                     <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:14px;"
                        @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
+                  </span>
+                  <!-- Rechazo de ST hacia área: mostrar informe de servicio en esta columna -->
+                  <span v-else-if="ciclo.rechazo_st_destino === 'area' && ciclo.adjunto_informeServicio"
+                        style="display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
+                    <i class="bi bi-sticky-fill" style="color:#9c7cc7; cursor:pointer; font-size:14px;"
+                       @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                   </span>
                   <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
@@ -512,7 +520,7 @@
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
-                  <!-- Con informe servicio, rechazado a administración -->
+                  <!-- Con informe servicio, rechazado a administración por Dirección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_destino === 'administracion'">
                     <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
                       <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
@@ -525,6 +533,22 @@
                              @change="subirInformeServicioCiclo($event, ciclo)">
                       <i class="bi bi-sticky-fill" style="color:#dc3545; cursor:pointer; font-size:16px;"
                          @click="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                    </div>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
+                  <!-- Con informe servicio, rechazado a administración por ST -->
+                  <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_st_destino === 'administracion'">
+                    <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                      <label :for="'inf-rechazado-st-' + ciclo.id" style="cursor:pointer;" title="Reemplazar informe">
+                        <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
+                      </label>
+                      <input :id="'inf-rechazado-st-' + ciclo.id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
+                             @change="subirInformeServicioCiclo($event, ciclo)">
+                      <i class="bi bi-sticky-fill" style="color:#9c7cc7; cursor:pointer; font-size:16px;"
+                         @click="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
@@ -555,7 +579,7 @@
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && ciclo.rechazo_area_destino !== 'area'">
+                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && ciclo.rechazo_area_destino !== 'area' && !ciclo.rechazo_st_destino">
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
@@ -572,17 +596,20 @@
                        @click.stop="abrirModalVerRechazoArea(ciclo)"
                        title="Ver nota de rechazo de Área"></i>
                     <div v-if="popupSTId === ciclo.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <div class="st-sd-opcion" style="--rotation: -90deg" title="Reemplazar archivo">
+                      <div class="st-sd-opcion" style="--rotation: -105deg" title="Reemplazar archivo">
                         <label :for="'st-reemplazar-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
                           <i class="bi bi-arrow-repeat"></i>
                         </label>
                         <input :id="'st-reemplazar-' + ciclo.id" type="file" style="display:none;" accept=".doc,.docx,.odt,.rtf" @change="seleccionarArchivoSTCorregido($event, ciclo)">
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -45deg" @click.stop="confirmarRevisionST(ciclo)" title="Confirmar OK">
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="confirmarRevisionST(ciclo)" title="Confirmar OK">
                         <i class="bi bi-check-lg"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -15deg" @click.stop="abrirModalRechazoST(ciclo); popupSTId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
@@ -1739,6 +1766,65 @@
       </div>
     </div>
 
+    <!-- Modal Rechazo ST -->
+    <div class="modal" :class="{ 'show': mostrarModalRechazoST }" id="mostrarModalRechazoST">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#9c7cc7;">
+            <h5 class="modal-title" style="color:#9c7cc7;">Rechazar Informe — Servicios Tecnológicos</h5>
+            <button type="button" class="btn-close" @click="cerrarModalRechazoST"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-3">
+              El informe volverá al paso seleccionado para su corrección.
+            </p>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Enviar de vuelta a:</label>
+              <div class="d-flex gap-3">
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoSTDestino" value="administracion"> &nbsp;Administración
+                </label>
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoSTDestino" value="area"> &nbsp;Área
+                </label>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold">Nota de corrección:</label>
+              <textarea v-model="rechazoSTNota" class="form-control" rows="4"
+                        placeholder="Describí los cambios necesarios..." style="border-color:#9c7cc7;"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-sm" style="background-color:#9c7cc7; color:#fff; border:none;"
+                    @click="confirmarRechazoST"
+                    :disabled="!rechazoSTDestino || !rechazoSTNota.trim()">
+              <i class="bi bi-x-circle"></i> Rechazar
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModalRechazoST">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ver Nota Rechazo ST -->
+    <div class="modal" :class="{ 'show': mostrarModalVerRechazoST }" id="mostrarModalVerRechazoST">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#9c7cc7;">
+            <h5 class="modal-title" style="color:#9c7cc7;">Nota de Rechazo — Servicios Tecnológicos</h5>
+            <button type="button" class="btn-close" @click="mostrarModalVerRechazoST = false"></button>
+          </div>
+          <div class="modal-body">
+            <p style="white-space:pre-line;">{{ cicloVerRechazoST?.nota_rechazo_st }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="mostrarModalVerRechazoST = false">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Rechazo Dirección -->
     <div class="modal" :class="{ 'show': mostrarModalRechazoDireccion }" id="mostrarModalRechazoDireccion">
       <div class="modal-dialog">
@@ -2239,6 +2325,13 @@
       const rechazoAreaDestino = ref('st');
       const rechazoAreaNota = ref('');
 
+      // Setup Rechazo ST
+      const mostrarModalRechazoST = ref(false);
+      const mostrarModalVerRechazoST = ref(false);
+      const cicloVerRechazoST = ref(null);
+      const rechazoSTDestino = ref('administracion');
+      const rechazoSTNota = ref('');
+
       // Setup Direccion - Firma
       const mostrarModalFirmaDireccion = ref(false);
       const signatureCanvasDir = ref(null);
@@ -2324,6 +2417,8 @@
                     rechazo_area_destino: c.rechazo_area_destino || null,
                     adjunto_informeServicio_pdf: c.adjunto_informeServicio_pdf || null,
                     pdf_confirmado_admin: c.pdf_confirmado_admin || false,
+                    nota_rechazo_st: c.nota_rechazo_st || null,
+                    rechazo_st_destino: c.rechazo_st_destino || null,
                   }));
 
                 const informes_interarea = (data.informes_inter_area || [])
@@ -3826,6 +3921,39 @@
           }
         };
 
+        // Rechazo ST
+        const abrirModalRechazoST = (ciclo) => {
+          cicloSeleccionado.value = ciclo;
+          rechazoSTDestino.value = 'administracion';
+          rechazoSTNota.value = '';
+          mostrarModalRechazoST.value = true;
+        };
+        const cerrarModalRechazoST = () => {
+          mostrarModalRechazoST.value = false;
+        };
+        const abrirModalVerRechazoST = (ciclo) => {
+          cicloVerRechazoST.value = ciclo;
+          mostrarModalVerRechazoST.value = true;
+        };
+        const confirmarRechazoST = async () => {
+          const ciclo = cicloSeleccionado.value;
+          if (!ciclo) return;
+          try {
+            await api.put(`/encurso/rechazar_revision_st_ciclo/${ciclo.id}/`, {
+              destino: rechazoSTDestino.value,
+              nota: rechazoSTNota.value,
+            });
+            mostrarModalRechazoST.value = false;
+            fetchData();
+            showSuccessAlert.value = true;
+            setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+          } catch (error) {
+            mostrarModalRechazoST.value = false;
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 5000);
+          }
+        };
+
         // Archivar
         const abrirModalArchivar = (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
@@ -4135,6 +4263,11 @@
         rechazoAreaDestino, rechazoAreaNota,
         abrirModalRechazoArea, cerrarModalRechazoArea,
         abrirModalVerRechazoArea, confirmarRechazoArea,
+        // Rechazo ST
+        mostrarModalRechazoST, mostrarModalVerRechazoST, cicloVerRechazoST,
+        rechazoSTDestino, rechazoSTNota,
+        abrirModalRechazoST, cerrarModalRechazoST,
+        abrirModalVerRechazoST, confirmarRechazoST,
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,

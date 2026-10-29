@@ -691,6 +691,9 @@ class SubirInformeAreaCiclo(APIView):
         ciclo.adjunto_informeArea = archivo
         ciclo.fecha_informeArea = timezone.now().date()
         ciclo.tipo = tipo
+        if ciclo.rechazo_st_destino == 'area':
+            ciclo.nota_rechazo_st = None
+            ciclo.rechazo_st_destino = None
         ciclo.save()
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
@@ -1003,6 +1006,8 @@ class SubirInformeServicioCiclo(APIView):
         ciclo.firma_responsable_area = False
         ciclo.firma_direccion = False
         ciclo.corregir = False
+        ciclo.nota_rechazo_st = None
+        ciclo.rechazo_st_destino = None
         ciclo.save()
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
@@ -1050,6 +1055,29 @@ class ConfirmarRevisionCiclo(APIView):
         ciclo.revision_confirmada = True
         ciclo.save()
         return JsonResponse({'message': 'Revisión confirmada correctamente.'})
+
+
+class RechazarRevisionSTCiclo(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def put(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        destino = request.data.get('destino')
+        nota = request.data.get('nota', '').strip()
+        if destino not in ('administracion', 'area'):
+            return Response({'error': 'Destino inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not nota:
+            return Response({'error': 'La nota es requerida.'}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo.nota_rechazo_st = nota
+        ciclo.rechazo_st_destino = destino
+        ciclo.revision_confirmada = False
+        if destino == 'administracion':
+            if ciclo.adjunto_informeServicio_pdf:
+                ciclo.adjunto_informeServicio_pdf.delete(save=False)
+                ciclo.adjunto_informeServicio_pdf = None
+            ciclo.pdf_confirmado_admin = False
+        ciclo.save()
+        return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
 class SubirInformeSTCorregido(APIView):
