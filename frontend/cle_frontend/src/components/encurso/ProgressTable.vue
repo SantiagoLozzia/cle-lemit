@@ -655,9 +655,9 @@
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion" style="--rotation: -60deg; border-color:#dc3545; color:#dc3545;"
-                           :style="generandoPDFId === ciclo.id ? '--rotation: -60deg; border-color:#dc3545; color:#dc3545; opacity:0.5; pointer-events:none;' : '--rotation: -60deg; border-color:#dc3545; color:#dc3545;'"
-                           @click.stop="generarPDFServicioCiclo(ciclo); popupPDFAdminId = null" title="Convertir a PDF">
-                        <i v-if="generandoPDFId === ciclo.id" class="bi bi-hourglass-split"></i>
+                           :class="generandoPDFId === ciclo.id ? 'st-sd-opcion--generando' : ''"
+                           @click.stop="generandoPDFId !== ciclo.id && generarPDFServicioCiclo(ciclo)" title="Convertir a PDF">
+                        <i v-if="generandoPDFId === ciclo.id" class="bi bi-hourglass-split" style="animation: spin 1.2s linear infinite;"></i>
                         <i v-else class="bi bi-filetype-pdf"></i>
                       </div>
                     </div>
@@ -4514,6 +4514,16 @@
   }
   .st-sd-opcion--ok { border-color: #198754; color: #198754; }
   .st-sd-opcion--ok:hover { background-color: #198754; color: white; }
+  .st-sd-opcion--generando {
+    opacity: 0.75;
+    pointer-events: none;
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
   .st-sd-opcion--warn { border-color: #ffc107; color: #b57a00; }
   .st-sd-opcion--warn:hover { background-color: #ffc107; color: white; }
   .st-sd-opcion--danger { border-color: #dc3545; color: #dc3545; }
