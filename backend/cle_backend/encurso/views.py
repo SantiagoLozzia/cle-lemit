@@ -1010,6 +1010,8 @@ class SubirInformeServicioCiclo(APIView):
         ciclo.corregir = False
         ciclo.nota_rechazo_st = None
         ciclo.rechazo_st_destino = None
+        ciclo.rechazo_area_destino = None
+        ciclo.nota_rechazo_area = None
         ciclo.save()
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 

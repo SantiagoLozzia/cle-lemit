@@ -548,6 +548,22 @@
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
+                  <!-- Con informe servicio, rechazado a administración por Área -->
+                  <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_area_destino === 'administracion'">
+                    <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
+                      <label :for="'inf-rechazado-area-admin-' + ciclo.id" style="cursor:pointer;" title="Reemplazar informe">
+                        <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
+                      </label>
+                      <input :id="'inf-rechazado-area-admin-' + ciclo.id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
+                             @change="subirInformeServicioCiclo($event, ciclo)">
+                      <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:16px;"
+                         @click="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                    </div>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
                   <!-- Con informe servicio, sin corrección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
                     <i class="bi bi-check-lg" style="color:green;"></i>
@@ -575,7 +591,7 @@
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
             <td class="add-border-right">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && ciclo.rechazo_area_destino !== 'area' && !ciclo.rechazo_st_destino">
+                <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && (!ciclo.rechazo_area_destino || ciclo.rechazo_area_destino === 'st') && !ciclo.rechazo_st_destino">
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
