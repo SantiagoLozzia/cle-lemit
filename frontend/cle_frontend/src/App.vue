@@ -11,12 +11,13 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import HeaderComponent from './components/HeaderComponent.vue';
 import HorizontalMenu from './components/HorizontalMenu.vue';
-// import VueGoodTablePlugin from 'vue-good-table';
-// import 'vue-good-table/dist/vue-good-table.css';
+
+// Minutos de inactividad antes de cerrar sesión automáticamente
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutos
 
 export default {
   name: 'App',
@@ -28,31 +29,66 @@ export default {
     const userPermissions = ref({
       option1: true,
       option2: false,
-      // ... y así sucesivamente
     });
 
     const router = useRouter();
     const route = useRoute();
     const isLoginPage = computed(() => route.path === '/userlogin');
 
-    // Función para verificar la expiración del token
-    const checkTokenExpiry = () => {
+    const cerrarSesion = () => {
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('role');
+      sessionStorage.removeItem('lastActivity');
+      router.push('/userlogin');
+    };
+
+    const registrarActividad = () => {
+      sessionStorage.setItem('lastActivity', Date.now().toString());
+    };
+
+    const checkInactividad = () => {
       const token = sessionStorage.getItem('token');
-      if (token) {
-        const expiryTime = JSON.parse(atob(token.split('.')[1])).exp;
-        if (Date.now() >= expiryTime * 1000) {
-          // Token expirado
-          sessionStorage.removeItem('token');
-          router.push('/login'); // Redirige a la página de login
-        }
+      if (!token) return;
+      const ultimaActividad = parseInt(sessionStorage.getItem('lastActivity') || '0');
+      if (Date.now() - ultimaActividad > IDLE_TIMEOUT_MS) {
+        cerrarSesion();
       }
     };
 
+    const checkTokenExpiry = () => {
+      const token = sessionStorage.getItem('token');
+      if (!token) return;
+      try {
+        const expiryTime = JSON.parse(atob(token.split('.')[1])).exp;
+        if (Date.now() >= expiryTime * 1000) {
+          cerrarSesion();
+        }
+      } catch {
+        cerrarSesion();
+      }
+    };
+
+    const EVENTOS_ACTIVIDAD = ['click', 'keydown', 'touchstart', 'mousemove'];
+    let intervaloCheck = null;
+
     onMounted(() => {
       document.title = "Circuito Legajo Electronico";
+      registrarActividad();
+      EVENTOS_ACTIVIDAD.forEach(ev =>
+        document.addEventListener(ev, registrarActividad, { passive: true })
+      );
       checkTokenExpiry();
-      // Configura un intervalo para revisar periódicamente
-      setInterval(checkTokenExpiry, 60000); // Revisa cada minuto
+      intervaloCheck = setInterval(() => {
+        checkTokenExpiry();
+        checkInactividad();
+      }, 60000);
+    });
+
+    onUnmounted(() => {
+      EVENTOS_ACTIVIDAD.forEach(ev =>
+        document.removeEventListener(ev, registrarActividad)
+      );
+      clearInterval(intervaloCheck);
     });
 
     return {
