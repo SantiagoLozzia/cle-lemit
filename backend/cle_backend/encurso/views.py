@@ -1269,10 +1269,10 @@ class ConfirmarFirmaDireccionCiclo(APIView):
 
                 import os
                 from django.core.files.base import ContentFile
-                original_name = os.path.basename(ciclo.adjunto_informeServicio.name)
-                nombre_base, ext = os.path.splitext(original_name)
+                original_name = os.path.basename(fuente.name)
+                nombre_base, _ = os.path.splitext(original_name)
                 ciclo.adjunto_firmado_direccion.save(
-                    f"{nombre_base}_firmado_dir{ext}",
+                    f"{nombre_base}_firmado_dir.pdf",
                     ContentFile(buf.read()),
                     save=False,
                 )
