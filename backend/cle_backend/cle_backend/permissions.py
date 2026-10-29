@@ -32,10 +32,25 @@ def get_user_area(request):
         return None
 
 
+EDITABLE_DOCUMENT_MIME_TYPES = {
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  # .docx
+    'application/msword',                                                         # .doc
+    'application/vnd.oasis.opendocument.text',                                   # .odt
+    'application/rtf',                                                            # .rtf
+    'text/rtf',                                                                   # .rtf (variante)
+}
+
+
 def validate_upload_file(file):
     """Raise ValueError if the uploaded file's MIME type is not in the allowlist."""
     if file is not None and file.content_type not in ALLOWED_UPLOAD_MIME_TYPES:
         raise ValueError('Tipo de archivo no permitido.')
+
+
+def validate_editable_document(file):
+    """Raise ValueError if the file is not an editable document (.doc, .docx, .odt, .rtf)."""
+    if file is not None and file.content_type not in EDITABLE_DOCUMENT_MIME_TYPES:
+        raise ValueError('Solo se permiten archivos editables (.doc, .docx, .odt, .rtf). No se permiten PDFs.')
 
 
 def user_can_access_circuit(user, nro_circuito):

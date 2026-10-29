@@ -30,6 +30,7 @@ from cle_backend.permissions import (
     get_user_area,
     user_can_access_circuit,
     validate_upload_file,
+    validate_editable_document,
 )
 from django.db.models import Q
 from database.models import *
@@ -679,6 +680,10 @@ class SubirInformeAreaCiclo(APIView):
         tipo = request.data.get('tipo', 'parcial')
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_editable_document(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         ciclo.adjunto_informeArea = archivo
         ciclo.fecha_informeArea = timezone.now().date()
         ciclo.tipo = tipo
@@ -985,7 +990,7 @@ class SubirInformeServicioCiclo(APIView):
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            validate_upload_file(archivo)
+            validate_editable_document(archivo)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         ciclo.adjunto_informeServicio = archivo
@@ -1052,7 +1057,7 @@ class SubirInformeSTCorregido(APIView):
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            validate_upload_file(archivo)
+            validate_editable_document(archivo)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         ciclo.adjunto_informeServicio = archivo

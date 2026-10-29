@@ -425,6 +425,7 @@
                       <i class="bi bi-paperclip action-icon"></i>
                     </label>
                     <input :id="'inf-area-ciclo-' + ciclo.id" style="display:none;" type="file"
+                           accept=".doc,.docx,.odt,.rtf"
                            @change="seleccionarArchivoInformeAreaCiclo($event, ciclo, fila)">
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
@@ -436,6 +437,7 @@
                       <i class="bi bi-paperclip action-icon"></i>
                     </label>
                     <input :id="'inf-area-primer-' + fila.nro_circuito" style="display:none;" type="file"
+                           accept=".doc,.docx,.odt,.rtf"
                            @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
@@ -452,6 +454,7 @@
                   </label>
                   <input :id="'inf-area-nuevo-' + fila.ciclos[fila.ciclos.length-1].id"
                          style="display:none;" type="file"
+                         accept=".doc,.docx,.odt,.rtf"
                          @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
                 </div>
               </template>
@@ -501,6 +504,7 @@
                         <i class="bi bi-paperclip action-icon"></i>
                       </label>
                       <input :id="'inf-serv-ciclo-' + ciclo.id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
                              @change="subirInformeServicioCiclo($event, ciclo)">
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
@@ -514,6 +518,7 @@
                         <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
                       </label>
                       <input :id="'inf-rechazado-' + ciclo.id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
                              @change="subirInformeServicioCiclo($event, ciclo)">
                       <i class="bi bi-sticky-fill" style="color:#dc3545; cursor:pointer; font-size:16px;"
                          @click="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
@@ -532,6 +537,7 @@
                         <i class="bi bi-upload action-icon"></i>
                       </label>
                       <input :id="'inf-serv-corr-ciclo-' + ciclo.id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
                              @change="subirInformeServicioCiclo($event, ciclo)">
                       <i class="bi bi-backspace-fill text-danger action-icon"
                          @click="abrirModalCorreccionesCiclo(ciclo)" title="Ver correcciones" style="font-size:0.8em;"></i>
@@ -570,7 +576,7 @@
                         <label :for="'st-reemplazar-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
                           <i class="bi bi-arrow-repeat"></i>
                         </label>
-                        <input :id="'st-reemplazar-' + ciclo.id" type="file" style="display:none;" @change="seleccionarArchivoSTCorregido($event, ciclo)">
+                        <input :id="'st-reemplazar-' + ciclo.id" type="file" style="display:none;" accept=".doc,.docx,.odt,.rtf" @change="seleccionarArchivoSTCorregido($event, ciclo)">
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -45deg" @click.stop="confirmarRevisionST(ciclo)" title="Confirmar OK">
                         <i class="bi bi-check-lg"></i>
