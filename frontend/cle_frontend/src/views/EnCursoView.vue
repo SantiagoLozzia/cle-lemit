@@ -44,13 +44,25 @@ export default {
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 8px;
   margin-left: 0;
   max-width: 100%;
   padding: 0;
+  /* Ocupa exactamente lo que queda del viewport tras el navbar fijo,
+     sin generar scroll de página que haría que el navbar tape el botón */
+  height: calc(100vh - 150px); /* 130px margin-top + 20px padding del content-wrapper */
+  overflow: hidden;
+}
+
+.button-container {
+  flex-shrink: 0;
 }
 
 .table-container {
-  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>

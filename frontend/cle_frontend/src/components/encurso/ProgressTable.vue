@@ -6,7 +6,7 @@
       ¡Error! Ha ocurrido un problema al guardar. Por favor, inténtalo de nuevo.
     </div>
 
-    <div>
+    <div class="pt-inner">
       <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
         <select v-if="isAdminOrTecnologicoOrDireccion" v-model="filterArea" class="form-select form-select-sm w-auto">
           <option value="">Todas las áreas</option>
@@ -27,7 +27,7 @@
         <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
       </div>
       <div class="table-scroll-wrapper">
-      <table class="table table-hover">
+      <table class="table table-hover mb-0">
         <thead class="text-center sticky-thead">
           <tr>
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Solicitud de Servicio</th>
@@ -4284,11 +4284,19 @@
   
 <style scoped>
 
-  /* Contenedor de tabla con scrollbar siempre visible en el viewport */
+  /* Ocupa todo el alto disponible que le da el flex parent (EnCursoView) */
+  .pt-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Contenedor de tabla: crece para llenar el espacio restante bajo los filtros */
   .table-scroll-wrapper {
+    flex: 1;
+    min-height: 0; /* permite que flex children se encojan */
     overflow-x: auto;
     overflow-y: auto;
-    height: calc(100vh - 215px); /* 130px navbar+menu + 20px padding + ~65px filtros */
   }
 
   /* Headers pegados al tope al hacer scroll vertical */
