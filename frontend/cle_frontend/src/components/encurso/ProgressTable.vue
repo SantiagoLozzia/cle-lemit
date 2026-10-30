@@ -898,8 +898,11 @@
                 <span class="badge bg-secondary me-1">Principal: #{{ editarDS.nro_presupuesto }}</span>
                 <span v-for="p in editarDS.presupuestos_adicionales" :key="p.nro_presupuesto" class="badge bg-info me-1">
                   #{{ p.nro_presupuesto }} — ${{ p.arancel_presupuesto }}
-                  <button type="button" class="btn-close btn-close-white ms-1" style="font-size:8px;" @click="quitarPresupuestoAdicional(p.nro_presupuesto)"></button>
+                  <button v-if="!editarDS.tieneFacturas" type="button" class="btn-close btn-close-white ms-1" style="font-size:8px;" @click="quitarPresupuestoAdicional(p.nro_presupuesto)"></button>
                 </span>
+                <div v-if="editarDS.tieneFacturas && editarDS.presupuestos_adicionales.length > 0" class="mt-1 text-muted" style="font-size:11px;">
+                  <i class="bi bi-lock-fill"></i> No se pueden quitar presupuestos con facturas ya cargadas.
+                </div>
               </div>
               <div v-if="presupuestosDisponibles.length > 0" class="input-group input-group-sm mt-2">
                 <select class="form-select" v-model="editarDS.nuevoPres">
@@ -2317,6 +2320,7 @@
           nuevoPres: '',
           presupuestosCompatibles: [],
           totalCalculado: 0,
+          tieneFacturas: !!(fila.adjuntos_factura && fila.adjuntos_factura.length > 0),
         };
         mostrarModalEditarDS.value = true;
         try {
