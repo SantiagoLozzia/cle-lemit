@@ -538,49 +538,82 @@
                   </template>
                   <!-- Con informe servicio, rechazado a administración por Dirección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_destino === 'administracion'">
-                    <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
-                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
-                      <label :for="'inf-rechazado-' + ciclo.id" style="cursor:pointer;" title="Reemplazar informe">
-                        <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
-                      </label>
-                      <input :id="'inf-rechazado-' + ciclo.id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="subirInformeServicioCiclo($event, ciclo)">
-                      <i class="bi bi-sticky-fill" style="color:#dc3545; cursor:pointer; font-size:16px;"
-                         @click="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                    <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormato(ciclo.id)" title="Ver / Reemplazar informe">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      </button>
+                      <i class="bi bi-sticky-fill"
+                         style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
+                         @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -120deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupFormatoId = null" title="Ver Word">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="st-sd-opcion" style="--rotation: -60deg" title="Reemplazar informe">
+                          <label :for="'inf-rechazado-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                            <i class="bi bi-arrow-repeat"></i>
+                          </label>
+                          <input :id="'inf-rechazado-' + ciclo.id" style="display:none;" type="file"
+                                 accept=".doc,.docx,.odt,.rtf"
+                                 @change="subirInformeServicioCiclo($event, ciclo)">
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, rechazado a administración por ST -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_st_destino === 'administracion'">
-                    <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
-                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
-                      <label :for="'inf-rechazado-st-' + ciclo.id" style="cursor:pointer;" title="Reemplazar informe">
-                        <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
-                      </label>
-                      <input :id="'inf-rechazado-st-' + ciclo.id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="subirInformeServicioCiclo($event, ciclo)">
-                      <i class="bi bi-sticky-fill" style="color:#9c7cc7; cursor:pointer; font-size:16px;"
-                         @click="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
+                    <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormato(ciclo.id)" title="Ver / Reemplazar informe">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      </button>
+                      <i class="bi bi-sticky-fill"
+                         style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#9c7cc7; cursor:pointer; z-index:10;"
+                         @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -120deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupFormatoId = null" title="Ver Word">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="st-sd-opcion" style="--rotation: -60deg" title="Reemplazar informe">
+                          <label :for="'inf-rechazado-st-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                            <i class="bi bi-arrow-repeat"></i>
+                          </label>
+                          <input :id="'inf-rechazado-st-' + ciclo.id" style="display:none;" type="file"
+                                 accept=".doc,.docx,.odt,.rtf"
+                                 @change="subirInformeServicioCiclo($event, ciclo)">
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, rechazado a administración por Área -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir && ciclo.rechazo_area_destino === 'administracion'">
-                    <div v-if="isAdministracion" style="display:inline-flex; align-items:center; gap:6px;">
-                      <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                         @click="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe"></i>
-                      <label :for="'inf-rechazado-area-admin-' + ciclo.id" style="cursor:pointer;" title="Reemplazar informe">
-                        <i class="bi bi-arrow-repeat action-icon" style="color:#6c757d;"></i>
-                      </label>
-                      <input :id="'inf-rechazado-area-admin-' + ciclo.id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="subirInformeServicioCiclo($event, ciclo)">
-                      <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:16px;"
-                         @click="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                    <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormato(ciclo.id)" title="Ver / Reemplazar informe">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      </button>
+                      <i class="bi bi-sticky-fill"
+                         style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#ffc107; cursor:pointer; z-index:10;"
+                         @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -120deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupFormatoId = null" title="Ver Word">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="st-sd-opcion" style="--rotation: -60deg" title="Reemplazar informe">
+                          <label :for="'inf-rechazado-area-admin-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                            <i class="bi bi-arrow-repeat"></i>
+                          </label>
+                          <input :id="'inf-rechazado-area-admin-' + ciclo.id" style="display:none;" type="file"
+                                 accept=".doc,.docx,.odt,.rtf"
+                                 @change="subirInformeServicioCiclo($event, ciclo)">
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
@@ -2453,6 +2486,7 @@
       const stReemplazadoIds = ref(new Set());
       const popupDirId = ref(null);
       const popupPDFAdminId = ref(null);
+      const popupFormatoId = ref(null);
       const popupFacturaId = ref(null);
       const mostrarModalFacturacion = ref(false);
       const datosFacturacion = ref({});
@@ -2715,6 +2749,7 @@
         popupSTId.value = null;
         popupAreaId.value = null;
         popupDirId.value = null;
+        popupFormatoId.value = null;
         popupFacturaId.value = null;
       };
 
@@ -3884,6 +3919,16 @@
         if (opening) document.dispatchEvent(new Event('speed-dial-open'));
       };
 
+      const togglePopupFormato = (cicloId) => {
+        const opening = popupFormatoId.value !== cicloId;
+        popupFormatoId.value = opening ? cicloId : null;
+        popupSTId.value = null;
+        popupAreaId.value = null;
+        popupDirId.value = null;
+        popupPDFAdminId.value = null;
+        if (opening) document.dispatchEvent(new Event('speed-dial-open'));
+      };
+
       const togglePopupPDFAdmin = (cicloId) => {
         const opening = popupPDFAdminId.value !== cicloId;
         popupPDFAdminId.value = opening ? cicloId : null;
@@ -4490,6 +4535,8 @@
         togglePopupArea,
         popupDirId,
         togglePopupDir,
+        popupFormatoId,
+        togglePopupFormato,
         popupPDFAdminId,
         togglePopupPDFAdmin,
         popupFacturaId,
