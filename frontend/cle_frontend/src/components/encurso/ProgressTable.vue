@@ -2648,6 +2648,7 @@
                   nro_circuito: solicitud.nro_circuito,
                   dataServicio_completo: solicitud.completo,
                   total_arancel: solicitud.total_arancel || 0,
+                  pendiente_factura: solicitud.pendiente_factura !== undefined ? solicitud.pendiente_factura : null,
                   // Legajo
                   nro_legajo: legajoCorrespondiente ? legajoCorrespondiente.nro_legajo : '',
                   fecha_legajo: legajoCorrespondiente ? formatDate(legajoCorrespondiente.fecha_legajo) : '',
@@ -3922,9 +3923,7 @@
 
       // Factura - helpers
       const pendienteFactura = (fila) => {
-        if (!fila.adjuntos_factura || fila.adjuntos_factura.length === 0) return null;
-        const totalFacturado = fila.adjuntos_factura.reduce((sum, f) => sum + (f.monto ? parseFloat(f.monto) : 0), 0);
-        return (fila.total_arancel || 0) - totalFacturado;
+        return fila.pendiente_factura !== undefined ? fila.pendiente_factura : null;
       };
 
       // Factura - speed dial

@@ -91,6 +91,13 @@ class ObtenerTodoEnCurso(APIView):
             data_servicio['presupuestos_adicionales'] = adicionales
             total_arancel = float(arancel_principal) + sum(float(p['arancel_presupuesto']) for p in adicionales)
             data_servicio['total_arancel'] = total_arancel
+            nro_circ = data_servicio['nro_circuito']
+            nro_leg = circuito_legajo_map.get(nro_circ)
+            factura_info = factura_monto_map.get(nro_leg) if nro_leg else None
+            if factura_info and factura_info['count'] > 0:
+                data_servicio['pendiente_factura'] = total_arancel - float(factura_info['total'])
+            else:
+                data_servicio['pendiente_factura'] = None
 
         # Obtener el numero de circuito de los DataServicio
         numeros_circuito = servicios_en_curso.values_list('nro_circuito', flat=True)
@@ -107,6 +114,17 @@ class ObtenerTodoEnCurso(APIView):
         nros_legajo = legajos.values_list('nro_legajo', flat=True)
         adjuntos_solicitud = AdjuntoSolicitudServicio.objects.filter(data_servicio__in=nros_dataServicio)
         adjuntos_factura = AdjuntoFactura.objects.filter(legajo__in=nros_legajo)
+
+        # Mapa nro_legajo -> {count, total_monto} para calcular pendiente por DataServicio
+        from decimal import Decimal as _Decimal
+        factura_monto_map = {}
+        for f in adjuntos_factura:
+            entry = factura_monto_map.setdefault(f.legajo_id, {'count': 0, 'total': _Decimal('0')})
+            entry['count'] += 1
+            if f.monto:
+                entry['total'] += f.monto
+        # Mapa nro_circuito -> nro_legajo
+        circuito_legajo_map = {l.nro_circuito_id: l.nro_legajo for l in legajos}
 
         # Serializar los datos
         legajos_serializer = LegajoEnCursoSerializer(legajos, many=True)
