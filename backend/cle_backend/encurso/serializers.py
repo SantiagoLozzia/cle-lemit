@@ -71,7 +71,7 @@ class AdjuntoSolicitudServicioSerializer(serializers.ModelSerializer):
 class AdjuntoFacturaSerializer(serializers.ModelSerializer):
         class Meta:
                 model = AdjuntoFactura
-                fields = ['id', 'legajo', 'archivo', 'fecha']
+                fields = ['id', 'legajo', 'archivo', 'monto', 'fecha']
 
 class RegistroEnsayoCicloSerializer(serializers.ModelSerializer):
         class Meta:

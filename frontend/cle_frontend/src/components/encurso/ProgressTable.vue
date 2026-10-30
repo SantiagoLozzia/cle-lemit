@@ -192,14 +192,34 @@
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="fila.nro_legajo">
-                <AttachmentCell
-                  :files="fila.adjuntos_factura"
-                  :can-upload="isAdministracion"
-                  :can-delete="isAdministracion"
-                  :input-id="'factura-' + index"
-                  @upload="cargarAdjuntoFactura($event, fila.nro_legajo, fila.nro_circuito)"
-                  @delete="eliminarAdjuntoFactura"
-                />
+                <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                  <button class="st-sd-trigger"
+                          :style="fila.adjuntos_factura && fila.adjuntos_factura.length > 0 ? 'border-color:#198754; color:#198754;' : ''"
+                          @click.stop="togglePopupFactura(fila.nro_dataServicio)"
+                          title="Factura">
+                    <i class="bi bi-receipt" style="font-size:13px;"></i>
+                    <span v-if="fila.adjuntos_factura && fila.adjuntos_factura.length > 0"
+                          class="st-sd-badge" style="background:#198754;"></span>
+                  </button>
+                  <div v-if="popupFacturaId === fila.nro_dataServicio" class="st-sd-dial">
+                    <div class="st-sd-opcion" style="--rotation: -120deg"
+                         @click.stop="abrirDatosFacturacion(fila); popupFacturaId = null"
+                         title="Ver datos de facturación">
+                      <i class="bi bi-info-circle"></i>
+                    </div>
+                    <div class="st-sd-opcion" style="--rotation: -60deg"
+                         @click.stop="abrirSubirFactura(fila); popupFacturaId = null"
+                         title="Cargar factura">
+                      <i class="bi bi-upload"></i>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <i v-if="fila.adjuntos_factura && fila.adjuntos_factura.length > 0"
+                     class="bi bi-receipt action-icon" style="cursor:pointer; color:#198754;"
+                     @click.stop="abrirDatosFacturacion(fila)" title="Ver datos de facturación"></i>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </div>
               </template>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
@@ -1777,6 +1797,141 @@
       </div>
     </div>
 
+    <!-- Modal Datos de Facturación -->
+    <div class="modal" :class="{ 'show': mostrarModalFacturacion }" id="mostrarModalFacturacion">
+      <div class="modal-dialog modal-dialog-md">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#198754;">
+            <h5 class="modal-title" style="color:#198754;">Datos de Facturación</h5>
+            <button type="button" class="btn-close" @click="mostrarModalFacturacion = false"></button>
+          </div>
+          <div class="modal-body">
+            <h6 class="text-muted fw-bold mb-2">Empresa</h6>
+            <div class="ds-grid mb-3">
+              <div class="ds-field">
+                <span class="ds-label">ID Solicitante</span>
+                <span class="ds-val">#{{ datosFacturacion.empresa?.nro_solicitante }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Nombre</span>
+                <span class="ds-val">{{ datosFacturacion.empresa?.nombre }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">CUIT</span>
+                <span class="ds-val">{{ datosFacturacion.empresa?.cuit }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Dirección</span>
+                <span class="ds-val">{{ datosFacturacion.empresa?.direccion }}, {{ datosFacturacion.empresa?.localidad }}, {{ datosFacturacion.empresa?.provincia }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Teléfono</span>
+                <span class="ds-val">{{ datosFacturacion.empresa?.telefono }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Email empresa</span>
+                <span class="ds-val">{{ datosFacturacion.empresa?.email || '—' }}</span>
+              </div>
+            </div>
+            <h6 class="text-muted fw-bold mb-2">Contactos del servicio</h6>
+            <div class="ds-grid mb-3">
+              <div class="ds-field">
+                <span class="ds-label">Email factura</span>
+                <span class="ds-val">{{ datosFacturacion.email_factura || '—' }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Email informe técnico</span>
+                <span class="ds-val">{{ datosFacturacion.email_informe_tecnico || '—' }}</span>
+              </div>
+            </div>
+            <hr>
+            <div class="ds-grid mb-3">
+              <div class="ds-field">
+                <span class="ds-label">Total Data Servicio</span>
+                <span class="ds-val fw-bold">{{ formatArancel(datosFacturacion.total_dataservicio) }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Total facturado</span>
+                <span class="ds-val fw-bold" style="color:#198754;">{{ formatArancel(datosFacturacion.total_facturado) }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Pendiente</span>
+                <span class="ds-val fw-bold" :style="parseFloat(datosFacturacion.pendiente) > 0 ? 'color:#dc3545;' : 'color:#198754;'">
+                  {{ formatArancel(datosFacturacion.pendiente) }}
+                </span>
+              </div>
+            </div>
+            <h6 class="text-muted fw-bold mb-2">Facturas cargadas</h6>
+            <div v-if="!datosFacturacion.facturas || datosFacturacion.facturas.length === 0"
+                 class="text-muted" style="font-size:13px; margin-bottom:8px;">
+              Sin facturas cargadas.
+            </div>
+            <table v-else class="table table-sm table-bordered" style="font-size:13px;">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Monto</th>
+                  <th>Archivo</th>
+                  <th v-if="isAdministracion"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="f in datosFacturacion.facturas" :key="f.id">
+                  <td>{{ f.fecha }}</td>
+                  <td>{{ f.monto ? formatArancel(f.monto) : '—' }}</td>
+                  <td>
+                    <i class="bi bi-file-earmark" style="cursor:pointer; font-size:18px;"
+                       @click="abrirArchivo(f.archivo)" title="Ver factura"></i>
+                  </td>
+                  <td v-if="isAdministracion">
+                    <i class="bi bi-trash" style="cursor:pointer; color:#dc3545; font-size:16px;"
+                       @click="eliminarFacturaDeModal(f.id)" title="Eliminar"></i>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer" style="justify-content: space-between;">
+            <button v-if="isAdministracion" type="button" class="btn btn-success"
+                    @click="mostrarModalFacturacion = false; abrirSubirFactura(filaFacturacion)">
+              <i class="bi bi-upload" style="font-size:14px;"></i> Cargar factura
+            </button>
+            <button type="button" class="btn btn-secondary" @click="mostrarModalFacturacion = false">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Subir Factura -->
+    <div class="modal" :class="{ 'show': mostrarModalSubirFactura }" id="mostrarModalSubirFactura">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Cargar Factura</h5>
+            <button type="button" class="btn-close" @click="mostrarModalSubirFactura = false"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Monto <span class="text-muted" style="font-weight:normal;">(opcional)</span></label>
+              <input v-model="subirFacturaData.monto" type="number" step="0.01" min="0"
+                     class="form-control" placeholder="Ej: 125000.00">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Archivo</label>
+              <input type="file" class="form-control" ref="inputSubirFactura"
+                     @change="subirFacturaData.archivo = $event.target.files[0]">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary"
+                    :disabled="!subirFacturaData.archivo"
+                    @click="confirmarSubirFactura">Guardar</button>
+            <button type="button" class="btn btn-secondary" @click="mostrarModalSubirFactura = false">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Ver Nota Rechazo Área -->
     <div class="modal" :class="{ 'show': mostrarModalVerRechazoArea }" id="mostrarModalVerRechazoArea">
       <div class="modal-dialog">
@@ -2298,6 +2453,12 @@
       const stReemplazadoIds = ref(new Set());
       const popupDirId = ref(null);
       const popupPDFAdminId = ref(null);
+      const popupFacturaId = ref(null);
+      const mostrarModalFacturacion = ref(false);
+      const datosFacturacion = ref({});
+      const filaFacturacion = ref(null);
+      const mostrarModalSubirFactura = ref(false);
+      const subirFacturaData = ref({ archivo: null, monto: null, nroLegajo: null, nroCircuito: null });
       const mostrarModalCorreccionST = ref(false);
       const textoCorreccionST = ref('');
       const cicloParaCorreccionST = ref(null);
@@ -2554,6 +2715,7 @@
         popupSTId.value = null;
         popupAreaId.value = null;
         popupDirId.value = null;
+        popupFacturaId.value = null;
       };
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
@@ -3731,6 +3893,67 @@
         if (opening) document.dispatchEvent(new Event('speed-dial-open'));
       };
 
+      // Factura - speed dial
+      const togglePopupFactura = (nroDataServicio) => {
+        const opening = popupFacturaId.value !== nroDataServicio;
+        popupFacturaId.value = opening ? nroDataServicio : null;
+        openDSPopup.value = null;
+        openST02Popup.value = null;
+        if (opening) document.dispatchEvent(new Event('speed-dial-open'));
+      };
+
+      const abrirDatosFacturacion = (fila) => {
+        filaFacturacion.value = fila;
+        api.get(`/encurso/datos_facturacion/${fila.nro_dataServicio}/`)
+          .then(res => {
+            datosFacturacion.value = res.data;
+            mostrarModalFacturacion.value = true;
+          })
+          .catch(err => console.error('Error al obtener datos de facturación:', err));
+      };
+
+      const abrirSubirFactura = (fila) => {
+        filaFacturacion.value = fila;
+        subirFacturaData.value = { archivo: null, monto: null, nroLegajo: fila.nro_legajo, nroCircuito: fila.nro_circuito };
+        mostrarModalSubirFactura.value = true;
+      };
+
+      const confirmarSubirFactura = () => {
+        const { archivo, monto, nroLegajo, nroCircuito } = subirFacturaData.value;
+        if (!archivo) return;
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        formData.append('nroLegajo', nroLegajo);
+        formData.append('nroCircuito', nroCircuito);
+        if (monto !== null && monto !== '') formData.append('monto', monto);
+        api.post('/encurso/guardar_adjuntofactura/', formData)
+          .then(() => {
+            mostrarModalSubirFactura.value = false;
+            subirFacturaData.value = { archivo: null, monto: null, nroLegajo: null, nroCircuito: null };
+            fetchData();
+            showSuccessAlert.value = true;
+            setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+          })
+          .catch(err => {
+            console.error('Error al guardar factura:', err);
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 3000);
+          });
+      };
+
+      const eliminarFacturaDeModal = async (id) => {
+        if (!confirm('¿Eliminar la factura?')) return;
+        try {
+          await api.delete(`/encurso/adjunto_factura/${id}/`);
+          fetchData();
+          // Refrescar los datos del modal
+          if (filaFacturacion.value) {
+            api.get(`/encurso/datos_facturacion/${filaFacturacion.value.nro_dataServicio}/`)
+              .then(res => { datosFacturacion.value = res.data; });
+          }
+        } catch (e) { console.error('Error al eliminar factura:', e); }
+      };
+
       const seleccionarArchivoSTCorregido = async (event, ciclo) => {
         const file = event.target.files[0];
         event.target.value = '';
@@ -4269,6 +4492,17 @@
         togglePopupDir,
         popupPDFAdminId,
         togglePopupPDFAdmin,
+        popupFacturaId,
+        togglePopupFactura,
+        mostrarModalFacturacion,
+        datosFacturacion,
+        filaFacturacion,
+        abrirDatosFacturacion,
+        mostrarModalSubirFactura,
+        subirFacturaData,
+        abrirSubirFactura,
+        confirmarSubirFactura,
+        eliminarFacturaDeModal,
         seleccionarArchivoSTCorregido,
         registrarCorreccionST,
         cerrarModalCorreccionST,

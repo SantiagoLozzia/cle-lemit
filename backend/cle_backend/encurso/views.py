@@ -239,6 +239,59 @@ def obtener_dataServicio(request, nro_dataServicio):
         logger.exception("Error en obtener_dataServicio")
         return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
 
+
+def datos_facturacion(request, nro_dataServicio):
+    try:
+        from decimal import Decimal
+        data_servicio = get_object_or_404(DataServicio, nro_dataServicio=nro_dataServicio)
+        presupuesto = data_servicio.nro_presupuesto
+        solicitante = presupuesto.nro_solicitante
+
+        # Total: presupuesto principal + adicionales
+        total = presupuesto.arancel_presupuesto
+        for p in data_servicio.presupuestos_adicionales.all():
+            total += p.arancel_presupuesto
+
+        # Facturas
+        legajo = Legajo.objects.filter(nro_circuito=data_servicio.nro_circuito).first()
+        facturas = []
+        total_facturado = Decimal('0')
+        if legajo:
+            for f in legajo.adjuntos_factura.all():
+                facturas.append({
+                    'id': f.id,
+                    'fecha': f.fecha.strftime('%d/%m/%Y'),
+                    'monto': str(f.monto) if f.monto is not None else None,
+                    'archivo': f.archivo.name if f.archivo else None,
+                })
+                if f.monto:
+                    total_facturado += f.monto
+
+        pendiente = total - total_facturado
+
+        return JsonResponse({
+            'empresa': {
+                'nro_solicitante': solicitante.nro_solicitante,
+                'nombre': solicitante.nombre_solicitante,
+                'cuit': solicitante.cuit,
+                'direccion': solicitante.direccion,
+                'localidad': solicitante.localidad,
+                'provincia': solicitante.provincia,
+                'telefono': solicitante.telefono,
+                'email': solicitante.email,
+            },
+            'email_factura': data_servicio.email_factura,
+            'email_informe_tecnico': data_servicio.email_informe_tecnico,
+            'total_dataservicio': str(total),
+            'facturas': facturas,
+            'total_facturado': str(total_facturado),
+            'pendiente': str(pendiente),
+        }, status=200)
+    except Exception:
+        logger.exception("Error en datos_facturacion")
+        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
+
+
 class GuardarAdjuntoSolicitud(APIView):
     def post(self, request):
         nro_dataServicio = request.data.get('nroDataServicio')
@@ -373,8 +426,15 @@ class GuardarAdjuntoFactura(APIView):
                 nueva_recepcion = Recepcion.objects.create(nro_circuito=circuito)
 
             # Guardar el adjunto en el nuevo modelo y marcar legajo como completo
+            monto_raw = request.data.get('monto')
+            monto = None
+            if monto_raw not in (None, ''):
+                try:
+                    monto = float(monto_raw)
+                except (ValueError, TypeError):
+                    monto = None
             legajo = get_object_or_404(Legajo, nro_legajo=nro_legajo)
-            AdjuntoFactura.objects.create(legajo=legajo, archivo=adjunto)
+            AdjuntoFactura.objects.create(legajo=legajo, archivo=adjunto, monto=monto)
             if not legajo.completo:
                 legajo.completo = True
                 legajo.save()

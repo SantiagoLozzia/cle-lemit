@@ -8,6 +8,7 @@ urlpatterns = [
     path('crear_dataServicio/', CrearDataServicioView.as_view(), name='crear-dataservicio'),
     path('obtener_todoencurso/', ObtenerTodoEnCurso.as_view(), name='obtener-todosencurso'),
     path('obtener_dataservicio/<int:nro_dataServicio>/', obtener_dataServicio, name='obtener-dataServicio'),
+    path('datos_facturacion/<int:nro_dataServicio>/', datos_facturacion, name='datos-facturacion'),
     path('guardar_adjuntosolicitudservicio/', GuardarAdjuntoSolicitud.as_view(), name='guardar-adjuntosolicitud'),
     # Legajo
     path('obtener_legajo/<int:nro_circuito>/', obtener_legajo, name='obtener-legajo'),

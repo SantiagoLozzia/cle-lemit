@@ -297,6 +297,7 @@ class AdjuntoSolicitudServicio(models.Model):
 class AdjuntoFactura(models.Model):
     legajo = models.ForeignKey('Legajo', on_delete=models.CASCADE, related_name='adjuntos_factura')
     archivo = models.FileField(upload_to='facturas/')
+    monto = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     fecha = models.DateTimeField(auto_now_add=True)
 
     class Meta:
