@@ -193,12 +193,13 @@
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="fila.nro_legajo">
                 <button class="st-sd-trigger"
-                        :style="fila.adjuntos_factura && fila.adjuntos_factura.length > 0 ? 'border-color:#198754; color:#198754;' : ''"
+                        :style="pendienteFactura(fila) === null ? '' : pendienteFactura(fila) > 0 ? 'border-color:#ffc107; color:#b8860b;' : 'border-color:#198754; color:#198754;'"
                         @click.stop="abrirDatosFacturacion(fila)"
                         title="Ver datos de facturación">
                   <i class="bi bi-receipt" style="font-size:13px;"></i>
-                  <span v-if="fila.adjuntos_factura && fila.adjuntos_factura.length > 0"
-                        class="st-sd-badge" style="background:#198754;"></span>
+                  <span v-if="pendienteFactura(fila) !== null"
+                        class="st-sd-badge"
+                        :style="pendienteFactura(fila) > 0 ? 'background:#ffc107;' : 'background:#198754;'"></span>
                 </button>
               </template>
             </td>
@@ -2595,7 +2596,7 @@
                 const adjuntos_factura = legajoCorrespondiente
                   ? (data.adjuntos_factura || [])
                     .filter(a => a.legajo === legajoCorrespondiente.nro_legajo)
-                    .map(a => ({ id: a.id, archivo: a.archivo }))
+                    .map(a => ({ id: a.id, archivo: a.archivo, monto: a.monto }))
                   : [];
 
                 const ciclos = (data.ciclos || [])
@@ -2646,6 +2647,7 @@
                   adjuntos_solicitud,
                   nro_circuito: solicitud.nro_circuito,
                   dataServicio_completo: solicitud.completo,
+                  total_arancel: solicitud.total_arancel || 0,
                   // Legajo
                   nro_legajo: legajoCorrespondiente ? legajoCorrespondiente.nro_legajo : '',
                   fecha_legajo: legajoCorrespondiente ? formatDate(legajoCorrespondiente.fecha_legajo) : '',
@@ -3918,6 +3920,13 @@
         if (opening) document.dispatchEvent(new Event('speed-dial-open'));
       };
 
+      // Factura - helpers
+      const pendienteFactura = (fila) => {
+        if (!fila.adjuntos_factura || fila.adjuntos_factura.length === 0) return null;
+        const totalFacturado = fila.adjuntos_factura.reduce((sum, f) => sum + (f.monto ? parseFloat(f.monto) : 0), 0);
+        return (fila.total_arancel || 0) - totalFacturado;
+      };
+
       // Factura - speed dial
       const togglePopupFactura = (nroDataServicio) => {
         const opening = popupFacturaId.value !== nroDataServicio;
@@ -4519,6 +4528,7 @@
         togglePopupFormato,
         popupPDFAdminId,
         togglePopupPDFAdmin,
+        pendienteFactura,
         popupFacturaId,
         togglePopupFactura,
         mostrarModalFacturacion,

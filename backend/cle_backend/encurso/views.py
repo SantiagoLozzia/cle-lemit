@@ -68,7 +68,7 @@ class ObtenerTodoEnCurso(APIView):
 
         # Obtener el área temática de cada presupuesto y el nro_solicitante
         presupuestos = Presupuesto.objects.filter(nro_presupuesto__in=numeros_presupuesto).select_related('nro_solicitante')
-        presupuesto_map = {presupuesto.nro_presupuesto: (presupuesto.area_tematica, presupuesto.nro_solicitante.nombre_solicitante) for presupuesto in presupuestos}
+        presupuesto_map = {presupuesto.nro_presupuesto: (presupuesto.area_tematica, presupuesto.nro_solicitante.nombre_solicitante, presupuesto.arancel_presupuesto) for presupuesto in presupuestos}
 
         # Serializar los datos de los DataServicio
         servicios_en_curso_serializer = DataServicioSerializer(servicios_en_curso, many=True)
@@ -84,10 +84,13 @@ class ObtenerTodoEnCurso(APIView):
         # Agregar los campos 'area_tematica', 'nombre_solicitante' y 'presupuestos_adicionales' a los datos de DataServicio
         for data_servicio in servicios_en_curso_serializer.data:
             nro_presupuesto = data_servicio['nro_presupuesto']
-            area_tematica, nombre_solicitante = presupuesto_map.get(nro_presupuesto, ('', ''))
+            area_tematica, nombre_solicitante, arancel_principal = presupuesto_map.get(nro_presupuesto, ('', '', 0))
             data_servicio['area_tematica'] = area_tematica
             data_servicio['nombre_solicitante'] = nombre_solicitante
-            data_servicio['presupuestos_adicionales'] = presupuestos_adicionales_map.get(data_servicio['nro_dataServicio'], [])
+            adicionales = presupuestos_adicionales_map.get(data_servicio['nro_dataServicio'], [])
+            data_servicio['presupuestos_adicionales'] = adicionales
+            total_arancel = float(arancel_principal) + sum(float(p['arancel_presupuesto']) for p in adicionales)
+            data_servicio['total_arancel'] = total_arancel
 
         # Obtener el numero de circuito de los DataServicio
         numeros_circuito = servicios_en_curso.values_list('nro_circuito', flat=True)
