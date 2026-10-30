@@ -306,7 +306,14 @@
                   </div>
               </template>
               <template v-if="(fila.ordenServicio_completo  === true ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <i class="bi bi-clipboard2"  style="cursor: pointer;" @click="abrirOrdenServicio(fila)"></i>
+                <div style="position:relative; display:inline-block;">
+                  <i class="bi bi-clipboard2" style="cursor: pointer;"
+                     :style="fila.os_modificada ? 'color:#b8860b;' : ''"
+                     :title="fila.os_modificada ? 'Orden de Servicio modificada — hay cambios pendientes de revisar' : 'Ver Orden de Servicio'"
+                     @click="abrirOrdenServicio(fila)"></i>
+                  <span v-if="fila.os_modificada"
+                        style="position:absolute; top:-4px; right:-4px; width:8px; height:8px; border-radius:50%; background:#ffc107; display:block;"></span>
+                </div>
               </template>
             </td>
             <td class="add-border-right">
@@ -2699,6 +2706,7 @@
                   fecha_ordenServicio: ordenCorrespondiente ? formatDate(ordenCorrespondiente.fecha_ordenServicio) : '',
                   plazo_estimado: solicitud.plazo_estimado,
                   ordenServicio_completo: ordenCorrespondiente ? ordenCorrespondiente.completo : '',
+                  os_modificada: ordenCorrespondiente ? !!ordenCorrespondiente.modificada : false,
                   // Ciclos de Informe
                   ciclos,
                   firma_direccion: ultimoCiclo ? ultimoCiclo.firma_direccion : false,
@@ -3376,6 +3384,12 @@
               observacionesOS.value = observaciones;
               osReadOnly.value = true;
               mostrarModalCrearOrdenServicio.value = true;
+              // Si el área abre una OS modificada, acusa recibo y limpia la alerta
+              if (fila.os_modificada && (isAreaJefe.value || isAreaStandard.value)) {
+                api.post(`/encurso/confirmar_lectura_os/${nro_circuito}/`)
+                  .then(() => { fila.os_modificada = false; })
+                  .catch(() => {});
+              }
           } catch (error) {
               console.error('Error al obtener la orden de servicio:', error);
               showErrorAlert.value = true;

@@ -1045,11 +1045,14 @@ class EditarDataServicio(APIView):
         if plazo_estimado is not None:
             data_servicio.plazo_estimado = int(plazo_estimado)
 
+        hubo_cambio_significativo = False
+
         cant_numLabs_nuevo = request.data.get('cant_numLabs')
         if cant_numLabs_nuevo is not None:
             cant_numLabs_nuevo = int(cant_numLabs_nuevo)
             if cant_numLabs_nuevo > data_servicio.cant_numLabs:
                 delta = cant_numLabs_nuevo - data_servicio.cant_numLabs
+                hubo_cambio_significativo = True
                 try:
                     legajo = Legajo.objects.get(nro_circuito=data_servicio.nro_circuito)
                     legajo.labs_adicionales_pendientes += delta
@@ -1062,9 +1065,32 @@ class EditarDataServicio(APIView):
         if nro_presupuesto_adicional:
             presupuesto = get_object_or_404(Presupuesto, nro_presupuesto=nro_presupuesto_adicional)
             data_servicio.presupuestos_adicionales.add(presupuesto)
+            hubo_cambio_significativo = True
 
         data_servicio.save()
+
+        # Marcar la Orden de Servicio como modificada para que el área lo sepa
+        if hubo_cambio_significativo:
+            try:
+                orden = OrdenServicio.objects.get(nro_circuito=data_servicio.nro_circuito)
+                if orden.completo:
+                    orden.modificada = True
+                    orden.save()
+            except OrdenServicio.DoesNotExist:
+                pass
+
         return Response({'message': 'Data Servicio actualizado.'}, status=status.HTTP_200_OK)
+
+
+def confirmar_lectura_os(request, nro_circuito):
+    """El área acusa recibo de los cambios al DataServicio: limpia la alerta de modificación."""
+    try:
+        orden = OrdenServicio.objects.get(nro_circuito=nro_circuito)
+        orden.modificada = False
+        orden.save()
+        return JsonResponse({'ok': True}, status=200)
+    except OrdenServicio.DoesNotExist:
+        return JsonResponse({'error': 'Orden de servicio no encontrada.'}, status=404)
 
 
 class AprobarLabsAdicionales(APIView):

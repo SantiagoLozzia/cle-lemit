@@ -194,6 +194,7 @@ class OrdenServicio(models.Model):
     fecha_ordenServicio = models.DateField()
     observaciones = models.TextField(max_length=255, null=True, blank=True)
     completo = models.BooleanField(default=False)
+    modificada = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
