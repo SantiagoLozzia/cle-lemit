@@ -4,6 +4,7 @@ urlpatterns = [
     path('archivados/', ObtenerArchivados.as_view(), name='obtener-archivados'),
     path('buscar_presupuestos/', NrosPresupuestoEnEspera.as_view(), name='presupuestos-list'),
     path('presupuesto_seleccionado/<int:nro_presupuesto>/', presupuesto_seleccionado, name='presupuesto-seleccionado'),
+    path('presupuestos_compatibles/<int:nro_presupuesto>/', presupuestos_compatibles, name='presupuestos-compatibles'),
     # Solicitud de Servicio
     path('crear_dataServicio/', CrearDataServicioView.as_view(), name='crear-dataservicio'),
     path('obtener_todoencurso/', ObtenerTodoEnCurso.as_view(), name='obtener-todosencurso'),

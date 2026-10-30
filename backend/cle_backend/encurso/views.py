@@ -163,6 +163,27 @@ class NrosPresupuestoEnEspera(APIView):
 
         return Response(data)
 
+def presupuestos_compatibles(request, nro_presupuesto):
+    """Devuelve presupuestos en_espera con mismo solicitante y área temática que el presupuesto dado."""
+    try:
+        principal = Presupuesto.objects.select_related('nro_solicitante').get(nro_presupuesto=nro_presupuesto)
+    except Presupuesto.DoesNotExist:
+        return JsonResponse({'error': 'Presupuesto no encontrado.'}, status=404)
+    compatibles = (
+        Presupuesto.objects
+        .filter(
+            nro_solicitante=principal.nro_solicitante,
+            area_tematica=principal.area_tematica,
+            estado_presupuesto='en_espera',
+        )
+        .exclude(nro_presupuesto=nro_presupuesto)
+        .values('nro_presupuesto', 'arancel_presupuesto')
+        .order_by('nro_presupuesto')
+    )
+    data = [{'nro_presupuesto': p['nro_presupuesto'], 'arancel_presupuesto': str(p['arancel_presupuesto'])} for p in compatibles]
+    return JsonResponse({'presupuestos': data}, status=200)
+
+
 def presupuesto_seleccionado(request, nro_presupuesto):
     try:
         presupuesto = Presupuesto.objects.select_related('nro_solicitante').get(nro_presupuesto=nro_presupuesto)

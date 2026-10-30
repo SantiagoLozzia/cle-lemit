@@ -901,30 +901,50 @@
                   <button type="button" class="btn-close btn-close-white ms-1" style="font-size:8px;" @click="quitarPresupuestoAdicional(p.nro_presupuesto)"></button>
                 </span>
               </div>
-              <div class="input-group input-group-sm mt-2">
-                <input type="number" class="form-control" v-model="editarDS.nuevoPres" placeholder="Nro presupuesto a agregar" />
-                <button class="btn btn-outline-secondary" @click="agregarPresupuestoAdicional">Agregar</button>
+              <div v-if="presupuestosDisponibles.length > 0" class="input-group input-group-sm mt-2">
+                <select class="form-select" v-model="editarDS.nuevoPres">
+                  <option value="">— Seleccioná un presupuesto —</option>
+                  <option v-for="p in presupuestosDisponibles" :key="p.nro_presupuesto" :value="p.nro_presupuesto">
+                    #{{ p.nro_presupuesto }} — ${{ p.arancel_presupuesto }}
+                  </option>
+                </select>
+                <button class="btn btn-outline-secondary" @click="agregarPresupuestoAdicional" :disabled="!editarDS.nuevoPres">Agregar</button>
               </div>
-              <div v-if="editarDS.presupuestoInfo" class="mt-1 text-muted" style="font-size:12px;">
-                {{ editarDS.presupuestoInfo }}
+              <div v-else class="mt-2 text-muted" style="font-size:12px;">
+                No hay presupuestos compatibles disponibles (misma empresa y área).
               </div>
-            </div>
-            <!-- Total -->
-            <div class="mb-3">
-              <label class="form-label fw-bold">Total estimado</label>
-              <div class="fw-bold text-success">${{ editarDS.totalCalculado }}</div>
             </div>
             <!-- Plazo -->
             <div class="mb-3">
               <label class="form-label fw-bold">Plazo estimado (días)</label>
-              <input type="number" class="form-control" v-model="editarDS.plazo_estimado" min="1" />
+              <div class="d-flex gap-2 align-items-end">
+                <div style="flex:1;">
+                  <label class="form-label text-muted mb-1" style="font-size:12px;">Plazo actual</label>
+                  <input type="number" class="form-control form-control-sm" :value="editarDS.plazo_original" disabled style="background:#f8f9fa; color:#6c757d;" />
+                </div>
+                <div style="flex:1;">
+                  <label class="form-label text-muted mb-1" style="font-size:12px;">Plazo adicional</label>
+                  <input type="number" class="form-control form-control-sm" v-model.number="editarDS.plazo_adicional" min="0" placeholder="0" />
+                </div>
+                <div class="pb-1 text-muted" style="white-space:nowrap;">= {{ (editarDS.plazo_original || 0) + (editarDS.plazo_adicional || 0) }} días</div>
+              </div>
             </div>
             <!-- Cant. Labs -->
             <div class="mb-3">
               <label class="form-label fw-bold">Cantidad de laboratorios</label>
-              <input type="number" class="form-control" v-model="editarDS.cant_numLabs" min="1" />
-              <div v-if="parseInt(editarDS.cant_numLabs) > editarDS.cant_numLabs_original" class="form-text text-warning">
-                ⚠️ Se agregarán {{ parseInt(editarDS.cant_numLabs) - editarDS.cant_numLabs_original }} lab(s) adicionales — pendientes de aprobación por Administración
+              <div class="d-flex gap-2 align-items-end">
+                <div style="flex:1;">
+                  <label class="form-label text-muted mb-1" style="font-size:12px;">Labs actuales</label>
+                  <input type="number" class="form-control form-control-sm" :value="editarDS.cant_numLabs_original" disabled style="background:#f8f9fa; color:#6c757d;" />
+                </div>
+                <div style="flex:1;">
+                  <label class="form-label text-muted mb-1" style="font-size:12px;">Labs adicionales</label>
+                  <input type="number" class="form-control form-control-sm" v-model.number="editarDS.labs_adicionales" min="0" placeholder="0" />
+                </div>
+                <div class="pb-1 text-muted" style="white-space:nowrap;">= {{ (editarDS.cant_numLabs_original || 0) + (editarDS.labs_adicionales || 0) }}</div>
+              </div>
+              <div v-if="editarDS.labs_adicionales > 0" class="form-text text-warning mt-1">
+                ⚠️ Se agregarán {{ editarDS.labs_adicionales }} lab(s) adicionales — pendientes de aprobación por Administración
               </div>
             </div>
           </div>
@@ -2270,46 +2290,53 @@
         nro_circuito: null,
         nro_presupuesto: null,
         presupuestos_adicionales: [],
-        plazo_estimado: null,
-        cant_numLabs: null,
+        plazo_original: null,
+        plazo_adicional: 0,
         cant_numLabs_original: null,
+        labs_adicionales: 0,
         nuevoPres: '',
-        presupuestoInfo: '',
+        presupuestosCompatibles: [],
         totalCalculado: 0,
       });
 
-      const abrirEditarDataServicio = (fila) => {
+      const presupuestosDisponibles = computed(() => {
+        const yaAgregados = new Set(editarDS.value.presupuestos_adicionales.map(p => p.nro_presupuesto));
+        return (editarDS.value.presupuestosCompatibles || []).filter(p => !yaAgregados.has(p.nro_presupuesto));
+      });
+
+      const abrirEditarDataServicio = async (fila) => {
         editarDS.value = {
           nro_dataServicio: fila.nro_dataServicio,
           nro_circuito: fila.nro_circuito,
           nro_presupuesto: fila.nro_presupuesto,
           presupuestos_adicionales: [...(fila.presupuestos_adicionales || [])],
-          plazo_estimado: fila.plazo_estimado_ds,
-          cant_numLabs: fila.cant_numLabs,
+          plazo_original: fila.plazo_estimado_ds,
+          plazo_adicional: 0,
           cant_numLabs_original: fila.cant_numLabs,
+          labs_adicionales: 0,
           nuevoPres: '',
-          presupuestoInfo: '',
+          presupuestosCompatibles: [],
           totalCalculado: 0,
         };
         mostrarModalEditarDS.value = true;
+        try {
+          const res = await api.get(`/encurso/presupuestos_compatibles/${fila.nro_presupuesto}/`);
+          editarDS.value.presupuestosCompatibles = res.data.presupuestos || [];
+        } catch (e) {
+          console.error('Error al cargar presupuestos compatibles:', e);
+        }
       };
 
       const cerrarEditarDataServicio = () => { mostrarModalEditarDS.value = false; };
 
-      const agregarPresupuestoAdicional = async () => {
+      const agregarPresupuestoAdicional = () => {
         const nro = editarDS.value.nuevoPres;
         if (!nro) return;
-        try {
-          const res = await api.get(`/encurso/presupuesto_seleccionado/${nro}/`);
-          editarDS.value.presupuestoInfo = `Presupuesto #${nro} — ${res.data.nombre_solicitante}`;
-          // Lo guardamos directamente (se persiste al guardar)
-          if (!editarDS.value.presupuestos_adicionales.find(p => p.nro_presupuesto === parseInt(nro))) {
-            editarDS.value.presupuestos_adicionales.push({ nro_presupuesto: parseInt(nro), arancel_presupuesto: res.data.arancel_presupuesto || '—' });
-          }
-          editarDS.value.nuevoPres = '';
-        } catch {
-          editarDS.value.presupuestoInfo = 'Presupuesto no encontrado.';
+        const pres = editarDS.value.presupuestosCompatibles.find(p => p.nro_presupuesto === nro);
+        if (pres && !editarDS.value.presupuestos_adicionales.find(p => p.nro_presupuesto === nro)) {
+          editarDS.value.presupuestos_adicionales.push({ nro_presupuesto: nro, arancel_presupuesto: pres.arancel_presupuesto });
         }
+        editarDS.value.nuevoPres = '';
       };
 
       const quitarPresupuestoAdicional = (nro) => {
@@ -2317,14 +2344,16 @@
       };
 
       const guardarEdicionDataServicio = async () => {
-        const { nro_dataServicio, plazo_estimado, cant_numLabs, presupuestos_adicionales } = editarDS.value;
+        const { nro_dataServicio, plazo_original, plazo_adicional, cant_numLabs_original, labs_adicionales, presupuestos_adicionales } = editarDS.value;
+        const plazo_estimado = (plazo_original || 0) + (plazo_adicional || 0);
+        const cant_numLabs = (cant_numLabs_original || 0) + (labs_adicionales || 0);
         try {
           // Guardar plazo y labs
           await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
             plazo_estimado,
             cant_numLabs,
           });
-          // Agregar presupuestos adicionales nuevos
+          // Agregar presupuestos adicionales
           for (const p of presupuestos_adicionales) {
             await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
               nro_presupuesto_adicional: p.nro_presupuesto,
@@ -4388,6 +4417,7 @@
         // Editar Data Servicio
         mostrarModalEditarDS,
         editarDS,
+        presupuestosDisponibles,
         abrirEditarDataServicio,
         cerrarEditarDataServicio,
         agregarPresupuestoAdicional,
