@@ -51,7 +51,7 @@ urlpatterns = [
     # Editar Data Servicio
     path('editar_dataservicio/<int:nro_dataServicio>/', EditarDataServicio.as_view(), name='editar-dataservicio'),
     path('aprobar_labs_adicionales/<int:nro_circuito>/', AprobarLabsAdicionales.as_view(), name='aprobar-labs-adicionales'),
-    path('confirmar_lectura_os/<int:nro_circuito>/', confirmar_lectura_os, name='confirmar-lectura-os'),
+    path('confirmar_lectura_os/<int:nro_circuito>/', ConfirmarLecturaOS.as_view(), name='confirmar-lectura-os'),
     # Eliminar adjuntos por ID
     path('adjunto_solicitud/<int:pk>/', EliminarAdjuntoSolicitud.as_view(), name='eliminar-adjunto-solicitud'),
     path('adjunto_factura/<int:pk>/', EliminarAdjuntoFactura.as_view(), name='eliminar-adjunto-factura'),

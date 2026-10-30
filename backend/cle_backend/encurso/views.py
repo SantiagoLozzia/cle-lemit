@@ -1082,15 +1082,15 @@ class EditarDataServicio(APIView):
         return Response({'message': 'Data Servicio actualizado.'}, status=status.HTTP_200_OK)
 
 
-def confirmar_lectura_os(request, nro_circuito):
-    """El área acusa recibo de los cambios al DataServicio: limpia la alerta de modificación."""
-    try:
-        orden = OrdenServicio.objects.get(nro_circuito=nro_circuito)
-        orden.modificada = False
-        orden.save()
-        return JsonResponse({'ok': True}, status=200)
-    except OrdenServicio.DoesNotExist:
-        return JsonResponse({'error': 'Orden de servicio no encontrada.'}, status=404)
+class ConfirmarLecturaOS(APIView):
+    def post(self, request, nro_circuito):
+        try:
+            orden = OrdenServicio.objects.get(nro_circuito=nro_circuito)
+            orden.modificada = False
+            orden.save()
+            return Response({'ok': True}, status=status.HTTP_200_OK)
+        except OrdenServicio.DoesNotExist:
+            return Response({'error': 'Orden de servicio no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class AprobarLabsAdicionales(APIView):
