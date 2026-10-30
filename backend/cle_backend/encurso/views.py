@@ -1076,8 +1076,8 @@ class EditarDataServicio(APIView):
                 if orden.completo:
                     orden.modificada = True
                     orden.save()
-            except OrdenServicio.DoesNotExist:
-                pass
+            except Exception:
+                logger.exception("Error al marcar OS como modificada en circuito %s", data_servicio.nro_circuito_id)
 
         return Response({'message': 'Data Servicio actualizado.'}, status=status.HTTP_200_OK)
 

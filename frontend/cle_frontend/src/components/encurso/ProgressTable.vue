@@ -2315,11 +2315,13 @@
       });
 
       const abrirEditarDataServicio = async (fila) => {
+        const adicionalesOriginales = (fila.presupuestos_adicionales || []).map(p => p.nro_presupuesto);
         editarDS.value = {
           nro_dataServicio: fila.nro_dataServicio,
           nro_circuito: fila.nro_circuito,
           nro_presupuesto: fila.nro_presupuesto,
           presupuestos_adicionales: [...(fila.presupuestos_adicionales || [])],
+          presupuestos_adicionales_originales: adicionalesOriginales,
           plazo_original: fila.plazo_estimado_ds,
           plazo_adicional: 0,
           cant_numLabs_original: fila.cant_numLabs,
@@ -2355,17 +2357,18 @@
       };
 
       const guardarEdicionDataServicio = async () => {
-        const { nro_dataServicio, plazo_original, plazo_adicional, cant_numLabs_original, labs_adicionales, presupuestos_adicionales } = editarDS.value;
+        const { nro_dataServicio, plazo_original, plazo_adicional, cant_numLabs_original, labs_adicionales, presupuestos_adicionales, presupuestos_adicionales_originales } = editarDS.value;
         const plazo_estimado = (plazo_original || 0) + (plazo_adicional || 0);
         const cant_numLabs = (cant_numLabs_original || 0) + (labs_adicionales || 0);
+        // Solo enviar presupuestos realmente nuevos (no los ya vinculados)
+        const originalesSet = new Set(presupuestos_adicionales_originales || []);
+        const nuevosPresupuestos = presupuestos_adicionales.filter(p => !originalesSet.has(p.nro_presupuesto));
         try {
-          // Guardar plazo y labs
           await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
             plazo_estimado,
             cant_numLabs,
           });
-          // Agregar presupuestos adicionales
-          for (const p of presupuestos_adicionales) {
+          for (const p of nuevosPresupuestos) {
             await api.patch(`/encurso/editar_dataservicio/${nro_dataServicio}/`, {
               nro_presupuesto_adicional: p.nro_presupuesto,
             });
@@ -2376,6 +2379,7 @@
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (e) {
           console.error('Error al editar Data Servicio:', e);
+          fetchData(); // sincronizar UI aunque haya error parcial
           showErrorAlert.value = true;
           setTimeout(() => { showErrorAlert.value = false; }, 3000);
         }
