@@ -1252,6 +1252,11 @@
               <div class="mb-3">
                 <label class="form-label">Rangos Laboratorios:</label>
                 <input v-model="rangosOS" type="text" readonly class="form-control" required />
+                <div v-if="osModificadaActual && nuevoRangoOS" class="mt-1">
+                  <span style="background:#fff3cd; border:1px solid #ffc107; padding:2px 10px; border-radius:4px; font-size:13px; font-weight:600;">
+                    Nuevo: {{ nuevoRangoOS }}
+                  </span>
+                </div>
               </div>
               <div class="mb-3">
                 <label class="form-label">Plazo Estimado:</label>
@@ -1290,8 +1295,8 @@
           </div>
           <div class="modal-footer">
             <button v-if="!osReadOnly" type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
-            <button v-if="osReadOnly && osModificadaActual" type="button" class="btn btn-success" @click="aceptarOrdenServicio">
-              <i class="bi bi-check-circle-fill me-1"></i>Aceptar cambios
+            <button v-if="osReadOnly && osModificadaActual" type="button" class="btn btn-success w-100" @click="aceptarOrdenServicio">
+              Aceptar cambios
             </button>
             <button v-if="!osModificadaActual" type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">{{ osReadOnly ? 'Cerrar' : 'Cancelar' }}</button>
           </div>
@@ -2464,6 +2469,7 @@
       const areaOS = ref();
       const legajoOS = ref();
       const rangosOS = ref();
+      const nuevoRangoOS = ref('');
       const plazoOS = ref();
       const solicitanteOS = ref();
       const servicioOS = ref();
@@ -3373,6 +3379,7 @@
         osModificadaActual.value = false;
         osFilaActual.value = null;
         osCircuitoActual.value = null;
+        nuevoRangoOS.value = '';
       };
 
       const aceptarOrdenServicio = () => {
@@ -3411,12 +3418,13 @@
           const nro_circuito = fila.nro_circuito;
           try {
               const response = await api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`);
-              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones } = response.data;
+              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, nuevo_rango_lab, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones } = response.data;
               nroOS.value = nro_ordenServicio;
               fechaOS.value = fecha_ordenServicio;
               areaOS.value = formatAreaTematica(area_tematica);
               legajoOS.value = nro_legajo;
               rangosOS.value = rangos_laboratorios;
+              nuevoRangoOS.value = nuevo_rango_lab || '';
               plazoOS.value = plazo_estimado;
               solicitanteOS.value = nombre_solicitante;
               servicioOS.value = servicio_solicitado;
@@ -4531,6 +4539,7 @@
         areaOS,
         legajoOS,
         rangosOS,
+        nuevoRangoOS,
         plazoOS,
         solicitanteOS,
         servicioOS,

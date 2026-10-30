@@ -739,6 +739,7 @@ def obtener_ordenServicio(request, nro_circuito):
             'area_tematica': area_tematica,
             'nro_legajo': nro_legajo,
             'rangos_laboratorios': rangos_laboratorios,
+            'nuevo_rango_lab': orden_servicio.nuevo_rango_lab,
             'plazo_estimado': plazo_estimado,
             'nombre_solicitante': nombre_solicitante,
             'servicio_solicitado': servicio_solicitado,
@@ -1114,6 +1115,7 @@ class ConfirmarLecturaOS(APIView):
         try:
             orden = OrdenServicio.objects.get(nro_circuito=nro_circuito)
             orden.modificada = False
+            orden.nuevo_rango_lab = ''
             orden.save()
             return Response({'ok': True}, status=status.HTTP_200_OK)
         except OrdenServicio.DoesNotExist:
@@ -1146,6 +1148,15 @@ class AprobarLabsAdicionales(APIView):
 
             result['nuevo_rango'] = nuevo_rango
             result['rangos_totales'] = legajo.rangos_laboratorios
+
+            # Marcar la OS con el nuevo rango para que el área lo vea destacado
+            try:
+                orden = OrdenServicio.objects.get(nro_circuito=nro_circuito)
+                orden.nuevo_rango_lab = nuevo_rango
+                orden.modificada = True
+                orden.save()
+            except OrdenServicio.DoesNotExist:
+                pass
 
         legajo.monto_adicional_pendiente = False
         legajo.save()
