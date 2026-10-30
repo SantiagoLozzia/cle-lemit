@@ -7,7 +7,7 @@
       <router-link v-if="!isRoleRestricted" to="/aranceles" class="router-link-item" :class="{ active: isRouteActive('/aranceles') }">
         <div @click="navigateTo('Aranceles')">Aranceles</div>
       </router-link>
-      <router-link v-if="!isRoleRestricted" to="/presupuestos" class="router-link-item" :class="{ active: isRouteActive('/presupuestos') }">
+      <router-link v-if="!isRoleRestricted && !isAdministracion" to="/presupuestos" class="router-link-item" :class="{ active: isRouteActive('/presupuestos') }">
         <div @click="navigateTo('Presupuestos')">Presupuestos</div>
       </router-link>
       <router-link v-if="!isRoleRestricted" to="/archivo" class="router-link-item" :class="{ active: isRouteActive('/archivo') }">
@@ -35,6 +35,8 @@ export default {
       return userRole === 'area_jefe' || userRole === 'area_standard';
     });
 
+    const isAdministracion = computed(() => userRole === 'administracion');
+
     const isRouteActive = (route) => {
       return $route.matched.some(record => record.path === route);
     };
@@ -48,7 +50,8 @@ export default {
     return {
       isRouteActive,
       navigateTo,
-      isRoleRestricted
+      isRoleRestricted,
+      isAdministracion
     };
   }
 };

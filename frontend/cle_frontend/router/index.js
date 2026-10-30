@@ -48,8 +48,9 @@ const router = createRouter({
 // Agrega una guardia global para proteger las rutas
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated()) {
-    // Redirige a la página de inicio de sesión si no está autenticado
     next('/userlogin');
+  } else if (to.path.startsWith('/presupuestos') && sessionStorage.getItem('role') === 'administracion') {
+    next('/encurso');
   } else {
     next();
   }
