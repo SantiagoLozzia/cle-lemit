@@ -720,7 +720,17 @@ def obtener_ordenServicio(request, nro_circuito):
 
         servicio_solicitado = _detalles_presupuesto(nro_presupuesto, False)
         for pres_adicional in data_servicio.presupuestos_adicionales.all():
-            servicio_solicitado += _detalles_presupuesto(pres_adicional.nro_presupuesto, True)
+            detalles_adicionales = _detalles_presupuesto(pres_adicional.nro_presupuesto, True)
+            if detalles_adicionales:
+                servicio_solicitado += detalles_adicionales
+            else:
+                # El presupuesto adicional existe pero no tiene DetallePresupuesto; igualmente avisar al área
+                servicio_solicitado.append({
+                    'nro_servicio': pres_adicional.nro_presupuesto,
+                    'servicio': f'Presupuesto adicional #{pres_adicional.nro_presupuesto} (sin detalle de servicios)',
+                    'cant': '-',
+                    'es_adicional': True,
+                })
 
         # Crear el diccionario de respuesta con los datos obtenidos
         response_data = {
