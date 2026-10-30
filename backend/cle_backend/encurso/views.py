@@ -125,8 +125,12 @@ class ObtenerTodoEnCurso(APIView):
             nro_circ = data_servicio['nro_circuito']
             nro_leg = circuito_legajo_map.get(nro_circ)
             factura_info = factura_monto_map.get(nro_leg) if nro_leg else None
-            if factura_info and factura_info['count'] > 0:
-                data_servicio['pendiente_factura'] = (data_servicio.get('total_arancel') or 0) - float(factura_info['total'])
+            ta = data_servicio.get('total_arancel') or 0
+            if nro_leg and ta > 0:
+                if factura_info and factura_info['count'] > 0:
+                    data_servicio['pendiente_factura'] = ta - float(factura_info['total'])
+                else:
+                    data_servicio['pendiente_factura'] = ta  # monto completo pendiente, aún sin facturas
             else:
                 data_servicio['pendiente_factura'] = None
 
@@ -1066,6 +1070,13 @@ class EditarDataServicio(APIView):
             presupuesto = get_object_or_404(Presupuesto, nro_presupuesto=nro_presupuesto_adicional)
             data_servicio.presupuestos_adicionales.add(presupuesto)
             hubo_cambio_significativo = True
+            # Avisar al admin que hay un monto adicional pendiente en el legajo
+            try:
+                legajo = Legajo.objects.get(nro_circuito=data_servicio.nro_circuito)
+                legajo.monto_adicional_pendiente = True
+                legajo.save()
+            except Legajo.DoesNotExist:
+                pass
 
         data_servicio.save()
 
@@ -1100,26 +1111,30 @@ class AprobarLabsAdicionales(APIView):
         legajo = get_object_or_404(Legajo, nro_circuito=nro_circuito)
         cant_labs_nuevos = legajo.labs_adicionales_pendientes
 
-        if cant_labs_nuevos <= 0:
-            return Response({'error': 'No hay labs pendientes.'}, status=status.HTTP_400_BAD_REQUEST)
+        if cant_labs_nuevos <= 0 and not legajo.monto_adicional_pendiente:
+            return Response({'error': 'No hay cambios pendientes.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        ultimo_numero_obj = UltimoNumero.obtener()
-        inicio_rango = ultimo_numero_obj.ultimo_numero_actual + 1
-        final_rango = inicio_rango + cant_labs_nuevos - 1
-        anio = timezone.now().year
-        nuevo_rango = f"{inicio_rango}-{final_rango}/{anio}"
+        result = {}
+        if cant_labs_nuevos > 0:
+            ultimo_numero_obj = UltimoNumero.obtener()
+            inicio_rango = ultimo_numero_obj.ultimo_numero_actual + 1
+            final_rango = inicio_rango + cant_labs_nuevos - 1
+            anio = timezone.now().year
+            nuevo_rango = f"{inicio_rango}-{final_rango}/{anio}"
 
-        legajo.rangos_laboratorios = f"{legajo.rangos_laboratorios}, {nuevo_rango}"
-        legajo.labs_adicionales_pendientes = 0
+            legajo.rangos_laboratorios = f"{legajo.rangos_laboratorios}, {nuevo_rango}"
+            legajo.labs_adicionales_pendientes = 0
+
+            ultimo_numero_obj.ultimo_numero_actual = final_rango
+            ultimo_numero_obj.save()
+
+            result['nuevo_rango'] = nuevo_rango
+            result['rangos_totales'] = legajo.rangos_laboratorios
+
+        legajo.monto_adicional_pendiente = False
         legajo.save()
 
-        ultimo_numero_obj.ultimo_numero_actual = final_rango
-        ultimo_numero_obj.save()
-
-        return Response({
-            'nuevo_rango': nuevo_rango,
-            'rangos_totales': legajo.rangos_laboratorios,
-        }, status=status.HTTP_200_OK)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class SubirInformeServicioCiclo(APIView):

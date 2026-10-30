@@ -180,9 +180,9 @@
               </template>
               <template v-else-if="fila.dataServicio_completo && fila.nro_legajo">
                 <button
-                  :class="fila.labs_adicionales_pendientes > 0 ? 'ds-icon-btn ds-icon-btn--warning' : 'ds-icon-btn'"
-                  :title="fila.labs_adicionales_pendientes > 0 ? fila.labs_adicionales_pendientes + ' labs adicionales pendientes de aprobación' : 'Ver Legajo'"
-                  @click="fila.labs_adicionales_pendientes > 0 && isAdministracion ? abrirAprobarLabs(fila) : abrirLegajo(fila)"
+                  :class="(fila.labs_adicionales_pendientes > 0 || fila.monto_adicional_pendiente) ? 'ds-icon-btn ds-icon-btn--warning' : 'ds-icon-btn'"
+                  :title="fila.labs_adicionales_pendientes > 0 ? fila.labs_adicionales_pendientes + ' labs adicionales pendientes de aprobación' : fila.monto_adicional_pendiente ? 'Nuevo presupuesto/monto pendiente de revisión' : 'Ver Legajo'"
+                  @click="(fila.labs_adicionales_pendientes > 0 || fila.monto_adicional_pendiente) && isAdministracion ? abrirAprobarLabs(fila) : abrirLegajo(fila)"
                 >
                   <i class="bi bi-file-earmark-check-fill"></i>
                 </button>
@@ -976,8 +976,13 @@
           </div>
           <div class="modal-body">
             <p>Circuito <strong>#{{ aprobarLabs.nro_circuito }}</strong></p>
-            <p>Se solicitan <strong>{{ aprobarLabs.labs_adicionales_pendientes }}</strong> laboratorio(s) adicional(es).</p>
-            <p class="text-muted">Al aprobar, se calculará automáticamente el nuevo rango de números de laboratorio y se añadirá al legajo existente.</p>
+            <p v-if="aprobarLabs.labs_adicionales_pendientes > 0">
+              Se solicitan <strong>{{ aprobarLabs.labs_adicionales_pendientes }}</strong> laboratorio(s) adicional(es).
+              <span class="text-muted" style="font-size:12px;">Se calculará el nuevo rango automáticamente.</span>
+            </p>
+            <p v-if="aprobarLabs.monto_adicional_pendiente" class="text-warning mb-1">
+              <i class="bi bi-exclamation-triangle-fill"></i> Se agregó un nuevo presupuesto con monto adicional. Verificar y actualizar la factura.
+            </p>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="cerrarAprobarLabs">Cancelar</button>
@@ -2357,6 +2362,10 @@
       };
 
       const guardarEdicionDataServicio = async () => {
+        // Si el usuario seleccionó un presupuesto del dropdown sin clickear "Agregar", agregarlo ahora
+        if (editarDS.value.nuevoPres) {
+          agregarPresupuestoAdicional();
+        }
         const { nro_dataServicio, plazo_original, plazo_adicional, cant_numLabs_original, labs_adicionales, presupuestos_adicionales, presupuestos_adicionales_originales } = editarDS.value;
         const plazo_estimado = (plazo_original || 0) + (plazo_adicional || 0);
         const cant_numLabs = (cant_numLabs_original || 0) + (labs_adicionales || 0);
@@ -2387,10 +2396,14 @@
 
       // Aprobar Labs Adicionales
       const mostrarModalAprobarLabs = ref(false);
-      const aprobarLabs = ref({ nro_circuito: null, labs_adicionales_pendientes: 0 });
+      const aprobarLabs = ref({ nro_circuito: null, labs_adicionales_pendientes: 0, monto_adicional_pendiente: false });
 
       const abrirAprobarLabs = (fila) => {
-        aprobarLabs.value = { nro_circuito: fila.nro_circuito, labs_adicionales_pendientes: fila.labs_adicionales_pendientes };
+        aprobarLabs.value = {
+          nro_circuito: fila.nro_circuito,
+          labs_adicionales_pendientes: fila.labs_adicionales_pendientes,
+          monto_adicional_pendiente: fila.monto_adicional_pendiente,
+        };
         mostrarModalAprobarLabs.value = true;
       };
 
@@ -2701,6 +2714,7 @@
                   plazo_pago: legajoCorrespondiente ? legajoCorrespondiente.plazo_pago : '',
                   legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo : '',
                   labs_adicionales_pendientes: legajoCorrespondiente ? (legajoCorrespondiente.labs_adicionales_pendientes || 0) : 0,
+                  monto_adicional_pendiente: legajoCorrespondiente ? !!legajoCorrespondiente.monto_adicional_pendiente : false,
                   // Recepcion
                   nros_remitos: recepcionCorrespondiente ? recepcionCorrespondiente.nros_remitos : '',
                   estado_recepcion: recepcionCorrespondiente ? recepcionCorrespondiente.estado_recepcion : '',

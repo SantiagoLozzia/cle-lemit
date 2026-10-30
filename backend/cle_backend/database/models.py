@@ -174,6 +174,7 @@ class Legajo(models.Model):
     completo = models.BooleanField(default=False)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
     labs_adicionales_pendientes = models.IntegerField(default=0)
+    monto_adicional_pendiente = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Legajo #{self.nro_legajo} - DataServicio #{self.nro_dataServicio.nro_dataServicio}"
