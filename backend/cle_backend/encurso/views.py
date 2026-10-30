@@ -710,11 +710,17 @@ def obtener_ordenServicio(request, nro_circuito):
         fecha_ordenServicio = orden_servicio.fecha_ordenServicio
         observaciones = orden_servicio.observaciones
 
-        # Obtener los detalles de Presupuesto y serializarlos
-        detalle_presupuestos = DetallePresupuesto.objects.select_related('nro_servicio') \
-                                                         .filter(nro_presupuesto=nro_presupuesto)
-        serializer = DetallePresupuestoSerializer(detalle_presupuestos, many=True)
-        servicio_solicitado = serializer.data
+        # Obtener los detalles del presupuesto principal + adicionales
+        def _detalles_presupuesto(nro_pres, es_adicional):
+            detalles = DetallePresupuesto.objects.select_related('nro_servicio').filter(nro_presupuesto=nro_pres)
+            return [
+                {'nro_servicio': d.nro_servicio.nro_servicio, 'servicio': d.nro_servicio.servicio, 'cant': d.cant, 'es_adicional': es_adicional}
+                for d in detalles
+            ]
+
+        servicio_solicitado = _detalles_presupuesto(nro_presupuesto, False)
+        for pres_adicional in data_servicio.presupuestos_adicionales.all():
+            servicio_solicitado += _detalles_presupuesto(pres_adicional.nro_presupuesto, True)
 
         # Crear el diccionario de respuesta con los datos obtenidos
         response_data = {

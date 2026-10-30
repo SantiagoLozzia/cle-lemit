@@ -1233,7 +1233,7 @@
           <div class="modal-header">
             <div class="modal-logo"></div>
             <h1 class="modal-title fs-5 fw-bold">{{ osReadOnly ? 'Orden de Servicio N°' + nroOS : 'Crear Orden de Servicio' }}</h1>
-            <button type="button" class="btn-close" @click="cerrarModalCrearOrdenServicio"></button>
+            <button v-if="!osModificadaActual" type="button" class="btn-close" @click="cerrarModalCrearOrdenServicio"></button>
           </div>
           <div class="modal-body">
             <form class="was-validated">
@@ -1271,8 +1271,12 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(servicio, index) in servicioOS" :key="index">
-                      <td style="text-align:left;">{{ servicio.servicio }}</td>
+                    <tr v-for="(servicio, index) in servicioOS" :key="index"
+                        :style="servicio.es_adicional ? 'background:#fff3cd; font-weight:600;' : ''">
+                      <td style="text-align:left;">
+                        {{ servicio.servicio }}
+                        <span v-if="servicio.es_adicional" style="font-size:10px; background:#ffc107; color:#000; padding:1px 5px; border-radius:4px; margin-left:4px;">Nuevo</span>
+                      </td>
                       <td>{{ servicio.cant }}</td>
                     </tr>
                   </tbody>
@@ -1286,7 +1290,10 @@
           </div>
           <div class="modal-footer">
             <button v-if="!osReadOnly" type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">{{ osReadOnly ? 'Cerrar' : 'Cancelar' }}</button>
+            <button v-if="osReadOnly && osModificadaActual" type="button" class="btn btn-success" @click="aceptarOrdenServicio">
+              <i class="bi bi-check-circle-fill me-1"></i>Aceptar cambios
+            </button>
+            <button v-if="!osModificadaActual" type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">{{ osReadOnly ? 'Cerrar' : 'Cancelar' }}</button>
           </div>
         </div>
       </div>
@@ -2464,6 +2471,9 @@
       const observacionesOS = ref();
       const mostrarModalCrearOrdenServicio = ref(false);
       const osReadOnly = ref(false);
+      const osModificadaActual = ref(false);
+      const osFilaActual = ref(null);
+      const osCircuitoActual = ref(null);
       const mostrarModalOrdenServicio = ref(false);
       const mostrarModalPlazoOrdenServicio = ref(false);
       // Setup Ciclos de Informe
@@ -3360,6 +3370,18 @@
       const cerrarModalCrearOrdenServicio = () => {
         mostrarModalCrearOrdenServicio.value = false;
         osReadOnly.value = false;
+        osModificadaActual.value = false;
+        osFilaActual.value = null;
+        osCircuitoActual.value = null;
+      };
+
+      const aceptarOrdenServicio = () => {
+        const nro_circuito = osCircuitoActual.value;
+        const fila = osFilaActual.value;
+        api.post(`/encurso/confirmar_lectura_os/${nro_circuito}/`)
+          .then(() => { if (fila) fila.os_modificada = false; })
+          .catch(() => {});
+        cerrarModalCrearOrdenServicio();
       };
       
       const crearOrdenServicio = async () => {
@@ -3401,13 +3423,11 @@
               muestrasOS.value = muestras;
               observacionesOS.value = observaciones;
               osReadOnly.value = true;
+              // Guardar si la OS está modificada: el área DEBE aceptar explícitamente
+              osModificadaActual.value = !!(fila.os_modificada && (isAreaJefe.value || isAreaStandard.value));
+              osFilaActual.value = fila;
+              osCircuitoActual.value = nro_circuito;
               mostrarModalCrearOrdenServicio.value = true;
-              // Si el área abre una OS modificada, acusa recibo y limpia la alerta
-              if (fila.os_modificada && (isAreaJefe.value || isAreaStandard.value)) {
-                api.post(`/encurso/confirmar_lectura_os/${nro_circuito}/`)
-                  .then(() => { fila.os_modificada = false; })
-                  .catch(() => {});
-              }
           } catch (error) {
               console.error('Error al obtener la orden de servicio:', error);
               showErrorAlert.value = true;
@@ -4519,8 +4539,10 @@
         crearOrdenServicio,
         mostrarModalCrearOrdenServicio,
         osReadOnly,
+        osModificadaActual,
         abrirModalCrearOrdenServicio,
         cerrarModalCrearOrdenServicio,
+        aceptarOrdenServicio,
         abrirOrdenServicio,
         mostrarModalOrdenServicio,
         cerrarModalOrdenServicio,
