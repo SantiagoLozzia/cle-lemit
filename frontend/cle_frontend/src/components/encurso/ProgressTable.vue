@@ -192,34 +192,14 @@
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <template v-if="fila.nro_legajo">
-                <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
-                  <button class="st-sd-trigger"
-                          :style="fila.adjuntos_factura && fila.adjuntos_factura.length > 0 ? 'border-color:#198754; color:#198754;' : ''"
-                          @click.stop="togglePopupFactura(fila.nro_dataServicio)"
-                          title="Factura">
-                    <i class="bi bi-receipt" style="font-size:13px;"></i>
-                    <span v-if="fila.adjuntos_factura && fila.adjuntos_factura.length > 0"
-                          class="st-sd-badge" style="background:#198754;"></span>
-                  </button>
-                  <div v-if="popupFacturaId === fila.nro_dataServicio" class="st-sd-dial">
-                    <div class="st-sd-opcion" style="--rotation: -120deg"
-                         @click.stop="abrirDatosFacturacion(fila); popupFacturaId = null"
-                         title="Ver datos de facturación">
-                      <i class="bi bi-info-circle"></i>
-                    </div>
-                    <div class="st-sd-opcion" style="--rotation: -60deg"
-                         @click.stop="abrirSubirFactura(fila); popupFacturaId = null"
-                         title="Cargar factura">
-                      <i class="bi bi-upload"></i>
-                    </div>
-                  </div>
-                </div>
-                <div v-else>
-                  <i v-if="fila.adjuntos_factura && fila.adjuntos_factura.length > 0"
-                     class="bi bi-receipt action-icon" style="cursor:pointer; color:#198754;"
-                     @click.stop="abrirDatosFacturacion(fila)" title="Ver datos de facturación"></i>
-                  <i v-else class="bi bi-stopwatch"></i>
-                </div>
+                <button class="st-sd-trigger"
+                        :style="fila.adjuntos_factura && fila.adjuntos_factura.length > 0 ? 'border-color:#198754; color:#198754;' : ''"
+                        @click.stop="abrirDatosFacturacion(fila)"
+                        title="Ver datos de facturación">
+                  <i class="bi bi-receipt" style="font-size:13px;"></i>
+                  <span v-if="fila.adjuntos_factura && fila.adjuntos_factura.length > 0"
+                        class="st-sd-badge" style="background:#198754;"></span>
+                </button>
               </template>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion">
