@@ -155,6 +155,8 @@ class DataServicio(models.Model):
     observaciones = models.TextField(max_length=255, null=True, blank=True)
     nro_presupuesto = models.ForeignKey('Presupuesto', on_delete=models.CASCADE)
     presupuestos_adicionales = models.ManyToManyField('Presupuesto', related_name='data_servicios_adicionales', blank=True)
+    email_factura = models.EmailField(max_length=100, null=True, blank=True)
+    email_informe_tecnico = models.EmailField(max_length=100, null=True, blank=True)
     completo = models.BooleanField(default=False) #Si es True habilito a adjuntar adjunto_solicitudServicio
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
     finalizado = models.BooleanField(default=False)

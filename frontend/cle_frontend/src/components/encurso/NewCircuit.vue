@@ -53,7 +53,17 @@
                     <label for="observaciones" class="form-label text-left">Observaciones:</label>
                     <input v-model="nuevoDataServicio.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
                   </div>
-    
+
+                  <div class="mb-3">
+                    <label for="email_factura" class="form-label text-left">Email factura:</label>
+                    <input v-model="nuevoDataServicio.email_factura" type="email" class="form-control" id="email_factura" name="email_factura" placeholder="email@ejemplo.com" />
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="email_informe_tecnico" class="form-label text-left">Email informe técnico:</label>
+                    <input v-model="nuevoDataServicio.email_informe_tecnico" type="email" class="form-control" id="email_informe_tecnico" name="email_informe_tecnico" placeholder="email@ejemplo.com" />
+                  </div>
+
                   <button @click="crearDataServicio" type="button" class="btn btn-primary w-100">Guardar</button>
                 </form>
               </div>
@@ -93,6 +103,8 @@
             muestras:null,
             plazo_estimado: null,
             cant_numLabs: null,
+            email_factura: null,
+            email_informe_tecnico: null,
         });
         const mostrarModal = ref(false);
         const showSuccessAlert = ref(false);
@@ -124,6 +136,8 @@
             muestras:null,
             plazo_estimado: null,
             cant_numLabs: null,
+            email_factura: null,
+            email_informe_tecnico: null,
           };
   
           mostrarModal.value = true;
@@ -152,6 +166,8 @@
                 muestras:null,
                 plazo_estimado: null,
                 cant_numLabs: null,
+                email_factura: null,
+                email_informe_tecnico: null,
               };
 
               document.dispatchEvent(new CustomEvent('encurso-refresh'));
