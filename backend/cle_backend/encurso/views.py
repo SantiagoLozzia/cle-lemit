@@ -91,13 +91,6 @@ class ObtenerTodoEnCurso(APIView):
             data_servicio['presupuestos_adicionales'] = adicionales
             total_arancel = float(arancel_principal) + sum(float(p['arancel_presupuesto']) for p in adicionales)
             data_servicio['total_arancel'] = total_arancel
-            nro_circ = data_servicio['nro_circuito']
-            nro_leg = circuito_legajo_map.get(nro_circ)
-            factura_info = factura_monto_map.get(nro_leg) if nro_leg else None
-            if factura_info and factura_info['count'] > 0:
-                data_servicio['pendiente_factura'] = total_arancel - float(factura_info['total'])
-            else:
-                data_servicio['pendiente_factura'] = None
 
         # Obtener el numero de circuito de los DataServicio
         numeros_circuito = servicios_en_curso.values_list('nro_circuito', flat=True)
@@ -123,8 +116,19 @@ class ObtenerTodoEnCurso(APIView):
             entry['count'] += 1
             if f.monto:
                 entry['total'] += f.monto
-        # Mapa nro_circuito -> nro_legajo
-        circuito_legajo_map = {l.nro_circuito_id: l.nro_legajo for l in legajos}
+        # Mapa nro_circuito -> nro_legajo (usando valores serializados para consistencia de tipos)
+        legajos_list = list(legajos.values('nro_legajo', 'nro_circuito'))
+        circuito_legajo_map = {l['nro_circuito']: l['nro_legajo'] for l in legajos_list}
+
+        # Segundo pass: agregar pendiente_factura a cada data_servicio (requiere los mapas anteriores)
+        for data_servicio in servicios_en_curso_serializer.data:
+            nro_circ = data_servicio['nro_circuito']
+            nro_leg = circuito_legajo_map.get(nro_circ)
+            factura_info = factura_monto_map.get(nro_leg) if nro_leg else None
+            if factura_info and factura_info['count'] > 0:
+                data_servicio['pendiente_factura'] = (data_servicio.get('total_arancel') or 0) - float(factura_info['total'])
+            else:
+                data_servicio['pendiente_factura'] = None
 
         # Serializar los datos
         legajos_serializer = LegajoEnCursoSerializer(legajos, many=True)
