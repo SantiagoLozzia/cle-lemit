@@ -549,12 +549,20 @@
                         </div>
                       </div>
                     </div>
-                    <div v-else-if="isServiciosTecnologicos || isDireccion"
-                         style="display:inline-flex; align-items:center; gap:6px;">
-                      <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a;"
-                         @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
-                      <i class="bi bi-sticky-fill" style="font-size:13px; color:#dc3545; cursor:pointer;"
+                    <div v-else-if="isServiciosTecnologicos || isDireccion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormato(ciclo.id)" title="Ver informe">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      </button>
+                      <i class="bi bi-sticky-fill"
+                         style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -90deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupFormatoId = null" title="Ver Word">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
@@ -583,12 +591,20 @@
                         </div>
                       </div>
                     </div>
-                    <div v-else-if="isServiciosTecnologicos || isDireccion"
-                         style="display:inline-flex; align-items:center; gap:6px;">
-                      <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a;"
-                         @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
-                      <i class="bi bi-sticky-fill" style="font-size:13px; color:#9c7cc7; cursor:pointer;"
+                    <div v-else-if="isServiciosTecnologicos || isDireccion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormato(ciclo.id)" title="Ver informe">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      </button>
+                      <i class="bi bi-sticky-fill"
+                         style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#9c7cc7; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -90deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupFormatoId = null" title="Ver Word">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
@@ -617,16 +633,27 @@
                         </div>
                       </div>
                     </div>
-                    <div v-else-if="isServiciosTecnologicos || isDireccion"
-                         style="display:inline-flex; align-items:center; gap:6px;">
-                      <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a;"
-                         @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
-                      <i class="bi bi-sticky-fill" style="font-size:13px; color:#ffc107; cursor:pointer;"
+                    <div v-else-if="isServiciosTecnologicos || isDireccion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormato(ciclo.id)" title="Ver informe">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      </button>
+                      <i class="bi bi-sticky-fill"
+                         style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#ffc107; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -90deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeServicio); popupFormatoId = null" title="Ver Word">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                      </div>
                     </div>
-                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-sticky-fill"
-                       style="font-size:14px; color:#ffc107; cursor:pointer;"
-                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo enviada"></i>
+                    <div v-else-if="isAreaJefe || isAreaStandard"
+                         style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-file-earmark-word" style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                      <i class="bi bi-sticky-fill" style="font-size:14px; color:#ffc107; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo enviada"></i>
+                    </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, sin corrección -->
