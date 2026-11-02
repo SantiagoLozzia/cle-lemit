@@ -713,7 +713,6 @@
                          style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
                     </div>
-                    <span class="st-pend-label">Pend. confirmación</span>
                   </div>
                   <div v-else style="position:relative; display:inline-flex; align-items:center;">
                     <i class="bi bi-stopwatch"></i>
@@ -770,7 +769,7 @@
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio_pdf)"
                        title="Ver PDF confirmado por Administración">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
                   </div>
                 </template>
               </div>
@@ -806,7 +805,7 @@
                        @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por responsable de área">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
                   </div>
                 </template>
               </div>
@@ -840,7 +839,7 @@
                        @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por dirección">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; bottom:-3px; right:-7px; font-size:10px; color:#198754;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
                   </div>
                 </template>
               </div>
