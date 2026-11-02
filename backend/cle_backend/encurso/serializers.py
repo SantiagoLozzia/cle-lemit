@@ -81,7 +81,7 @@ class RegistroEnsayoCicloSerializer(serializers.ModelSerializer):
 class CorreccionSerializer(serializers.ModelSerializer):
         class Meta:
                 model = Correccion
-                fields = ['id', 'tipo', 'descripcion', 'fecha', 'estado', 'autor']
+                fields = ['id', 'tipo', 'destinatario', 'descripcion', 'fecha', 'estado', 'autor']
 
 class CicloInformeSerializer(serializers.ModelSerializer):
         registros_ensayo = RegistroEnsayoCicloSerializer(many=True, read_only=True)

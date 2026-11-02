@@ -1335,7 +1335,7 @@ class RegistrarCorreccionST(APIView):
         descripcion = request.data.get('descripcion', '').strip()
         if not descripcion:
             return Response({'error': 'Descripción requerida.'}, status=status.HTTP_400_BAD_REQUEST)
-        Correccion.objects.create(ciclo=ciclo, tipo='st', descripcion=descripcion, autor=request.user)
+        Correccion.objects.create(ciclo=ciclo, tipo='st', destinatario='administracion', descripcion=descripcion, autor=request.user)
         return Response(status=status.HTTP_201_CREATED)
 
 

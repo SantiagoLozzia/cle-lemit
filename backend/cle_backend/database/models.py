@@ -365,14 +365,16 @@ class RegistroEnsayoCiclo(models.Model):
 
 class Correccion(models.Model):
     TIPO_CHOICES = [('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
+    DEST_CHOICES = [('administracion', 'Administración'), ('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
     ESTADO_CHOICES = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada')]
 
-    ciclo       = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='correcciones')
-    tipo        = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    descripcion = models.TextField()
-    fecha       = models.DateTimeField(auto_now_add=True)
-    estado      = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
-    autor       = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    ciclo        = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='correcciones')
+    tipo         = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    destinatario = models.CharField(max_length=20, choices=DEST_CHOICES, default='administracion')
+    descripcion  = models.TextField()
+    fecha        = models.DateTimeField(auto_now_add=True)
+    estado       = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    autor        = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ['fecha']

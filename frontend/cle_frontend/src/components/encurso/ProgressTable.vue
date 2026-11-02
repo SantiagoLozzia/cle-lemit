@@ -1720,10 +1720,14 @@
                    class="border rounded p-3 mb-2"
                    :style="c.estado === 'confirmada' ? 'background:#f0fff4; opacity:0.7;' : 'background:#fffdf0;'">
                 <div class="d-flex justify-content-between align-items-start mb-1">
-                  <strong style="font-size:12px; color:#888;">
-                    Corrección {{ idx + 1 }}
-                    <span v-if="c.estado === 'confirmada'" style="color:#198754; margin-left:4px;">✓ Confirmada</span>
-                  </strong>
+                  <div>
+                    <strong style="font-size:12px; color:#888;">Corrección {{ idx + 1 }}</strong>
+                    <span style="font-size:11px; color:#6c757d; margin-left:6px;">
+                      de <em>{{ { st: 'ST', area: 'Área', direccion: 'Dirección' }[c.tipo] }}</em>
+                      → a <em>{{ { administracion: 'Administración', st: 'ST', area: 'Área', direccion: 'Dirección' }[c.destinatario] }}</em>
+                    </span>
+                    <span v-if="c.estado === 'confirmada'" style="color:#198754; font-size:11px; margin-left:6px;">✓ Confirmada</span>
+                  </div>
                   <small class="text-muted">{{ new Date(c.fecha).toLocaleString('es-AR') }}</small>
                 </div>
                 <p class="mb-0" style="white-space:pre-wrap;">{{ c.descripcion }}</p>
