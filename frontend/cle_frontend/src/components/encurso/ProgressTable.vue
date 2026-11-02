@@ -646,6 +646,11 @@
                       <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }" title="Informe de servicio"></i>
                       <i class="bi bi-check-circle-fill"
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                      <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0 && !ciclo.revision_confirmada"
+                         class="bi bi-sticky-fill"
+                         style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#9c7cc7; cursor:pointer; z-index:10;"
+                         @click.stop="abrirModalVerCorrecciones(ciclo)"
+                         :title="ciclo.correcciones_st.length + ' corrección(es) de ST pendiente(s)'"></i>
                     </div>
                   </template>
                   <!-- Con corrección pendiente -->
@@ -732,11 +737,6 @@
                     <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
                     <i class="bi bi-check-circle-fill"
                        style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
-                    <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
-                       class="bi bi-sticky-fill st-nota-correcciones"
-                       style="position:absolute; top:-5px; right:-12px; font-size:13px;"
-                       @click.stop.prevent="abrirModalVerCorrecciones(ciclo)"
-                       :title="ciclo.correcciones_st.length + ' corrección(es) registrada(s)'"></i>
                   </div>
                 </template>
               </div>
