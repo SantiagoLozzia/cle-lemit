@@ -368,7 +368,7 @@ class Correccion(models.Model):
     DEST_CHOICES = [('administracion', 'Administración'), ('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
     ESTADO_CHOICES = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada')]
 
-    ciclo        = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='correcciones')
+    ciclo        = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='historial_correcciones')
     tipo         = models.CharField(max_length=20, choices=TIPO_CHOICES)
     destinatario = models.CharField(max_length=20, choices=DEST_CHOICES, default='administracion')
     descripcion  = models.TextField()

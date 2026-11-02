@@ -646,11 +646,11 @@
                       <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }" title="Informe de servicio"></i>
                       <i class="bi bi-check-circle-fill"
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
-                      <i v-if="ciclo.correcciones && ciclo.correcciones.some(c => c.tipo === 'st' && c.estado === 'pendiente')"
+                      <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'st' && c.estado === 'pendiente')"
                          class="bi bi-sticky-fill"
                          style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#9c7cc7; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerCorrecciones(ciclo)"
-                         :title="ciclo.correcciones.filter(c => c.tipo === 'st' && c.estado === 'pendiente').length + ' corrección(es) de ST pendiente(s)'"></i>
+                         :title="ciclo.historial_correcciones.filter(c => c.tipo === 'st' && c.estado === 'pendiente').length + ' corrección(es) de ST pendiente(s)'"></i>
                     </div>
                   </template>
                   <!-- Con corrección pendiente -->
@@ -1715,8 +1715,8 @@
             <button type="button" class="btn-close" @click="cerrarModalVerCorrecciones"></button>
           </div>
           <div class="modal-body">
-            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.correcciones && cicloVerCorrecciones.correcciones.filter(c => c.tipo === 'st').length > 0">
-              <div v-for="(c, idx) in cicloVerCorrecciones.correcciones.filter(c => c.tipo === 'st')" :key="c.id"
+            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.historial_correcciones && cicloVerCorrecciones.historial_correcciones.filter(c => c.tipo === 'st').length > 0">
+              <div v-for="(c, idx) in cicloVerCorrecciones.historial_correcciones.filter(c => c.tipo === 'st')" :key="c.id"
                    class="border rounded p-3 mb-2"
                    :style="c.estado === 'confirmada' ? 'background:#f0fff4; opacity:0.7;' : 'background:#fffdf0;'">
                 <div class="d-flex justify-content-between align-items-start mb-1">
@@ -2738,7 +2738,7 @@
                     correcciones: c.correcciones,
                     corregir: c.corregir,
                     revision_confirmada: c.revision_confirmada,
-                    correcciones: c.correcciones || [],
+                    historial_correcciones: c.historial_correcciones || [],
                     firma_responsable_area: c.firma_responsable_area,
                     adjunto_firmado_area: c.adjunto_firmado_area || null,
                     firma_direccion: c.firma_direccion,

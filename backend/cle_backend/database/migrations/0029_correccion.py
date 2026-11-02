@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('descripcion', models.TextField()),
                 ('fecha', models.DateTimeField(auto_now_add=True)),
                 ('estado', models.CharField(choices=[('pendiente', 'Pendiente'), ('confirmada', 'Confirmada')], default='pendiente', max_length=20)),
-                ('ciclo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='correcciones', to='database.cicloinforme')),
+                ('ciclo', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='historial_correcciones', to='database.cicloinforme')),
                 ('autor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
             options={'ordering': ['fecha']},

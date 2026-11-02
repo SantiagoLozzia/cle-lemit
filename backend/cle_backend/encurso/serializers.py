@@ -85,7 +85,7 @@ class CorreccionSerializer(serializers.ModelSerializer):
 
 class CicloInformeSerializer(serializers.ModelSerializer):
         registros_ensayo = RegistroEnsayoCicloSerializer(many=True, read_only=True)
-        correcciones = CorreccionSerializer(many=True, read_only=True)
+        historial_correcciones = CorreccionSerializer(many=True, read_only=True)
 
         class Meta:
                 model = CicloInforme

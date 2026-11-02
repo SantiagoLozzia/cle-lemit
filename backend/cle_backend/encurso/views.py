@@ -1230,7 +1230,7 @@ class ConfirmarRevisionCiclo(APIView):
 
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
-        ciclo.correcciones.filter(tipo='st', estado='pendiente').update(estado='confirmada')
+        ciclo.historial_correcciones.filter(tipo='st', estado='pendiente').update(estado='confirmada')
         ciclo.revision_confirmada = True
         ciclo.save()
         return JsonResponse({'message': 'Revisión confirmada correctamente.'})
