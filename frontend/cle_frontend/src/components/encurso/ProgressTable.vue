@@ -639,9 +639,11 @@
                   </template>
                   <!-- Con informe servicio, sin corrección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
-                    <i v-if="isAdministracion" class="bi bi-check-lg" style="color:green;"></i>
-                    <i v-else class="bi bi-file-earmark-word"
-                       style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                    <div style="position:relative; display:inline-flex; align-items:center;">
+                      <i class="bi bi-file-earmark-word" style="color:#2b579a;" title="Informe de servicio"></i>
+                      <i class="bi bi-check-circle-fill"
+                         style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    </div>
                   </template>
                   <!-- Con corrección pendiente -->
                   <template v-else-if="ciclo.corregir">
