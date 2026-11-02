@@ -761,7 +761,11 @@
                       </div>
                     </div>
                   </div>
-                  <i v-else class="bi bi-stopwatch"></i>
+                  <div v-else style="position:relative; display:inline-flex; align-items:center;">
+                    <i class="bi bi-file-earmark-word" style="color:#2b579a;" title="Informe de servicio aprobado por ST"></i>
+                    <i class="bi bi-check-circle-fill"
+                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                  </div>
                 </template>
                 <template v-else-if="ciclo.pdf_confirmado_admin && !ciclo.corregir">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
