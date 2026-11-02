@@ -673,12 +673,12 @@
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && (!ciclo.rechazo_area_destino || ciclo.rechazo_area_destino === 'st') && !ciclo.rechazo_st_destino">
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
-                    <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
+                    <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)"
+                            :title="stReemplazadoIds.has(ciclo.id) ? 'Archivo reemplazado — abrí para confirmar' : 'Informe ST ' + ciclo.numero">
                       <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
                       <span v-if="!stReemplazadoIds.has(ciclo.id)" class="st-sd-badge"></span>
                       <span v-if="stReemplazadoIds.has(ciclo.id)" class="st-sd-badge st-sd-badge--confirmar"></span>
                     </button>
-                    <span v-if="stReemplazadoIds.has(ciclo.id)" class="st-confirmar-hint">↑ Confirmar</span>
                     <i v-if="ciclo.rechazo_destino === 'st'" class="bi bi-sticky-fill"
                        style="position:absolute; top:-6px; left:calc(100% - 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazo(ciclo)"
