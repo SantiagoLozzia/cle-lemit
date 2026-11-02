@@ -724,14 +724,16 @@
                   </div>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
-                  <div style="position:relative; display:inline-flex; align-items:center;">
-                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
-                       title="Ver informe (ST)"></i>
+                       title="Ver informe de servicio (Word)">
+                    <i class="bi bi-file-earmark-word" style="color:#2b579a;"></i>
+                    <i class="bi bi-check-circle-fill"
+                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
                     <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0"
                        class="bi bi-sticky-fill st-nota-correcciones"
                        style="position:absolute; top:-5px; right:-12px; font-size:13px;"
-                       @click.stop="abrirModalVerCorrecciones(ciclo)"
+                       @click.stop.prevent="abrirModalVerCorrecciones(ciclo)"
                        :title="ciclo.correcciones_st.length + ' corrección(es) registrada(s)'"></i>
                   </div>
                 </template>
@@ -761,11 +763,7 @@
                       </div>
                     </div>
                   </div>
-                  <div v-else style="position:relative; display:inline-flex; align-items:center;">
-                    <i class="bi bi-file-earmark-word" style="color:#2b579a;" title="Informe de servicio aprobado por ST"></i>
-                    <i class="bi bi-check-circle-fill"
-                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
-                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
                 </template>
                 <template v-else-if="ciclo.pdf_confirmado_admin && !ciclo.corregir">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
