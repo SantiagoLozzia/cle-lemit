@@ -549,6 +549,13 @@
                         </div>
                       </div>
                     </div>
+                    <div v-else-if="isServiciosTecnologicos || isDireccion"
+                         style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a;"
+                         @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
+                      <i class="bi bi-sticky-fill" style="font-size:13px; color:#dc3545; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
+                    </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, rechazado a administración por ST -->
@@ -575,6 +582,13 @@
                                  @change="subirInformeServicioCiclo($event, ciclo)">
                         </div>
                       </div>
+                    </div>
+                    <div v-else-if="isServiciosTecnologicos || isDireccion"
+                         style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a;"
+                         @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
+                      <i class="bi bi-sticky-fill" style="font-size:13px; color:#9c7cc7; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
@@ -603,6 +617,16 @@
                         </div>
                       </div>
                     </div>
+                    <div v-else-if="isServiciosTecnologicos || isDireccion"
+                         style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-file-earmark-word action-icon" style="color:#2b579a;"
+                         @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
+                      <i class="bi bi-sticky-fill" style="font-size:13px; color:#ffc107; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo de Área"></i>
+                    </div>
+                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-sticky-fill"
+                       style="font-size:14px; color:#ffc107; cursor:pointer;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo enviada"></i>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, sin corrección -->
