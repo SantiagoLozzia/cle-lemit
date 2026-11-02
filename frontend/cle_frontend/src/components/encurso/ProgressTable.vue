@@ -652,8 +652,12 @@
                         </div>
                       </div>
                     </div>
-                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-file-earmark-word"
-                       style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                    <div v-else-if="isAreaJefe || isAreaStandard"
+                         style="display:inline-flex; align-items:center; gap:6px;">
+                      <i class="bi bi-file-earmark-word" style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                      <i class="bi bi-sticky-fill" style="font-size:14px; color:#ffc107; cursor:pointer;"
+                         @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo enviada"></i>
+                    </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, sin corrección -->
@@ -746,7 +750,12 @@
                     </div>
                     <span class="st-pend-label">Pend. confirmación</span>
                   </div>
-                  <i v-else class="bi bi-stopwatch"></i>
+                  <div v-else style="display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-stopwatch"></i>
+                    <i v-if="(isAreaJefe || isAreaStandard) && (ciclo.rechazo_area_destino === 'st' || ciclo.rechazo_area_destino === 'area')"
+                       class="bi bi-sticky-fill" style="font-size:14px; color:#ffc107; cursor:pointer;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo enviada"></i>
+                  </div>
                 </template>
                 <template v-else-if="ciclo.revision_confirmada && !ciclo.corregir">
                   <div style="position:relative; display:inline-flex; align-items:center;">
