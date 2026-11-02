@@ -1230,7 +1230,7 @@ class ConfirmarRevisionCiclo(APIView):
 
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
-        ciclo.correcciones_st.all().delete()
+        ciclo.correcciones.filter(tipo='st', estado='pendiente').update(estado='confirmada')
         ciclo.revision_confirmada = True
         ciclo.save()
         return JsonResponse({'message': 'Revisión confirmada correctamente.'})
@@ -1335,7 +1335,7 @@ class RegistrarCorreccionST(APIView):
         descripcion = request.data.get('descripcion', '').strip()
         if not descripcion:
             return Response({'error': 'Descripción requerida.'}, status=status.HTTP_400_BAD_REQUEST)
-        CorreccionST.objects.create(ciclo=ciclo, descripcion=descripcion)
+        Correccion.objects.create(ciclo=ciclo, tipo='st', descripcion=descripcion, autor=request.user)
         return Response(status=status.HTTP_201_CREATED)
 
 

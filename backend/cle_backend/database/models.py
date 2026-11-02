@@ -363,10 +363,16 @@ class RegistroEnsayoCiclo(models.Model):
         ordering = ['fecha']
 
 
-class CorreccionST(models.Model):
-    ciclo = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='correcciones_st')
+class Correccion(models.Model):
+    TIPO_CHOICES = [('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
+    ESTADO_CHOICES = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada')]
+
+    ciclo       = models.ForeignKey(CicloInforme, on_delete=models.CASCADE, related_name='correcciones')
+    tipo        = models.CharField(max_length=20, choices=TIPO_CHOICES)
     descripcion = models.TextField()
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha       = models.DateTimeField(auto_now_add=True)
+    estado      = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    autor       = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         ordering = ['fecha']

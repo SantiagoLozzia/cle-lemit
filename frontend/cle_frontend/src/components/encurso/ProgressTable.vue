@@ -646,11 +646,11 @@
                       <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }" title="Informe de servicio"></i>
                       <i class="bi bi-check-circle-fill"
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
-                      <i v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0 && !ciclo.revision_confirmada"
+                      <i v-if="ciclo.correcciones && ciclo.correcciones.some(c => c.tipo === 'st' && c.estado === 'pendiente')"
                          class="bi bi-sticky-fill"
                          style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#9c7cc7; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerCorrecciones(ciclo)"
-                         :title="ciclo.correcciones_st.length + ' corrección(es) de ST pendiente(s)'"></i>
+                         :title="ciclo.correcciones.filter(c => c.tipo === 'st' && c.estado === 'pendiente').length + ' corrección(es) de ST pendiente(s)'"></i>
                     </div>
                   </template>
                   <!-- Con corrección pendiente -->
@@ -1715,11 +1715,15 @@
             <button type="button" class="btn-close" @click="cerrarModalVerCorrecciones"></button>
           </div>
           <div class="modal-body">
-            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.correcciones_st && cicloVerCorrecciones.correcciones_st.length > 0">
-              <div v-for="(c, idx) in cicloVerCorrecciones.correcciones_st" :key="c.id"
-                   class="border rounded p-3 mb-2" style="background:#fffdf0;">
+            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.correcciones && cicloVerCorrecciones.correcciones.filter(c => c.tipo === 'st').length > 0">
+              <div v-for="(c, idx) in cicloVerCorrecciones.correcciones.filter(c => c.tipo === 'st')" :key="c.id"
+                   class="border rounded p-3 mb-2"
+                   :style="c.estado === 'confirmada' ? 'background:#f0fff4; opacity:0.7;' : 'background:#fffdf0;'">
                 <div class="d-flex justify-content-between align-items-start mb-1">
-                  <strong style="font-size:12px; color:#888;">Corrección {{ idx + 1 }}</strong>
+                  <strong style="font-size:12px; color:#888;">
+                    Corrección {{ idx + 1 }}
+                    <span v-if="c.estado === 'confirmada'" style="color:#198754; margin-left:4px;">✓ Confirmada</span>
+                  </strong>
                   <small class="text-muted">{{ new Date(c.fecha).toLocaleString('es-AR') }}</small>
                 </div>
                 <p class="mb-0" style="white-space:pre-wrap;">{{ c.descripcion }}</p>
@@ -2730,7 +2734,7 @@
                     correcciones: c.correcciones,
                     corregir: c.corregir,
                     revision_confirmada: c.revision_confirmada,
-                    correcciones_st: c.correcciones_st || [],
+                    correcciones: c.correcciones || [],
                     firma_responsable_area: c.firma_responsable_area,
                     adjunto_firmado_area: c.adjunto_firmado_area || null,
                     firma_direccion: c.firma_direccion,

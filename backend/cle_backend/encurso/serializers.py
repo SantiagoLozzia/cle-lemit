@@ -78,14 +78,14 @@ class RegistroEnsayoCicloSerializer(serializers.ModelSerializer):
                 model = RegistroEnsayoCiclo
                 fields = ['id', 'ciclo', 'archivo', 'fecha']
 
-class CorreccionSTSerializer(serializers.ModelSerializer):
+class CorreccionSerializer(serializers.ModelSerializer):
         class Meta:
-                model = CorreccionST
-                fields = ['id', 'ciclo', 'descripcion', 'fecha']
+                model = Correccion
+                fields = ['id', 'tipo', 'descripcion', 'fecha', 'estado', 'autor']
 
 class CicloInformeSerializer(serializers.ModelSerializer):
         registros_ensayo = RegistroEnsayoCicloSerializer(many=True, read_only=True)
-        correcciones_st = CorreccionSTSerializer(many=True, read_only=True)
+        correcciones = CorreccionSerializer(many=True, read_only=True)
 
         class Meta:
                 model = CicloInforme
