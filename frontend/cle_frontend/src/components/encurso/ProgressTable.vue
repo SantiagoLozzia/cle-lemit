@@ -530,6 +530,7 @@
                       <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
                               @click.stop="togglePopupFormato(ciclo.id)" title="Ver / Reemplazar informe">
                         <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                        <span class="st-sd-badge"></span>
                       </button>
                       <i class="bi bi-sticky-fill"
                          style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#dc3545; cursor:pointer; z-index:10;"
@@ -566,6 +567,7 @@
                       <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
                               @click.stop="togglePopupFormato(ciclo.id)" title="Ver / Reemplazar informe">
                         <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                        <span class="st-sd-badge"></span>
                       </button>
                       <i class="bi bi-sticky-fill"
                          style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#9c7cc7; cursor:pointer; z-index:10;"
@@ -602,6 +604,7 @@
                       <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
                               @click.stop="togglePopupFormato(ciclo.id)" title="Ver / Reemplazar informe">
                         <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                        <span class="st-sd-badge"></span>
                       </button>
                       <i class="bi bi-sticky-fill"
                          style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#ffc107; cursor:pointer; z-index:10;"
@@ -672,7 +675,7 @@
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupST(ciclo.id)" :title="'Informe ST ' + ciclo.numero">
                       <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
-                      <span v-if="ciclo.correcciones_st && ciclo.correcciones_st.length > 0" class="st-sd-badge"></span>
+                      <span v-if="!stReemplazadoIds.has(ciclo.id)" class="st-sd-badge"></span>
                       <span v-if="stReemplazadoIds.has(ciclo.id)" class="st-sd-badge st-sd-badge--confirmar"></span>
                     </button>
                     <span v-if="stReemplazadoIds.has(ciclo.id)" class="st-confirmar-hint">↑ Confirmar</span>
@@ -748,6 +751,7 @@
                     <button class="st-sd-trigger" @click.stop="togglePopupPDFAdmin(ciclo.id)" title="Ver / Convertir a PDF"
                             style="border-color:#2b579a; color:#2b579a;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
                     </button>
                     <div v-if="popupPDFAdminId === ciclo.id" class="st-sd-dial" @click.stop>
                       <div class="st-sd-opcion" style="--rotation: -120deg"
@@ -783,6 +787,7 @@
                   <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupArea(ciclo.id)" title="Opciones">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
                     </button>
                     <div v-if="popupAreaId === ciclo.id" class="st-sd-dial">
                       <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ciclo.adjunto_informeServicio_pdf); popupAreaId = null" title="Ver informe PDF">
@@ -819,6 +824,7 @@
                   <div v-if="isDireccion" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupDir(ciclo.id)" title="Opciones">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
                     </button>
                     <div v-if="popupDirId === ciclo.id" class="st-sd-dial">
                       <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf); popupDirId = null" title="Ver informe PDF firmado por área">
