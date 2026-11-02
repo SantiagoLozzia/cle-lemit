@@ -4899,7 +4899,8 @@
     width: 9px;
     height: 9px;
     border-radius: 50%;
-    background: #9c7cc7;
+    background: #ffc107;
+    animation: pulse-confirmar 1.4s ease-in-out infinite;
   }
   .st-sd-dial {
     position: absolute;
