@@ -100,7 +100,7 @@ class ObtenerTodoEnCurso(APIView):
         legajos = Legajo.objects.filter(nro_circuito__in=numeros_circuito)
         recepciones = Recepcion.objects.filter(nro_circuito__in=numeros_circuito)
         ordenes_servicio = OrdenServicio.objects.filter(nro_circuito__in=numeros_circuito)
-        ciclos = CicloInforme.objects.filter(nro_circuito__in=numeros_circuito).prefetch_related('registros_ensayo')
+        ciclos = CicloInforme.objects.filter(nro_circuito__in=numeros_circuito).prefetch_related('registros_ensayo', 'historial_correcciones')
         solicitudes_inter_area = SolicitudInterarea.objects.filter(nro_circuito__in=numeros_circuito)
         informes_inter_area = InformeInterarea.objects.filter(nro_circuito__in=numeros_circuito)
         nros_dataServicio = servicios_en_curso.values_list('nro_dataServicio', flat=True)
