@@ -1256,6 +1256,13 @@ class RechazarRevisionSTCiclo(APIView):
                 ciclo.adjunto_informeServicio_pdf = None
             ciclo.pdf_confirmado_admin = False
         ciclo.save()
+        Correccion.objects.create(
+            ciclo=ciclo,
+            tipo='st',
+            destinatario=destino,
+            descripcion=nota,
+            autor=request.user,
+        )
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
