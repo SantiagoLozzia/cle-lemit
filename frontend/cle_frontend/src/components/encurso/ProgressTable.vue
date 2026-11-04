@@ -25,9 +25,17 @@
           <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
         </div>
         <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
-        <button @click="manualRefresh" class="btn btn-sm btn-outline-secondary ms-auto" title="Actualizar datos">
-          <i class="bi bi-arrow-clockwise" :class="{ 'spin-icon': refreshCargando }"></i>
-        </button>
+        <div class="d-flex gap-1 ms-auto">
+          <button @click="manualRefresh" class="btn btn-sm btn-outline-secondary" title="Actualizar datos">
+            <i class="bi bi-arrow-clockwise" :class="{ 'spin-icon': refreshCargando }"></i>
+          </button>
+          <button @click="toggleSilencio"
+                  class="btn btn-sm"
+                  :class="silenciado ? 'btn-outline-danger' : 'btn-outline-secondary'"
+                  :title="silenciado ? 'Alertas de sonido silenciadas — click para activar' : 'Silenciar alertas de sonido'">
+            <i :class="silenciado ? 'bi bi-bell-slash' : 'bi bi-bell'"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Banner de actualizaciones disponibles -->
@@ -2820,6 +2828,66 @@
       const hayActualizaciones = ref(false);
       const refreshCargando = ref(false);
 
+      // Silenciar alertas de sonido (persiste en localStorage)
+      const silenciado = ref(localStorage.getItem('notif_silenciado') === 'true');
+      const toggleSilencio = () => {
+        silenciado.value = !silenciado.value;
+        localStorage.setItem('notif_silenciado', String(silenciado.value));
+      };
+
+      const playNotificationSound = () => {
+        if (silenciado.value) return;
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          [0, 0.28].forEach(offset => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.25, ctx.currentTime + offset);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.22);
+            osc.start(ctx.currentTime + offset);
+            osc.stop(ctx.currentTime + offset + 0.22);
+          });
+        } catch { /* Sin soporte de audio */ }
+      };
+
+      // Detecta si hay acciones pendientes para el rol actual en los datos crudos de la API
+      const hasPendingForMyRole = (data) => {
+        const rol = sessionStorage.getItem('role');
+        const ciclos = data.ciclos || [];
+        const solicitudes = data.solicitudes || [];
+        const legajos = data.legajos || [];
+
+        if (rol === 'servicios_tecnologicos') {
+          return ciclos.some(c =>
+            (c.adjunto_informeServicio && !c.revision_confirmada) ||
+            (c.historial_correcciones || []).some(r => r.destinatario === 'st' && r.estado === 'pendiente')
+          );
+        }
+        if (rol === 'administracion') {
+          const circuitosConLegajo = new Set(legajos.map(l => l.nro_circuito));
+          const sinLegajo = solicitudes.some(s => s.nro_circuito && !circuitosConLegajo.has(s.nro_circuito));
+          const listaParaArchivar = ciclos.some(c => c.firma_direccion);
+          const rechazoPendiente = ciclos.some(c =>
+            (c.historial_correcciones || []).some(r => r.destinatario === 'administracion' && r.estado === 'pendiente')
+          );
+          return sinLegajo || listaParaArchivar || rechazoPendiente;
+        }
+        if (rol === 'area_jefe' || rol === 'area_standard') {
+          return ciclos.some(c =>
+            (c.revision_confirmada && !c.firma_responsable_area) ||
+            (c.historial_correcciones || []).some(r => r.destinatario === 'area' && r.estado === 'pendiente')
+          );
+        }
+        if (rol === 'direccion') {
+          return ciclos.some(c => c.firma_responsable_area && !c.firma_direccion);
+        }
+        return false;
+      };
+
       const computeFingerprint = (data) => {
         const circuits = (data.solicitudes || []).map(s => s.nro_circuito).sort().join(',');
         const ciclosState = (data.ciclos || [])
@@ -2835,6 +2903,9 @@
           const fp = computeFingerprint(response.data);
           if (lastFingerprint && fp !== lastFingerprint) {
             hayActualizaciones.value = true;
+            if (hasPendingForMyRole(response.data)) {
+              playNotificationSound();
+            }
           }
         } catch {
           // fallo silencioso en polling
@@ -5062,6 +5133,8 @@
         refreshCargando,
         aplicarActualizaciones,
         manualRefresh,
+        silenciado,
+        toggleSilencio,
       };
     },
   };
