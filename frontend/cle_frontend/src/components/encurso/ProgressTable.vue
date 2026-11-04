@@ -1074,7 +1074,7 @@
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" @click="cerrarAprobarLabs">Cancelar</button>
-            <button class="btn btn-warning" @click="confirmarAprobarLabs">Aprobar y asignar rango</button>
+            <button class="btn btn-primary" @click="confirmarAprobarLabs">Aprobar y asignar rango</button>
           </div>
         </div>
       </div>
@@ -1387,7 +1387,7 @@
           </div>
           <div class="modal-footer">
             <button v-if="!osReadOnly" type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
-            <button v-if="osReadOnly && osModificadaActual" type="button" class="btn btn-success w-100" @click="aceptarOrdenServicio">
+            <button v-if="osReadOnly && osModificadaActual" type="button" class="btn btn-primary" @click="aceptarOrdenServicio">
               Aceptar cambios
             </button>
             <button v-if="!osModificadaActual" type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">{{ osReadOnly ? 'Cerrar' : 'Cancelar' }}</button>
@@ -1528,20 +1528,20 @@
           <div class="modal-footer flex-wrap gap-1">
             <template v-if="esCambioTipo">
               <button type="button" class="btn btn-primary" @click="confirmarCambioTipo('parcial')">Parcial</button>
-              <button type="button" class="btn btn-success"
+              <button type="button" class="btn btn-primary"
                       :disabled="!hayParcialesPrevios"
                       :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
                       @click="hayParcialesPrevios && confirmarCambioTipo('complementario')">Complementario</button>
-              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
+              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-primary"
                       @click="confirmarCambioTipo('final')">Final</button>
             </template>
             <template v-else>
               <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
-              <button type="button" class="btn btn-success"
+              <button type="button" class="btn btn-primary"
                       :disabled="!hayParcialesPrevios"
                       :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
                       @click="hayParcialesPrevios && subirInformeAreaCiclo('complementario')">Complementario</button>
-              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-dark"
+              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-primary"
                       @click="subirInformeAreaCiclo('final')">Final</button>
             </template>
             <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
@@ -1743,10 +1743,10 @@
             <textarea v-model="textoCorreccionST" class="form-control" rows="10"></textarea>
           </div>
           <div class="modal-footer flex-wrap gap-1">
-            <button type="button" class="btn btn-warning btn-sm" @click="registrarCorreccionST" :disabled="!textoCorreccionST.trim()">
+            <button type="button" class="btn btn-primary" @click="registrarCorreccionST" :disabled="!textoCorreccionST.trim()">
               Registrar
             </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" @click="cerrarModalCorreccionST">
+            <button type="button" class="btn btn-secondary" @click="cerrarModalCorreccionST">
               No registrar
             </button>
           </div>
@@ -1950,11 +1950,11 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-sm btn-warning" @click="confirmarRechazoArea"
+            <button type="button" class="btn btn-danger" @click="confirmarRechazoArea"
                     :disabled="!rechazoAreaDestino || !rechazoAreaNota.trim()">
               <i class="bi bi-x-circle"></i> Rechazar
             </button>
-            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModalRechazoArea">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoArea">Cancelar</button>
           </div>
         </div>
       </div>
@@ -2054,8 +2054,8 @@
               </tbody>
             </table>
           </div>
-          <div class="modal-footer" style="justify-content: space-between;">
-            <button v-if="isAdministracion" type="button" class="btn btn-success"
+          <div class="modal-footer">
+            <button v-if="isAdministracion" type="button" class="btn btn-primary"
                     @click="mostrarModalFacturacion = false; abrirSubirFactura(filaFacturacion)">
               <i class="bi bi-upload" style="font-size:14px;"></i> Cargar factura
             </button>
@@ -2143,12 +2143,12 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-sm" style="background-color:#9c7cc7; color:#fff; border:none;"
+            <button type="button" class="btn btn-danger"
                     @click="confirmarRechazoST"
                     :disabled="!rechazoSTDestino || !rechazoSTNota.trim()">
               <i class="bi bi-x-circle"></i> Rechazar
             </button>
-            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModalRechazoST">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoST">Cancelar</button>
           </div>
         </div>
       </div>
@@ -2203,11 +2203,11 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-sm btn-danger" @click="confirmarRechazoDireccion"
+            <button type="button" class="btn btn-danger" @click="confirmarRechazoDireccion"
                     :disabled="!rechazoDireccionDestino || !rechazoDireccionNota.trim()">
               <i class="bi bi-x-circle"></i> Rechazar
             </button>
-            <button type="button" class="btn btn-sm btn-secondary" @click="cerrarModalRechazoDireccion">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoDireccion">Cancelar</button>
           </div>
         </div>
       </div>
@@ -5559,6 +5559,16 @@
   }
 
   /* Footer pegado al fondo de la hoja */
+  /* Layout estándar de footers de modales */
+  .modal-footer {
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  .modal-footer .btn {
+    flex: 1;
+    min-width: 0;
+  }
+
   #modalAbrirDataServicio.show .modal-footer-a4,
   #modalAbrirLegajo.show .modal-footer-a4 {
     position: fixed;
