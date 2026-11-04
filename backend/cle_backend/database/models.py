@@ -148,7 +148,6 @@ class DetallePresupuesto(models.Model):
 class DataServicio(models.Model):
     nro_dataServicio = models.AutoField(primary_key=True)
     fecha_dataServicio = models.DateField()
-    adjunto_solicitudServicio = models.FileField(upload_to='solicitudes_servicio/', null=True)
     obra = models.CharField(max_length=255, null=True, blank=True)
     plazo_estimado = models.IntegerField() 
     cant_numLabs = models.IntegerField()
@@ -158,7 +157,7 @@ class DataServicio(models.Model):
     presupuestos_adicionales = models.ManyToManyField('Presupuesto', related_name='data_servicios_adicionales', blank=True)
     email_factura = models.EmailField(max_length=100, null=True, blank=True)
     email_informe_tecnico = models.EmailField(max_length=100, null=True, blank=True)
-    completo = models.BooleanField(default=False) #Si es True habilito a adjuntar adjunto_solicitudServicio
+    completo = models.BooleanField(default=False)
     nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='data_servicio')
     finalizado = models.BooleanField(default=False)
 
@@ -169,9 +168,8 @@ class Legajo(models.Model):
     nro_legajo = models.AutoField(primary_key=True)
     fecha_legajo = models.DateField()
     rangos_laboratorios = models.CharField(max_length=255)
-    pago = models.CharField(choices=PAGO_CHOICES)
+    pago = models.CharField(choices=PAGO_CHOICES, default='0')
     plazo_pago = models.IntegerField(default=30)
-    adjunto_factura = models.FileField(upload_to='facturas/', null=True)
     completo = models.BooleanField(default=False)
     nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='legajo')
     labs_adicionales_pendientes = models.IntegerField(default=0)

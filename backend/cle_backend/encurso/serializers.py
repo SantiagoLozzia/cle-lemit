@@ -91,16 +91,6 @@ class CicloInformeSerializer(serializers.ModelSerializer):
                 model = CicloInforme
                 fields = '__all__'
 
-class GuardarAdjuntoSolicitudDataServicioSerializer(serializers.ModelSerializer):
-        class Meta:
-                model = DataServicio
-                fields = ['nro_dataServicio', 'adjunto_solicitudServicio']
-
-class GuardarAdjuntoFacturaSerializer(serializers.ModelSerializer):
-        class Meta:
-                model = Legajo
-                fields = ['nro_legajo', 'adjunto_factura']
-
 class CambiarRemitoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = Recepcion
