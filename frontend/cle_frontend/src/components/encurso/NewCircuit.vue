@@ -84,7 +84,7 @@
   
   <script>
     import api from '@/api.js';
-    import { ref } from 'vue';
+    import { ref, nextTick } from 'vue';
     // eslint-disable-next-line no-unused-vars
     // import vSelect from 'vue-select';
     // import 'vue-select/dist/vue-select.css';
@@ -170,7 +170,7 @@
                 email_informe_tecnico: null,
               };
 
-              document.dispatchEvent(new CustomEvent('encurso-refresh'));
+              nextTick(() => document.dispatchEvent(new CustomEvent('encurso-refresh')));
               showSuccessAlert.value = true;
     
               setTimeout(() => {
