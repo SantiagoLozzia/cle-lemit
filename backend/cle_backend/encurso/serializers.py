@@ -151,3 +151,16 @@ class AdvertirCorreccionesCicloSerializer(serializers.ModelSerializer):
         class Meta:
                 model = CicloInforme
                 fields = ['correcciones', 'corregir', 'revision_confirmada']
+
+class EventoAuditoriaSerializer(serializers.ModelSerializer):
+        usuario_nombre = serializers.SerializerMethodField()
+
+        class Meta:
+                model = EventoAuditoria
+                fields = ['id', 'accion', 'descripcion', 'fecha', 'nro_circuito', 'usuario_nombre']
+
+        def get_usuario_nombre(self, obj):
+                if obj.usuario:
+                        nombre = f"{obj.usuario.first_name} {obj.usuario.last_name}".strip()
+                        return nombre if nombre else obj.usuario.username
+                return 'Sistema'

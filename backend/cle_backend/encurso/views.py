@@ -42,6 +42,15 @@ from .serializers import *
 
 logger = logging.getLogger(__name__)
 
+
+def _log(request, accion, descripcion, nro_circuito=None):
+    EventoAuditoria.objects.create(
+        usuario=request.user if request.user.is_authenticated else None,
+        accion=accion,
+        descripcion=descripcion,
+        nro_circuito=nro_circuito,
+    )
+
 # Cargar la Tabla
 class ObtenerTodoEnCurso(APIView):
     def get(self, request, format=None):
@@ -235,6 +244,9 @@ class CrearDataServicioView(APIView):
             except Presupuesto.DoesNotExist:
                 pass  # Manejar el caso donde no se encuentra el presupuesto
 
+            _log(request, 'crear_data_servicio',
+                 f'Data servicio creado — circuito #{circuito_instance.pk}',
+                 nro_circuito=circuito_instance.pk)
             return Response(data_servicio_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(data_servicio_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -409,6 +421,9 @@ class CrearLegajo(APIView):
                 ultimo_numero_obj.ultimo_numero_actual = nuevo_ultimo_numero
                 ultimo_numero_obj.save()
 
+                _log(request, 'crear_legajo',
+                     f'Legajo creado — circuito #{nro_circuito}',
+                     nro_circuito=int(nro_circuito) if nro_circuito else None)
                 return Response({'message': 'Legajo creado y último número actualizado correctamente'}, status=status.HTTP_201_CREATED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -489,6 +504,9 @@ class GuardarAdjuntoFactura(APIView):
                 legajo.completo = True
                 legajo.save()
 
+            _log(request, 'subir_factura',
+                 f'Factura subida al legajo #{nro_legajo} — circuito #{nro_circuito}',
+                 nro_circuito=int(nro_circuito) if nro_circuito else None)
             return Response({'mensaje': 'Factura guardada.'}, status=status.HTTP_200_OK)
 
         except ValueError as e:
@@ -822,6 +840,9 @@ class SubirInformeAreaCiclo(APIView):
             ciclo.nota_rechazo_st = None
             ciclo.rechazo_st_destino = None
         ciclo.save()
+        _log(request, 'subir_informe_area',
+             f'Informe de área {tipo} #{ciclo.numero} subido — circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
@@ -836,6 +857,9 @@ class SubirRegistroEnsayoCiclo(APIView):
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         registro = RegistroEnsayoCiclo.objects.create(ciclo=ciclo, archivo=archivo)
+        _log(request, 'subir_registro_ensayo',
+             f'Registro de ensayo subido — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response({'id': registro.id, 'archivo': str(registro.archivo)}, status=status.HTTP_201_CREATED)
 
 
@@ -846,7 +870,11 @@ class EliminarRegistroEnsayoCiclo(APIView):
         registro = get_object_or_404(RegistroEnsayoCiclo, pk=pk)
         if not user_can_access_circuit(request.user, registro.ciclo.nro_circuito_id):
             return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        ciclo = registro.ciclo
         registro.delete()
+        _log(request, 'eliminar_registro_ensayo',
+             f'Registro de ensayo eliminado — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -863,6 +891,9 @@ class EliminarInformeAreaCiclo(APIView):
         ciclo.fecha_informeArea = None
         ciclo.tipo = 'parcial'
         ciclo.save()
+        _log(request, 'eliminar_informe_area',
+             f'Informe de área eliminado — ciclo #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -1040,10 +1071,14 @@ class EliminarAdjuntoFactura(APIView):
     def delete(self, request, pk):
         adjunto = get_object_or_404(AdjuntoFactura, pk=pk)
         legajo = adjunto.legajo
+        nro_circuito = legajo.nro_circuito_id
         adjunto.delete()
         if not legajo.adjuntos_factura.exists():
             legajo.completo = False
             legajo.save()
+        _log(request, 'eliminar_factura',
+             f'Factura eliminada del legajo #{legajo.nro_legajo} — circuito #{nro_circuito}',
+             nro_circuito=nro_circuito)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -1187,6 +1222,9 @@ class SubirInformeServicioCiclo(APIView):
         ciclo.rechazo_area_destino = None
         ciclo.nota_rechazo_area = None
         ciclo.save()
+        _log(request, 'subir_formato_institucional',
+             f'Formato institucional subido — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
@@ -1233,6 +1271,9 @@ class ConfirmarRevisionCiclo(APIView):
         ciclo.historial_correcciones.filter(estado='pendiente').update(estado='confirmada')
         ciclo.revision_confirmada = True
         ciclo.save()
+        _log(request, 'confirmar_revision_st',
+             f'Revisión ST confirmada — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return JsonResponse({'message': 'Revisión confirmada correctamente.'})
 
 
@@ -1263,6 +1304,9 @@ class RechazarRevisionSTCiclo(APIView):
             descripcion=nota,
             autor=request.user,
         )
+        _log(request, 'rechazar_revision_st',
+             f'Revisión ST rechazada → {destino} — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
@@ -1331,6 +1375,9 @@ class GenerarPDFServicioCiclo(APIView):
         )
         ciclo.pdf_confirmado_admin = True
         ciclo.save()
+        _log(request, 'generar_pdf',
+             f'PDF generado — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return Response(CicloInformeSerializer(ciclo).data, status=status.HTTP_200_OK)
 
 
@@ -1407,6 +1454,9 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
 
         ciclo.firma_responsable_area = True
         ciclo.save()
+        _log(request, 'firma_responsable_area',
+             f'Firma del responsable de área registrada — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return JsonResponse({'message': 'Firma Responsable Area confirmada correctamente.'})
 
 
@@ -1467,6 +1517,9 @@ class ConfirmarFirmaDireccionCiclo(APIView):
 
         ciclo.firma_direccion = True
         ciclo.save()
+        _log(request, 'firma_direccion',
+             f'Firma de Dirección registrada — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return JsonResponse({'message': 'Firma Dirección confirmada correctamente.'})
 
 
@@ -1522,6 +1575,9 @@ class RechazarFirmaDireccionCiclo(APIView):
                 descripcion=nota,
                 autor=request.user,
             )
+        _log(request, 'rechazar_firma_direccion',
+             f'Firma de Dirección rechazada → {destino} — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return JsonResponse({'message': 'Informe rechazado correctamente.'})
 
 
@@ -1572,6 +1628,9 @@ class RechazarFirmaResponsableAreaCiclo(APIView):
                 descripcion=nota,
                 autor=request.user,
             )
+        _log(request, 'rechazar_firma_area',
+             f'Firma de Área rechazada → {destino} — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
+             nro_circuito=ciclo.nro_circuito_id)
         return JsonResponse({'message': 'Informe rechazado por responsable de área correctamente.'})
 
 
@@ -1587,6 +1646,9 @@ class ArchivarCircuito(APIView):
         circuito.finalizado = True
         circuito.save()
 
+        _log(request, 'archivar_circuito',
+             f'Circuito #{nro_circuito} archivado',
+             nro_circuito=int(nro_circuito))
         return JsonResponse({'message': 'Archivado correctamente.'})
 
 
@@ -1653,4 +1715,15 @@ class ObtenerArchivados(APIView):
             })
 
         return JsonResponse(result, safe=False)
+
+
+class ObtenerEventosAuditoria(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rol = get_user_rol(request)
+        if rol not in PRIVILEGED_ROLES and rol != 'direccion':
+            return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        eventos = EventoAuditoria.objects.select_related('usuario').order_by('-fecha')[:500]
+        return Response(EventoAuditoriaSerializer(eventos, many=True).data)
     

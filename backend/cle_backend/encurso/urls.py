@@ -63,4 +63,6 @@ urlpatterns = [
     path('guardar_adjuntoinformeinterarea/', GuardarAdjuntoInformeInterarea.as_view(), name='guardar-adjuntoinformeinterarea'),
     # Archivar
     path('archivar_circuito/<int:nro_circuito>/', ArchivarCircuito.as_view(), name='archivar-circuito'),
+    # Auditoría
+    path('auditoria/', ObtenerEventosAuditoria.as_view(), name='auditoria'),
 ]

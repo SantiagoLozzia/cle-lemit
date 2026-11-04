@@ -380,6 +380,23 @@ class Correccion(models.Model):
         ordering = ['fecha']
 
 
+class EventoAuditoria(models.Model):
+    usuario      = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='eventos_auditoria')
+    accion       = models.CharField(max_length=100)
+    descripcion  = models.CharField(max_length=500)
+    fecha        = models.DateTimeField(auto_now_add=True)
+    nro_circuito = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-fecha']
+        verbose_name = 'Evento de Auditoría'
+        verbose_name_plural = 'Eventos de Auditoría'
+
+    def __str__(self):
+        usuario = self.usuario.username if self.usuario else 'Sistema'
+        return f"{self.fecha.strftime('%d/%m/%Y %H:%M')} - {usuario} - {self.accion}"
+
+
 # Clases singleton que podria borrar
 # class UltimoNumeroSingleton:
 #     _instance = None
