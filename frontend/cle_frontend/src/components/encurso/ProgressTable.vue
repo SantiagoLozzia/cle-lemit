@@ -58,6 +58,7 @@
             <th colspan="1" class="add-border-right align-middle text-center">Responsable Area</th>
             <th colspan="1" class="add-border-right align-middle text-center">Direccion</th>
             <th  v-if="isAdminOrTecnologicoOrDireccion" colspan="1" class="align-middle text-center">Archivo</th>
+            <th colspan="1" class="align-middle text-center"></th>
           </tr>
           <tr>
             <!-- Subcolumnas de Solicitud de Servicio -->
@@ -105,6 +106,7 @@
             <th class="add-border-right align-middle text-center">Firma</th>
             <!-- Subcolumnas de Archivo -->
             <th  v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">Archivar</th>
+            <th class="align-middle text-center"></th>
           </tr>
         </thead>
         <tbody >
@@ -890,6 +892,13 @@
             <!-- Columna Archivo -->
             <td v-if="isAdminOrTecnologicoOrDireccion">
               <button @click="abrirModalArchivar(fila)" class="btn btn-link"><i class="bi bi-archive-fill"></i></button>
+            </td>
+
+            <!-- Columna Historial -->
+            <td>
+              <button @click="abrirModalHistorial(fila)" class="btn btn-link p-0" title="Ver historial del circuito">
+                <i class="bi bi-activity" style="font-size:1.1rem; color:#6c757d;"></i>
+              </button>
             </td>
             
           </tr>
@@ -2223,6 +2232,44 @@
     </div>
 
     <!-- Modales Archivo -->
+    <!-- Modal Historial del circuito -->
+    <div class="modal" :class="{ 'show': mostrarModalHistorial }" id="modalHistorial">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-activity me-2"></i>Historial — Circuito #{{ historialCircuitoId }}
+            </h5>
+            <button type="button" class="btn-close" @click="cerrarModalHistorial"></button>
+          </div>
+          <div class="modal-body p-0">
+            <div v-if="historialCargando" class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm me-2"></div>Cargando...
+            </div>
+            <div v-else-if="!historialEventos.length" class="text-center py-4 text-muted">
+              Sin eventos registrados para este circuito.
+            </div>
+            <ul v-else class="historial-timeline list-unstyled mb-0 px-3 py-3">
+              <li v-for="(ev, i) in historialEventos" :key="ev.id" class="historial-item">
+                <div class="historial-dot"></div>
+                <div class="historial-contenido">
+                  <div class="historial-accion">{{ labelAccion(ev.accion) }}</div>
+                  <div v-if="ev.descripcion" class="historial-desc text-muted small">{{ ev.descripcion }}</div>
+                  <div class="historial-meta small text-muted mt-1">
+                    <i class="bi bi-person me-1"></i>{{ ev.usuario_nombre }}
+                    <span class="ms-2"><i class="bi bi-calendar3 me-1"></i>{{ formatHistorialFecha(ev.fecha) }}</span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cerrarModalHistorial">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="modal" :class="{ 'show': mostrarModalArchivar }" id="mostrarModalArchivar">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -4497,6 +4544,60 @@
           }
         };
 
+        // Historial del circuito
+        const mostrarModalHistorial = ref(false);
+        const historialCircuitoId = ref(null);
+        const historialEventos = ref([]);
+        const historialCargando = ref(false);
+
+        const LABEL_ACCIONES = {
+          crear_data_servicio:    'Solicitud de servicio creada',
+          crear_legajo:           'Legajo creado',
+          guardar_factura:        'Factura adjuntada',
+          subir_informe_area:     'Informe de área subido',
+          reemplazar_informe_area:'Informe de área reemplazado',
+          subir_registros:        'Registro de ensayo adjuntado',
+          crear_orden_servicio:   'Orden de servicio generada',
+          subir_formato_institucional: 'Formato institucional subido',
+          revision_st:            'Revisión ST confirmada',
+          rechazar_revision_st:   'Revisión ST rechazada',
+          firma_area:             'Firma de Área confirmada',
+          rechazar_firma_area:    'Firma de Área rechazada',
+          firma_direccion:        'Firma de Dirección confirmada',
+          rechazar_firma_direccion:'Firma de Dirección rechazada',
+          archivar_circuito:      'Circuito archivado',
+        };
+
+        const labelAccion = (accion) => LABEL_ACCIONES[accion] || accion;
+
+        const formatHistorialFecha = (fechaStr) => {
+          if (!fechaStr) return '';
+          const d = new Date(fechaStr);
+          return d.toLocaleString('es-AR', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          });
+        };
+
+        const abrirModalHistorial = async (fila) => {
+          historialCircuitoId.value = fila.nro_circuito;
+          historialEventos.value = [];
+          historialCargando.value = true;
+          mostrarModalHistorial.value = true;
+          try {
+            const res = await api.get(`/encurso/historial_circuito/${fila.nro_circuito}/`);
+            historialEventos.value = res.data;
+          } catch (e) {
+            console.error('Error al cargar historial:', e);
+          } finally {
+            historialCargando.value = false;
+          }
+        };
+
+        const cerrarModalHistorial = () => {
+          mostrarModalHistorial.value = false;
+        };
+
         // Archivar
         const motivoArchivar = ref('');
         const notaArchivar = ref('');
@@ -4887,6 +4988,14 @@
         motivosArchivo,
         alertasPlazos,
         abrirModalArchivarConMotivo,
+        mostrarModalHistorial,
+        historialCircuitoId,
+        historialEventos,
+        historialCargando,
+        abrirModalHistorial,
+        cerrarModalHistorial,
+        labelAccion,
+        formatHistorialFecha,
       };
     },
   };
@@ -5601,6 +5710,39 @@
   font-weight: 500;
 }
 .st02-add-btn:hover { text-decoration: underline; }
+
+/* Modal Historial — timeline */
+.historial-timeline { position: relative; }
+.historial-timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+.historial-item {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.historial-dot {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0d6efd;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #dee2e6;
+  margin-top: 2px;
+  z-index: 1;
+}
+.historial-contenido { flex: 1; }
+.historial-accion { font-weight: 600; font-size: 0.9rem; }
+.historial-desc { font-size: 0.82rem; margin-top: 2px; }
+.historial-meta { font-size: 0.78rem; }
 
 /* Modal Archivar — opciones de motivo */
 .motivo-archivo-option {

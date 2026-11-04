@@ -65,4 +65,5 @@ urlpatterns = [
     path('archivar_circuito/<int:nro_circuito>/', ArchivarCircuito.as_view(), name='archivar-circuito'),
     # Auditoría
     path('auditoria/', ObtenerEventosAuditoria.as_view(), name='auditoria'),
+    path('historial_circuito/<int:nro_circuito>/', HistorialCircuito.as_view(), name='historial-circuito'),
 ]

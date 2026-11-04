@@ -1753,4 +1753,17 @@ class ObtenerEventosAuditoria(APIView):
             return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
         eventos = EventoAuditoria.objects.select_related('usuario').order_by('-fecha')[:500]
         return Response(EventoAuditoriaSerializer(eventos, many=True).data)
+
+
+class HistorialCircuito(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, nro_circuito):
+        eventos = (
+            EventoAuditoria.objects
+            .filter(nro_circuito=nro_circuito)
+            .select_related('usuario')
+            .order_by('fecha')
+        )
+        return Response(EventoAuditoriaSerializer(eventos, many=True).data)
     
