@@ -52,9 +52,10 @@ ESTADO_RECEPCION_CHOICES = [
     ]
 
 PAGO_CHOICES = [
-        (0, '0%'),
-        (50, '50%'),
-        (100, '100%'),
+        ('0', '0%'),
+        ('100', '100%'),
+        ('no_arancelado', 'No arancelado'),
+        ('pago_diferido', 'Pago diferido'),
 ]
 
 TIPO_CICLO_CHOICES = [

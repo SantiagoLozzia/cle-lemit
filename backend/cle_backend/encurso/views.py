@@ -1466,6 +1466,16 @@ class ConfirmarFirmaDireccionCiclo(APIView):
     def put(self, request, ciclo_id, *args, **kwargs):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
 
+        try:
+            legajo = Legajo.objects.get(nro_circuito=ciclo.nro_circuito)
+            if str(legajo.pago) == 'pago_diferido':
+                return Response(
+                    {'error': 'No se puede firmar el informe mientras el pago figure como diferido. El circuito debe estar pagado al 100% primero.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except Legajo.DoesNotExist:
+            pass
+
         # Obtener bytes de firma: primero del perfil, si no del canvas
         sig_bytes = None
         profile = getattr(request.user, 'userprofile', None)

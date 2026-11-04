@@ -293,14 +293,17 @@ export default {
     };
 
     const labelPago = (pago) => {
-      if (pago === 100) return '100% pagado';
-      if (pago === 50) return '50% pagado';
+      const p = String(pago);
+      if (p === '100') return '100% pagado';
+      if (p === 'no_arancelado') return 'No arancelado';
+      if (p === 'pago_diferido') return 'Pago diferido';
       return 'Sin pago';
     };
 
     const badgePago = (pago) => {
-      if (pago === 100) return 'badge bg-success';
-      if (pago === 50) return 'badge bg-warning text-dark';
+      const p = String(pago);
+      if (p === '100' || p === 'no_arancelado') return 'badge bg-success';
+      if (p === 'pago_diferido') return 'badge bg-warning text-dark';
       return 'badge bg-secondary';
     };
 

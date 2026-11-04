@@ -206,20 +206,18 @@
             <td v-if="isAdminOrTecnologicoOrDireccion">
                 <div v-if="fila.pago !== undefined && fila.pago !== null">
                   <div v-if="isAdministracion">
-                      <!-- Mostrar el valor de fila.pago -->
-                      <span v-if="fila.pago === 0" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">0%</span>
-                      <span v-else-if="fila.pago === 50" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">50%</span>
-                      <span v-else-if="fila.pago === 100" @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;">100%</span>
+                      <span @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;"
+                            :class="labelPagoBadgeClass(fila.pago)">
+                        {{ labelPago(fila.pago) }}
+                      </span>
                   </div>
                   <div v-else>
-                      <span v-if="fila.pago === 0">0%</span>
-                      <span v-else-if="fila.pago === 50">50%</span>
-                      <span v-else-if="fila.pago === 100">100%</span>
+                      <span :class="labelPagoBadgeClass(fila.pago)">{{ labelPago(fila.pago) }}</span>
                   </div>
                 </div>
             </td>
             <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
-                <template v-if="fila.pago === 100">-</template>
+                <template v-if="pagoEsCompleto(fila.pago)">-</template>
                 <template v-else>
                   <div v-if="isAdministracion">
                     <span @click="abrirModalPlazoPago(fila)" style="cursor: pointer;">
@@ -1142,15 +1140,19 @@
           <div class="modal-body">
             <div class="form-check">
               <input class="form-check-input" type="radio" v-model="pagoLegajoNuevo" value="0" name="tipoPagoLegajo">
-              <label class="form-check-label">0 %</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" v-model="pagoLegajoNuevo" value="50" name="tipoPagoLegajo">
-              <label class="form-check-label">50 %</label>
+              <label class="form-check-label">0%</label>
             </div>
             <div class="form-check">
               <input class="form-check-input" type="radio" v-model="pagoLegajoNuevo" value="100" name="tipoPagoLegajo">
-              <label class="form-check-label">100 %</label>
+              <label class="form-check-label">100%</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" v-model="pagoLegajoNuevo" value="no_arancelado" name="tipoPagoLegajo">
+              <label class="form-check-label">No arancelado</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" v-model="pagoLegajoNuevo" value="pago_diferido" name="tipoPagoLegajo">
+              <label class="form-check-label">Pago diferido <small class="text-muted">(el director no puede firmar hasta que se regularice)</small></label>
             </div>
           </div>
 
@@ -3129,6 +3131,26 @@
       };
 
       // Legajo - Pago
+      const labelPago = (pago) => {
+        const p = String(pago);
+        if (p === '100') return '100%';
+        if (p === 'no_arancelado') return 'No arancelado';
+        if (p === 'pago_diferido') return 'Pago diferido';
+        return '0%';
+      };
+
+      const labelPagoBadgeClass = (pago) => {
+        const p = String(pago);
+        if (p === '100' || p === 'no_arancelado') return 'badge bg-success';
+        if (p === 'pago_diferido') return 'badge bg-warning text-dark';
+        return 'badge bg-danger';
+      };
+
+      const pagoEsCompleto = (pago) => {
+        const p = String(pago);
+        return p === '100' || p === 'no_arancelado' || p === 'pago_diferido';
+      };
+
       const abrirModalPagoLegajo = (fila) => {
         numeroCircuitoGlobal.value = fila.nro_circuito;
         // console.log('Pago Legajo en abrirModalPagoLegajo',fila.pago)
@@ -4605,6 +4627,9 @@
         cerrarModalDataServicio,
         cerrarModalLegajo,
         crearLegajo,
+        labelPago,
+        labelPagoBadgeClass,
+        pagoEsCompleto,
         abrirModalPagoLegajo,
         cerrarModalPagoLegajo,
         guardarPagoLegajo,
