@@ -557,8 +557,7 @@
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#dc3545; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazo(ciclo)" title="Ver nota de rechazo de Dirección"></i>
                     </div>
-                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-file-earmark-word"
-                       style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-stopwatch"></i>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, rechazado a administración por ST -->
@@ -594,8 +593,7 @@
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#9c7cc7; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                     </div>
-                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-file-earmark-word"
-                       style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                    <i v-else-if="isAreaJefe || isAreaStandard" class="bi bi-stopwatch"></i>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
                   <!-- Con informe servicio, rechazado a administración por Área -->
@@ -633,7 +631,7 @@
                     </div>
                     <div v-else-if="isAreaJefe || isAreaStandard"
                          style="position:relative; display:inline-flex; align-items:center;">
-                      <i class="bi bi-file-earmark-word" style="color:#2b579a; opacity:0.35; font-size:16px;" title="Informe de servicio"></i>
+                      <i class="bi bi-stopwatch"></i>
                       <i class="bi bi-sticky-fill"
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo enviada"></i>
@@ -651,6 +649,16 @@
                          style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#9c7cc7; cursor:pointer; z-index:10;"
                          @click.stop="abrirModalVerCorrecciones(ciclo)"
                          :title="ciclo.historial_correcciones.filter(c => c.tipo === 'st' && c.estado === 'pendiente').length + ' corrección(es) de ST pendiente(s)'"></i>
+                      <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'area' && c.estado === 'pendiente')"
+                         class="bi bi-sticky-fill"
+                         style="position:absolute; top:-5px; left:calc(100% + 21px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
+                         @click.stop="abrirModalVerCorrecciones(ciclo)"
+                         :title="ciclo.historial_correcciones.filter(c => c.tipo === 'area' && c.estado === 'pendiente').length + ' corrección(es) de Área pendiente(s)'"></i>
+                      <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'direccion' && c.estado === 'pendiente')"
+                         class="bi bi-sticky-fill"
+                         style="position:absolute; top:-5px; left:calc(100% + 33px); font-size:12px; color:#dc3545; cursor:pointer; z-index:10;"
+                         @click.stop="abrirModalVerCorrecciones(ciclo)"
+                         :title="ciclo.historial_correcciones.filter(c => c.tipo === 'direccion' && c.estado === 'pendiente').length + ' corrección(es) de Dirección pendiente(s)'"></i>
                     </div>
                   </template>
                   <!-- Con corrección pendiente -->
@@ -811,6 +819,11 @@
                        title="Ver informe firmado por responsable de área">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'area' && c.estado === 'pendiente')"
+                       class="bi bi-sticky-fill"
+                       style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
+                       @click.stop.prevent="abrirModalVerCorrecciones(ciclo)"
+                       :title="ciclo.historial_correcciones.filter(c => c.tipo === 'area' && c.estado === 'pendiente').length + ' corrección(es) de Área pendiente(s)'"></i>
                   </div>
                 </template>
               </div>
@@ -846,6 +859,11 @@
                        title="Ver informe firmado por dirección">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'direccion' && c.estado === 'pendiente')"
+                       class="bi bi-sticky-fill"
+                       style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#dc3545; cursor:pointer; z-index:10;"
+                       @click.stop.prevent="abrirModalVerCorrecciones(ciclo)"
+                       :title="ciclo.historial_correcciones.filter(c => c.tipo === 'direccion' && c.estado === 'pendiente').length + ' corrección(es) de Dirección pendiente(s)'"></i>
                   </div>
                 </template>
               </div>
@@ -1715,10 +1733,12 @@
             <button type="button" class="btn-close" @click="cerrarModalVerCorrecciones"></button>
           </div>
           <div class="modal-body">
-            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.historial_correcciones && cicloVerCorrecciones.historial_correcciones.filter(c => c.tipo === 'st').length > 0">
-              <div v-for="(c, idx) in cicloVerCorrecciones.historial_correcciones.filter(c => c.tipo === 'st')" :key="c.id"
+            <div v-if="cicloVerCorrecciones && cicloVerCorrecciones.historial_correcciones && cicloVerCorrecciones.historial_correcciones.length > 0">
+              <div v-for="(c, idx) in cicloVerCorrecciones.historial_correcciones" :key="c.id"
                    class="border rounded p-3 mb-2"
-                   :style="c.estado === 'confirmada' ? 'background:#f0fff4; opacity:0.7;' : 'background:#fffdf0;'">
+                   :style="c.estado === 'confirmada'
+                     ? 'background:#f0fff4; opacity:0.7; border-left: 4px solid ' + {st:'#9c7cc7',area:'#ffc107',direccion:'#dc3545'}[c.tipo] + ' !important;'
+                     : 'background:#fffdf0; border-left: 4px solid ' + {st:'#9c7cc7',area:'#ffc107',direccion:'#dc3545'}[c.tipo] + ' !important;'">
                 <div class="d-flex justify-content-between align-items-start mb-1">
                   <div>
                     <strong style="font-size:12px; color:#888;">Corrección {{ idx + 1 }}</strong>
