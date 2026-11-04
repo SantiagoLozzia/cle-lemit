@@ -411,25 +411,27 @@
                   </span>
                   <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap" style="position:relative; display:inline-flex; align-items:center;">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
-                       @click.stop="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion ? togglePopupInformeArea(ciclo.id) : abrirArchivo(ciclo.adjunto_informeArea)"
+                       @click.stop="togglePopupInformeArea(ciclo.id)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
                     <i v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada"
                        class="bi bi-sticky-fill"
                        style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
                        @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
-                    <div v-if="popupInformeAreaId === ciclo.id && (isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                    <div v-if="popupInformeAreaId === ciclo.id"
                          class="st-sd-dial" @click.stop>
                       <div class="st-sd-opcion" style="--rotation: -120deg"
                            @click.stop="abrirArchivo(ciclo.adjunto_informeArea); popupInformeAreaId = null" title="Ver">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <label class="st-sd-opcion" style="--rotation: -60deg; cursor:pointer;" title="Reemplazar"
-                             :for="'reemplazar-inf-area-' + ciclo.id" @click.stop="popupInformeAreaId = null">
-                        <i class="bi bi-arrow-repeat"></i>
-                      </label>
-                      <input :id="'reemplazar-inf-area-' + ciclo.id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="reemplazarInformeAreaCiclo($event, ciclo)">
+                      <template v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion">
+                        <label class="st-sd-opcion" style="--rotation: -60deg; cursor:pointer;" title="Reemplazar"
+                               :for="'reemplazar-inf-area-' + ciclo.id" @click.stop="popupInformeAreaId = null">
+                          <i class="bi bi-arrow-repeat"></i>
+                        </label>
+                        <input :id="'reemplazar-inf-area-' + ciclo.id" style="display:none;" type="file"
+                               accept=".doc,.docx,.odt,.rtf"
+                               @change="reemplazarInformeAreaCiclo($event, ciclo)">
+                      </template>
                     </div>
                   </span>
                   <span v-else-if="isAreaJefe || isAreaStandard" style="display:inline-flex; align-items:center; gap:4px;">
