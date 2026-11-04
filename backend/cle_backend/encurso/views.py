@@ -1648,16 +1648,25 @@ class ArchivarCircuito(APIView):
     permission_classes = [IsAuthenticated, IsAdministracionOrDireccion]
 
     def put(self, request, nro_circuito, *args, **kwargs):
+        motivo = request.data.get('motivo_archivo', '')
+        nota = request.data.get('nota_archivo', '')
+
+        if not motivo:
+            return Response({'error': 'Debe indicar el motivo de archivo.'}, status=status.HTTP_400_BAD_REQUEST)
+
         data_servicio = get_object_or_404(DataServicio, nro_circuito=nro_circuito)
         data_servicio.finalizado = True
         data_servicio.save()
 
         circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
         circuito.finalizado = True
+        circuito.motivo_archivo = motivo
+        circuito.nota_archivo = nota if nota else None
         circuito.save()
 
+        motivo_display = dict(MOTIVO_ARCHIVO_CHOICES).get(motivo, motivo)
         _log(request, 'archivar_circuito',
-             f'Circuito #{nro_circuito} archivado',
+             f'Circuito #{nro_circuito} archivado — {motivo_display}',
              nro_circuito=int(nro_circuito))
         return JsonResponse({'message': 'Archivado correctamente.'})
 
@@ -1707,6 +1716,9 @@ class ObtenerArchivados(APIView):
                 for d in detalles
             ]
 
+            motivo_key = circuito.motivo_archivo if circuito else None
+            motivo_display = dict(MOTIVO_ARCHIVO_CHOICES).get(motivo_key, None) if motivo_key else None
+
             result.append({
                 'nro_dataServicio': ds.nro_dataServicio,
                 'nro_circuito': circuito.nro_circuito if circuito else None,
@@ -1721,6 +1733,9 @@ class ObtenerArchivados(APIView):
                 'cuit_solicitante': solicitante.cuit,
                 'nro_legajo': legajo.nro_legajo if legajo else None,
                 'pago': legajo.pago if legajo else None,
+                'motivo_archivo': motivo_key,
+                'motivo_archivo_display': motivo_display,
+                'nota_archivo': circuito.nota_archivo if circuito else None,
                 'servicios': servicios_list,
             })
 

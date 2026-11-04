@@ -26,6 +26,21 @@
         </div>
         <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
       </div>
+
+      <!-- Alertas plazo vencido -->
+      <div v-for="alerta in alertasPlazos" :key="alerta.key"
+           class="alert alert-warning d-flex align-items-center justify-content-between mb-2 py-2"
+           style="border-left: 4px solid #e65100;">
+        <div class="small">
+          <i class="bi bi-clock-history me-2"></i>
+          <strong>Plazo vencido — Circuito #{{ alerta.nro_circuito }}:</strong>
+          {{ alerta.mensaje }}
+        </div>
+        <button class="btn btn-sm btn-outline-danger ms-3 text-nowrap" @click="abrirModalArchivarConMotivo(alerta)">
+          <i class="bi bi-archive me-1"></i>Archivar
+        </button>
+      </div>
+
       <div class="table-scroll-wrapper">
       <table class="table table-hover mb-0">
         <thead class="text-center sticky-thead">
@@ -2211,27 +2226,42 @@
     <div class="modal" :class="{ 'show': mostrarModalArchivar }" id="mostrarModalArchivar">
       <div class="modal-dialog">
         <div class="modal-content">
-          <!-- Modal Header -->
           <div class="modal-header">
-            <h4 class="modal-title">Archivo</h4>
+            <h4 class="modal-title"><i class="bi bi-archive-fill me-2"></i>Archivar circuito #{{ numeroCircuitoGlobal }}</h4>
             <button type="button" class="btn-close" @click="cerrarModalArchivar"></button>
           </div>
-
-          <!-- Modal Body -->
           <div class="modal-body">
-            <div>
-              Archivar?
+            <p class="text-muted mb-3">Seleccioná el motivo de archivo:</p>
+            <div class="d-flex flex-column gap-2">
+              <label v-for="opt in motivosArchivo" :key="opt.value" class="motivo-archivo-option" :class="{ selected: motivoArchivar === opt.value }">
+                <input type="radio" :value="opt.value" v-model="motivoArchivar" class="me-2" />
+                <span>{{ opt.label }}</span>
+              </label>
+            </div>
+            <div v-if="motivoArchivar === 'otro'" class="mt-3">
+              <label class="form-label text-muted small">Descripción <span class="text-danger">*</span></label>
+              <textarea v-model="notaArchivar" class="form-control" rows="3" maxlength="500" placeholder="Describí el motivo..."></textarea>
+            </div>
+            <div v-else-if="motivoArchivar" class="mt-3">
+              <label class="form-label text-muted small">Nota adicional (opcional)</label>
+              <textarea v-model="notaArchivar" class="form-control" rows="2" maxlength="500" placeholder="Observaciones adicionales..."></textarea>
             </div>
           </div>
-
-          <!-- Modal Footer -->
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="enviarArchivar(fila); cerrarModal">Si</button>
             <button type="button" class="btn btn-secondary" @click="cerrarModalArchivar">Cancelar</button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              @click="enviarArchivar"
+              :disabled="!motivoArchivar || (motivoArchivar === 'otro' && !notaArchivar.trim())"
+            >
+              <i class="bi bi-archive me-1"></i>Archivar
+            </button>
           </div>
         </div>
       </div>
     </div>
+
    
     
 </template>
@@ -4468,8 +4498,64 @@
         };
 
         // Archivar
+        const motivoArchivar = ref('');
+        const notaArchivar = ref('');
+
+        const motivosArchivo = [
+          { value: 'exito',                label: 'Finalizado con éxito' },
+          { value: 'falta_pago',           label: 'Empresa no abonó' },
+          { value: 'vencimiento_muestras', label: 'Vencimiento del plazo de muestras' },
+          { value: 'vencimiento_informe',  label: 'Vencimiento del plazo de informe de área' },
+          { value: 'desistimiento',        label: 'Desistimiento del cliente' },
+          { value: 'otro',                 label: 'Otro' },
+        ];
+
+        const alertasPlazos = computed(() => {
+          const alertas = [];
+          for (const fila of filas.value) {
+            // Plazo de pago vencido → Administración
+            if (isAdministracion.value && Number(fila.plazo_pago) <= 0 && !pagoEsCompleto(fila.pago)) {
+              alertas.push({
+                key: `pago_${fila.nro_circuito}`,
+                nro_circuito: fila.nro_circuito,
+                mensaje: 'El plazo de pago venció y el pago no está completo.',
+                motivo: 'falta_pago',
+              });
+            }
+            // Plazo de muestras vencido → ST
+            if (isServiciosTecnologicos.value && Number(fila.plazo_muestras) <= 0 && fila.estado_recepcion !== 'total') {
+              alertas.push({
+                key: `muestras_${fila.nro_circuito}`,
+                nro_circuito: fila.nro_circuito,
+                mensaje: 'El plazo de recepción de muestras venció.',
+                motivo: 'vencimiento_muestras',
+              });
+            }
+            // Plazo de informe de área vencido → ST
+            const restOS = diasRestantesOS(fila);
+            if (isServiciosTecnologicos.value && restOS !== null && restOS <= 0) {
+              alertas.push({
+                key: `informe_${fila.nro_circuito}`,
+                nro_circuito: fila.nro_circuito,
+                mensaje: 'El plazo del informe de área venció.',
+                motivo: 'vencimiento_informe',
+              });
+            }
+          }
+          return alertas;
+        });
+
         const abrirModalArchivar = (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
+          motivoArchivar.value = '';
+          notaArchivar.value = '';
+          mostrarModalArchivar.value = true;
+        };
+
+        const abrirModalArchivarConMotivo = (alerta) => {
+          numeroCircuitoGlobal.value = alerta.nro_circuito;
+          motivoArchivar.value = alerta.motivo;
+          notaArchivar.value = '';
           mostrarModalArchivar.value = true;
         };
 
@@ -4478,30 +4564,23 @@
         };
 
         const enviarArchivar = async () => {
+          if (!motivoArchivar.value) return;
+          if (motivoArchivar.value === 'otro' && !notaArchivar.value.trim()) return;
           const nroCircuito = numeroCircuitoGlobal.value;
           try {
-              const response = await api.put(
-                  `/encurso/archivar_circuito/${nroCircuito}/`
+              await api.put(
+                  `/encurso/archivar_circuito/${nroCircuito}/`,
+                  { motivo_archivo: motivoArchivar.value, nota_archivo: notaArchivar.value }
               );
-              console.log('Archivado correctamente:', response.data);
               mostrarModalArchivar.value = false;
               fetchData();
-
               showSuccessAlert.value = true;
-              setTimeout(() => {
-                showSuccessAlert.value = false;
-              }, 3000);
-
-              // Manejar la respuesta como sea necesario
+              setTimeout(() => { showSuccessAlert.value = false; }, 3000);
           } catch (error) {
               console.error('Error al archivar:', error);
               mostrarModalArchivar.value = false;
-
               showErrorAlert.value = true;
-
-              setTimeout(() => {
-                showErrorAlert.value = false;
-              }, 5000);
+              setTimeout(() => { showErrorAlert.value = false; }, 5000);
           }
         };
 
@@ -4814,6 +4893,11 @@
         fechaLegajoFormateada,
         mostrarModalArchivar,
         enviarArchivar,
+        motivoArchivar,
+        notaArchivar,
+        motivosArchivo,
+        alertasPlazos,
+        abrirModalArchivarConMotivo,
       };
     },
   };
@@ -5528,5 +5612,30 @@
   font-weight: 500;
 }
 .st02-add-btn:hover { text-decoration: underline; }
+
+/* Modal Archivar — opciones de motivo */
+.motivo-archivo-option {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1.5px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+  font-size: 0.9rem;
+  user-select: none;
+}
+.motivo-archivo-option:hover {
+  border-color: #adb5bd;
+  background-color: #f8f9fa;
+}
+.motivo-archivo-option.selected {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+  font-weight: 500;
+}
+.motivo-archivo-option input[type="radio"] {
+  accent-color: #dc3545;
+}
 </style>
   

@@ -236,9 +236,22 @@ class InformeInterarea(models.Model):
     def __str__(self):
         return f"InformeInterarea #{self.nro_informeInterarea} - SolicitudInterarea #{self.nro_solicitudInterarea.nro_solicitudInterarea}"
     
+MOTIVO_ARCHIVO_CHOICES = [
+    ('exito', 'Finalizado con éxito'),
+    ('falta_pago', 'Empresa no abonó'),
+    ('vencimiento_muestras', 'Vencimiento del plazo de muestras'),
+    ('vencimiento_informe', 'Vencimiento del plazo de informe de área'),
+    ('desistimiento', 'Desistimiento del cliente'),
+    ('otro', 'Otro'),
+]
+
 class Circuito(models.Model):
     nro_circuito = models.AutoField(primary_key=True)
     finalizado = models.BooleanField(default=False)
+    motivo_archivo = models.CharField(
+        max_length=30, choices=MOTIVO_ARCHIVO_CHOICES, null=True, blank=True
+    )
+    nota_archivo = models.TextField(max_length=500, null=True, blank=True)
 
 
 class UltimoNumero(models.Model):

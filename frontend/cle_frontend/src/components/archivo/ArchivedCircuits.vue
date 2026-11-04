@@ -51,6 +51,7 @@
             <th class="sortable" @click="setSort('nro_legajo')">Legajo <span class="sort-icon">{{ sortKey === 'nro_legajo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th>Total</th>
             <th>Pago</th>
+            <th>Motivo</th>
             <th></th>
           </tr>
         </thead>
@@ -67,13 +68,19 @@
               <span :class="badgePago(item.pago)">{{ labelPago(item.pago) }}</span>
             </td>
             <td>
+              <span v-if="item.motivo_archivo" :class="badgeMotivo(item.motivo_archivo)" :title="item.nota_archivo || ''">
+                {{ item.motivo_archivo_display || item.motivo_archivo }}
+              </span>
+              <span v-else class="text-muted">—</span>
+            </td>
+            <td>
               <button class="btn btn-sm btn-outline-primary py-0" @click="abrirDetalle(item)">
                 <i class="bi bi-eye"></i>
               </button>
             </td>
           </tr>
           <tr v-if="sortedArchivados.length === 0">
-            <td colspan="9" class="text-center text-muted py-5" style="font-size:1.1rem">No hay registros archivados</td>
+            <td colspan="10" class="text-center text-muted py-5" style="font-size:1.1rem">No hay registros archivados</td>
           </tr>
         </tbody>
       </table>
@@ -124,6 +131,21 @@
               <div class="info-block">
                 <span class="label">Estado de pago</span>
                 <span :class="badgePago(detalle.pago)" class="value">{{ labelPago(detalle.pago) }}</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="info-block">
+                <span class="label">Motivo de archivo</span>
+                <span v-if="detalle.motivo_archivo" :class="badgeMotivo(detalle.motivo_archivo)" class="value">
+                  {{ detalle.motivo_archivo_display || detalle.motivo_archivo }}
+                </span>
+                <span v-else class="value text-muted">—</span>
+              </div>
+            </div>
+            <div v-if="detalle.nota_archivo" class="col-12">
+              <div class="info-block">
+                <span class="label">Nota de archivo</span>
+                <span class="value">{{ detalle.nota_archivo }}</span>
               </div>
             </div>
             <div class="col-12 col-md-6">
@@ -307,6 +329,14 @@ export default {
       return 'badge bg-secondary';
     };
 
+    const badgeMotivo = (motivo) => {
+      if (motivo === 'exito') return 'badge bg-success';
+      if (motivo === 'falta_pago') return 'badge bg-danger';
+      if (motivo === 'vencimiento_muestras' || motivo === 'vencimiento_informe') return 'badge bg-warning text-dark';
+      if (motivo === 'desistimiento') return 'badge bg-secondary';
+      return 'badge bg-dark';
+    };
+
     onMounted(fetchArchivados);
 
     return {
@@ -314,7 +344,7 @@ export default {
       filterEmpresa, filterArea, filterDesde, filterHasta, filterNroDoc, clearFilters,
       sortKey, sortDir, setSort, sortedArchivados,
       mostrarModal, detalle, abrirDetalle, cerrarModal,
-      formatDate, formatAreaTematica, formatMonto, labelPago, badgePago,
+      formatDate, formatAreaTematica, formatMonto, labelPago, badgePago, badgeMotivo,
     };
   }
 };
