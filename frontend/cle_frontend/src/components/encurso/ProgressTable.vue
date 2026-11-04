@@ -25,6 +25,22 @@
           <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
         </div>
         <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+        <button @click="manualRefresh" class="btn btn-sm btn-outline-secondary ms-auto" title="Actualizar datos">
+          <i class="bi bi-arrow-clockwise" :class="{ 'spin-icon': refreshCargando }"></i>
+        </button>
+      </div>
+
+      <!-- Banner de actualizaciones disponibles -->
+      <div v-if="hayActualizaciones"
+           class="alert alert-info d-flex align-items-center justify-content-between mb-2 py-2"
+           style="border-left: 4px solid #0dcaf0;">
+        <div class="small">
+          <i class="bi bi-arrow-clockwise me-2"></i>
+          Hay cambios disponibles de otros usuarios.
+        </div>
+        <button class="btn btn-sm btn-primary ms-3 text-nowrap" @click="aplicarActualizaciones">
+          Actualizar ahora
+        </button>
       </div>
 
       <!-- Alertas plazo vencido -->
@@ -2798,10 +2814,54 @@
 
       //methods
 
+      // ── Polling & notificaciones de actualización ──────────────────────────
+      let pollInterval = null;
+      let lastFingerprint = '';
+      const hayActualizaciones = ref(false);
+      const refreshCargando = ref(false);
+
+      const computeFingerprint = (data) => {
+        const circuits = (data.solicitudes || []).map(s => s.nro_circuito).sort().join(',');
+        const ciclosState = (data.ciclos || [])
+          .map(c => `${c.id}:${c.firma_direccion}:${c.firma_responsable_area}:${c.revision_confirmada}:${!!c.adjunto_informeArea}:${!!c.adjunto_informeServicio}`)
+          .sort().join('|');
+        const legajosState = (data.legajos || []).map(l => `${l.nro_legajo}:${l.pago}`).sort().join('|');
+        return [circuits, ciclosState, legajosState].join('||');
+      };
+
+      const pollData = async () => {
+        try {
+          const response = await api.get('/encurso/obtener_todoencurso/');
+          const fp = computeFingerprint(response.data);
+          if (lastFingerprint && fp !== lastFingerprint) {
+            hayActualizaciones.value = true;
+          }
+        } catch {
+          // fallo silencioso en polling
+        }
+      };
+
+      const aplicarActualizaciones = () => {
+        hayActualizaciones.value = false;
+        fetchData();
+      };
+
+      const manualRefresh = async () => {
+        refreshCargando.value = true;
+        hayActualizaciones.value = false;
+        await new Promise(resolve => {
+          fetchData();
+          setTimeout(resolve, 600);
+        });
+        refreshCargando.value = false;
+      };
+      // ────────────────────────────────────────────────────────────────────────
+
       const fetchData = () => {
           api.get('/encurso/obtener_todoencurso/')
             .then(response => {
               const data = response.data;
+              lastFingerprint = computeFingerprint(data);
 
               // Obtener el área temática del usuario
               const userAreaTematica = formatAreaTematica(sessionStorage.getItem('area_tematica')); 
@@ -2975,6 +3035,7 @@
         document.addEventListener('att-cell-open', closeAllPopups);
         document.addEventListener('encurso-refresh', fetchData);
         window.addEventListener('firma-usuario-actualizada', onFirmaActualizada);
+        pollInterval = setInterval(pollData, 60000);
       });
 
       onUnmounted(() => {
@@ -2982,6 +3043,7 @@
         document.removeEventListener('att-cell-open', closeAllPopups);
         document.removeEventListener('encurso-refresh', fetchData);
         window.removeEventListener('firma-usuario-actualizada', onFirmaActualizada);
+        clearInterval(pollInterval);
       });
 
       const triggerFileInput = () => {
@@ -4996,6 +5058,10 @@
         cerrarModalHistorial,
         labelAccion,
         formatHistorialFecha,
+        hayActualizaciones,
+        refreshCargando,
+        aplicarActualizaciones,
+        manualRefresh,
       };
     },
   };
@@ -5720,6 +5786,13 @@
   font-weight: 500;
 }
 .st02-add-btn:hover { text-decoration: underline; }
+
+/* Botón de refresh manual */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.spin-icon { animation: spin 0.7s linear infinite; }
 
 /* Modal Historial — timeline */
 .historial-timeline { position: relative; }
