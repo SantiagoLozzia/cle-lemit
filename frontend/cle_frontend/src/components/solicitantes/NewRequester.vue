@@ -75,7 +75,7 @@
 </template>
 
 <script>
-  import { ref } from 'vue'; 
+  import { ref, nextTick } from 'vue'; 
   import api from '@/api.js';
 
   export default {
@@ -142,6 +142,7 @@
             };
 
             showSuccessAlert.value = true;
+            nextTick(() => document.dispatchEvent(new CustomEvent('solicitantes-refresh')));
 
             setTimeout(() => {
               showSuccessAlert.value = false;

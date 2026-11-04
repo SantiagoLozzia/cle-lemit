@@ -76,7 +76,7 @@ export default {
       initSocket();
     });
 
-    return { moduloData, servicioData, arancelesData };
+    return { moduloData, servicioData, arancelesData, fetchAranceles };
   }
 };
 </script>

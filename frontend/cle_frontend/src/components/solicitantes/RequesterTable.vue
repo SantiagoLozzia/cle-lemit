@@ -42,7 +42,7 @@
   
   <script>
   
-    import { ref, onMounted } from 'vue';
+    import { ref, onMounted, onUnmounted } from 'vue';
     import api from '@/api.js';
   
     export default {
@@ -62,9 +62,16 @@
           }
         };
   
-        onMounted(fetchSolicitantes); // Utilizamos onMounted para llamar a fetchSolicitantes en la creación del componente
-  
-        return { 
+        onMounted(() => {
+          fetchSolicitantes();
+          document.addEventListener('solicitantes-refresh', fetchSolicitantes);
+        });
+
+        onUnmounted(() => {
+          document.removeEventListener('solicitantes-refresh', fetchSolicitantes);
+        });
+
+        return {
             solicitantes,
         };
       }
