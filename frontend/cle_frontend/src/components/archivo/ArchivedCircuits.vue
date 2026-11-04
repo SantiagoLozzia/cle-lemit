@@ -52,6 +52,7 @@
             <th>Total</th>
             <th>Pago</th>
             <th>Motivo</th>
+            <th class="sortable" @click="setSort('fecha_archivo')">Finalización <span class="sort-icon">{{ sortKey === 'fecha_archivo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th></th>
           </tr>
         </thead>
@@ -73,6 +74,7 @@
               </span>
               <span v-else class="text-muted">—</span>
             </td>
+            <td class="text-nowrap">{{ formatDate(item.fecha_archivo) || '—' }}</td>
             <td>
               <button class="btn btn-sm btn-outline-primary py-0" @click="abrirDetalle(item)">
                 <i class="bi bi-eye"></i>
@@ -80,7 +82,7 @@
             </td>
           </tr>
           <tr v-if="sortedArchivados.length === 0">
-            <td colspan="10" class="text-center text-muted py-5" style="font-size:1.1rem">No hay registros archivados</td>
+            <td colspan="11" class="text-center text-muted py-5" style="font-size:1.1rem">No hay registros archivados</td>
           </tr>
         </tbody>
       </table>
@@ -140,6 +142,12 @@
                   {{ detalle.motivo_archivo_display || detalle.motivo_archivo }}
                 </span>
                 <span v-else class="value text-muted">—</span>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="info-block">
+                <span class="label">Fecha de finalización</span>
+                <span class="value">{{ formatDate(detalle.fecha_archivo) || '—' }}</span>
               </div>
             </div>
             <div v-if="detalle.nota_archivo" class="col-12">

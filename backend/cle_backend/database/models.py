@@ -251,6 +251,7 @@ class Circuito(models.Model):
         max_length=30, choices=MOTIVO_ARCHIVO_CHOICES, null=True, blank=True
     )
     nota_archivo = models.TextField(max_length=500, null=True, blank=True)
+    fecha_archivo = models.DateTimeField(null=True, blank=True)
 
 
 class UltimoNumero(models.Model):

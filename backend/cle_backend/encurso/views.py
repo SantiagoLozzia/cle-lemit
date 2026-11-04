@@ -1662,6 +1662,7 @@ class ArchivarCircuito(APIView):
         circuito.finalizado = True
         circuito.motivo_archivo = motivo
         circuito.nota_archivo = nota if nota else None
+        circuito.fecha_archivo = timezone.now()
         circuito.save()
 
         motivo_display = dict(MOTIVO_ARCHIVO_CHOICES).get(motivo, motivo)
@@ -1736,6 +1737,7 @@ class ObtenerArchivados(APIView):
                 'motivo_archivo': motivo_key,
                 'motivo_archivo_display': motivo_display,
                 'nota_archivo': circuito.nota_archivo if circuito else None,
+                'fecha_archivo': circuito.fecha_archivo.strftime('%Y-%m-%d') if circuito and circuito.fecha_archivo else None,
                 'servicios': servicios_list,
             })
 
