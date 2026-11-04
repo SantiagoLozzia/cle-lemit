@@ -401,45 +401,47 @@
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
-                  <!-- Rechazo del jefe de área: mostrar informe de servicio en esta columna -->
-                  <span v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada && ciclo.adjunto_informeServicio"
-                        style="display:inline-flex; align-items:center; gap:4px;">
-                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
-                       @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe con formato institucional"></i>
-                    <i class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:14px;"
-                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
-                  </span>
                   <!-- Rechazo de ST hacia área: mostrar informe de servicio en esta columna -->
-                  <span v-else-if="ciclo.rechazo_st_destino === 'area' && ciclo.adjunto_informeServicio"
+                  <span v-if="ciclo.rechazo_st_destino === 'area' && ciclo.adjunto_informeServicio"
                         style="display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)" title="Ver informe de servicio"></i>
                     <i class="bi bi-sticky-fill" style="color:#9c7cc7; cursor:pointer; font-size:14px;"
                        @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                   </span>
-                  <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap">
+                  <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap" style="position:relative; display:inline-flex; align-items:center;">
                     <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
                        @click.stop="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion ? togglePopupInformeArea(ciclo.id) : abrirArchivo(ciclo.adjunto_informeArea)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
+                    <i v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada"
+                       class="bi bi-sticky-fill"
+                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
                     <div v-if="popupInformeAreaId === ciclo.id && (isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
                          class="st-sd-dial" @click.stop>
                       <div class="st-sd-opcion" style="--rotation: -120deg"
                            @click.stop="abrirArchivo(ciclo.adjunto_informeArea); popupInformeAreaId = null" title="Ver">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -60deg"
-                           @click.stop="eliminarInformeAreaCiclo(ciclo); popupInformeAreaId = null" title="Eliminar">
-                        <i class="bi bi-trash"></i>
-                      </div>
+                      <label class="st-sd-opcion" style="--rotation: -60deg; cursor:pointer;" title="Reemplazar"
+                             :for="'reemplazar-inf-area-' + ciclo.id" @click.stop="popupInformeAreaId = null">
+                        <i class="bi bi-arrow-repeat"></i>
+                      </label>
+                      <input :id="'reemplazar-inf-area-' + ciclo.id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
+                             @change="reemplazarInformeAreaCiclo($event, ciclo)">
                     </div>
                   </span>
-                  <span v-else-if="isAreaJefe || isAreaStandard">
+                  <span v-else-if="isAreaJefe || isAreaStandard" style="display:inline-flex; align-items:center; gap:4px;">
                     <label :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe área">
                       <i class="bi bi-paperclip action-icon"></i>
                     </label>
                     <input :id="'inf-area-ciclo-' + ciclo.id" style="display:none;" type="file"
                            accept=".doc,.docx,.odt,.rtf"
                            @change="seleccionarArchivoInformeAreaCiclo($event, ciclo, fila)">
+                    <i v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada"
+                       class="bi bi-sticky-fill" style="color:#ffc107; cursor:pointer; font-size:14px;"
+                       @click.stop="abrirModalVerRechazoArea(ciclo)" title="Ver nota de rechazo del responsable de área"></i>
                   </span>
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
@@ -3646,6 +3648,23 @@
         mostrarModalTipoCiclo.value = true;
       };
 
+      const reemplazarInformeAreaCiclo = async (event, ciclo) => {
+        const archivo = event.target.files[0];
+        if (!archivo) return;
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        formData.append('tipo', ciclo.tipo);
+        try {
+          await api.post(`/encurso/subir_informe_area_ciclo/${ciclo.id}/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
       const seleccionarArchivoParaNuevoCiclo = (event, fila) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -4641,6 +4660,7 @@
         togglePopupInformeArea,
         eliminarInformeAreaCiclo,
         seleccionarArchivoInformeAreaCiclo,
+        reemplazarInformeAreaCiclo,
         seleccionarArchivoParaNuevoCiclo,
         subirInformeAreaCiclo,
         cambiarTipoCiclo,
