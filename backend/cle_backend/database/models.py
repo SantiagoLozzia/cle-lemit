@@ -159,11 +159,11 @@ class DataServicio(models.Model):
     email_factura = models.EmailField(max_length=100, null=True, blank=True)
     email_informe_tecnico = models.EmailField(max_length=100, null=True, blank=True)
     completo = models.BooleanField(default=False) #Si es True habilito a adjuntar adjunto_solicitudServicio
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='data_servicio')
     finalizado = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"DataServicio #{self.nro_dataServicio} - Presupuesto #{self.nro_presupuesto.nro_presupuesto} - Legajo #{self.nro_legajo.nro_legajo}"
+        return f"DataServicio #{self.nro_dataServicio} - Circuito #{self.nro_circuito_id}"
 
 class Legajo(models.Model):
     nro_legajo = models.AutoField(primary_key=True)
@@ -173,12 +173,12 @@ class Legajo(models.Model):
     plazo_pago = models.IntegerField(default=30)
     adjunto_factura = models.FileField(upload_to='facturas/', null=True)
     completo = models.BooleanField(default=False)
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='legajo')
     labs_adicionales_pendientes = models.IntegerField(default=0)
     monto_adicional_pendiente = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Legajo #{self.nro_legajo} - DataServicio #{self.nro_dataServicio.nro_dataServicio}"
+        return f"Legajo #{self.nro_legajo} - Circuito #{self.nro_circuito_id}"
 
 class Recepcion(models.Model):
     nro_recepcion = models.AutoField(primary_key=True)
@@ -186,10 +186,10 @@ class Recepcion(models.Model):
     estado_recepcion = models.CharField(choices=ESTADO_RECEPCION_CHOICES, default='sin_llegar')
     plazo_muestras = models.IntegerField(default=30)
     completo = models.BooleanField(default=False)
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='recepcion')
 
     def __str__(self):
-        return f"Recepcion #{self.nro_recepcion} - Legajo #{self.nro_legajo.nro_legajo}"
+        return f"Recepcion #{self.nro_recepcion} - Circuito #{self.nro_circuito_id}"
 
 class OrdenServicio(models.Model):
     nro_ordenServicio = models.AutoField(primary_key=True)
@@ -198,10 +198,10 @@ class OrdenServicio(models.Model):
     completo = models.BooleanField(default=False)
     modificada = models.BooleanField(default=False)
     nuevo_rango_lab = models.CharField(max_length=255, blank=True, default='')
-    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
+    nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='orden_servicio')
 
     def __str__(self):
-        return f"OrdenServicio #{self.nro_ordenServicio} - Legajo #{self.nro_legajo.nro_legajo}"
+        return f"OrdenServicio #{self.nro_ordenServicio} - Circuito #{self.nro_circuito_id}"
 
 
 class SolicitudInterarea(models.Model):
@@ -216,7 +216,7 @@ class SolicitudInterarea(models.Model):
     completo = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"SolicitudInterarea #{self.nro_solicitudInterarea} - InformeInterarea #{self.nro_informeInterarea.nro_informeInterarea}"
+        return f"SolicitudInterarea #{self.nro_solicitudInterarea} - Circuito #{self.nro_circuito_id}"
 
 class DetalleInterarea(models.Model):
     nro_detalle = models.AutoField(primary_key=True)
@@ -386,7 +386,7 @@ class EventoAuditoria(models.Model):
     accion       = models.CharField(max_length=100)
     descripcion  = models.CharField(max_length=500)
     fecha        = models.DateTimeField(auto_now_add=True)
-    nro_circuito = models.IntegerField(null=True, blank=True)
+    nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True, blank=True, related_name='eventos_auditoria')
 
     class Meta:
         ordering = ['-fecha']

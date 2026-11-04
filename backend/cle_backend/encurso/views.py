@@ -48,7 +48,7 @@ def _log(request, accion, descripcion, nro_circuito=None):
         usuario=request.user if request.user.is_authenticated else None,
         accion=accion,
         descripcion=descripcion,
-        nro_circuito=nro_circuito,
+        nro_circuito_id=nro_circuito,
     )
 
 # Cargar la Tabla
