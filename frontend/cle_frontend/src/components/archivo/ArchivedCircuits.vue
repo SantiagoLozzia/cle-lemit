@@ -332,7 +332,7 @@ export default {
     const badgeMotivo = (motivo) => {
       if (motivo === 'exito') return 'badge bg-success';
       if (motivo === 'falta_pago') return 'badge bg-danger';
-      if (motivo === 'vencimiento_muestras' || motivo === 'vencimiento_informe') return 'badge bg-warning text-dark';
+      if (motivo === 'vencimiento_muestras') return 'badge bg-warning text-dark';
       if (motivo === 'desistimiento') return 'badge bg-secondary';
       return 'badge bg-dark';
     };

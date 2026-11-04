@@ -240,7 +240,6 @@ MOTIVO_ARCHIVO_CHOICES = [
     ('exito', 'Finalizado con éxito'),
     ('falta_pago', 'Empresa no abonó'),
     ('vencimiento_muestras', 'Vencimiento del plazo de muestras'),
-    ('vencimiento_informe', 'Vencimiento del plazo de informe de área'),
     ('desistimiento', 'Desistimiento del cliente'),
     ('otro', 'Otro'),
 ]

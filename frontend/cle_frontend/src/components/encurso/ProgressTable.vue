@@ -4505,7 +4505,6 @@
           { value: 'exito',                label: 'Finalizado con éxito' },
           { value: 'falta_pago',           label: 'Empresa no abonó' },
           { value: 'vencimiento_muestras', label: 'Vencimiento del plazo de muestras' },
-          { value: 'vencimiento_informe',  label: 'Vencimiento del plazo de informe de área' },
           { value: 'desistimiento',        label: 'Desistimiento del cliente' },
           { value: 'otro',                 label: 'Otro' },
         ];
@@ -4529,16 +4528,6 @@
                 nro_circuito: fila.nro_circuito,
                 mensaje: 'El plazo de recepción de muestras venció.',
                 motivo: 'vencimiento_muestras',
-              });
-            }
-            // Plazo de informe de área vencido → ST
-            const restOS = diasRestantesOS(fila);
-            if (isServiciosTecnologicos.value && restOS !== null && restOS <= 0) {
-              alertas.push({
-                key: `informe_${fila.nro_circuito}`,
-                nro_circuito: fila.nro_circuito,
-                mensaje: 'El plazo del informe de área venció.',
-                motivo: 'vencimiento_informe',
               });
             }
           }
