@@ -91,6 +91,24 @@ class CicloInformeSerializer(serializers.ModelSerializer):
                 model = CicloInforme
                 fields = '__all__'
 
+class RegistroEnsayoCicloIASerializer(serializers.ModelSerializer):
+        class Meta:
+                model = RegistroEnsayoCicloIA
+                fields = '__all__'
+
+class CorreccionIASerializer(serializers.ModelSerializer):
+        class Meta:
+                model = CorreccionIA
+                fields = ['id', 'tipo', 'destinatario', 'descripcion', 'fecha', 'estado', 'autor']
+
+class CicloInterareaSerializer(serializers.ModelSerializer):
+        registros_ensayo = RegistroEnsayoCicloIASerializer(many=True, read_only=True)
+        historial_correcciones = CorreccionIASerializer(many=True, read_only=True)
+
+        class Meta:
+                model = CicloInterarea
+                fields = '__all__'
+
 class CambiarRemitoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = Recepcion

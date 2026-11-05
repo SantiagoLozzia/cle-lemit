@@ -1025,7 +1025,11 @@ def obtener_solicitudInterarea(request, nro_circuito):
         # Serializar los detalles de interarea para obtener los servicios solicitados
         detalles_serializer = DetalleInterareaSerializer(detalles_interarea, many=True)
         data['servicio_solicitado'] = detalles_serializer.data
-        
+
+        # Incluir ciclos inter-area
+        ciclos_ia = CicloInterarea.objects.filter(nro_solicitudInterarea=solicitud_interarea)
+        data['ciclos'] = CicloInterareaSerializer(ciclos_ia, many=True).data
+
         return JsonResponse(data, safe=False)
     
     except Circuito.DoesNotExist:
@@ -1670,6 +1674,472 @@ class RechazarFirmaResponsableAreaCiclo(APIView):
              f'Firma de Área rechazada → {destino} — ciclo {ciclo.tipo} #{ciclo.numero}, circuito #{ciclo.nro_circuito_id}',
              nro_circuito=ciclo.nro_circuito_id)
         return JsonResponse({'message': 'Informe rechazado por responsable de área correctamente.'})
+
+
+# ── Ciclos de Informe Inter-Area ──────────────────────────────────────────────
+
+def user_can_manage_ciclo_ia(user, solicitud):
+    """Return True if the user is privileged or belongs to the inter_areaTematica."""
+    try:
+        rol = user.userprofile.rol
+    except AttributeError:
+        return False
+    if rol in PRIVILEGED_ROLES:
+        return True
+    return user.userprofile.area_tematica == solicitud.inter_areaTematica
+
+
+class CrearCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def post(self, request, nro_solicitud):
+        solicitud = get_object_or_404(SolicitudInterarea, pk=nro_solicitud)
+        if not user_can_manage_ciclo_ia(request.user, solicitud):
+            return Response({'error': 'No tiene permisos para esta solicitud inter-area.'}, status=status.HTTP_403_FORBIDDEN)
+        ultimo = CicloInterarea.objects.filter(nro_solicitudInterarea=solicitud).order_by('-numero').first()
+        numero = (ultimo.numero + 1) if ultimo else 1
+        ciclo_ia = CicloInterarea.objects.create(nro_solicitudInterarea=solicitud, numero=numero)
+        _log(request, 'crear_ciclo_ia',
+             f'Ciclo inter-area #{numero} creado — solicitudIA #{nro_solicitud}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_201_CREATED)
+
+
+class SubirInformeAreaCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def post(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        if not user_can_manage_ciclo_ia(request.user, solicitud):
+            return Response({'error': 'No tiene permisos para esta solicitud inter-area.'}, status=status.HTTP_403_FORBIDDEN)
+        archivo = request.FILES.get('archivo')
+        tipo = request.data.get('tipo', 'parcial')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_editable_document(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo_ia.adjunto_informeArea = archivo
+        ciclo_ia.fecha_informeArea = timezone.now().date()
+        ciclo_ia.tipo = tipo
+        if ciclo_ia.rechazo_st_destino == 'area':
+            ciclo_ia.nota_rechazo_st = None
+            ciclo_ia.rechazo_st_destino = None
+        ciclo_ia.save()
+        _log(request, 'subir_informe_area_ia',
+             f'Informe de área inter-area #{ciclo_ia.numero} subido — solicitudIA #{solicitud.pk}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class SubirRegistroEnsayoCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def post(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        if not user_can_manage_ciclo_ia(request.user, solicitud):
+            return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        registro = RegistroEnsayoCicloIA.objects.create(ciclo_ia=ciclo_ia, archivo=archivo)
+        _log(request, 'subir_registro_ensayo_ia',
+             f'Registro de ensayo inter-area subido — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response({'id': registro.id, 'archivo': str(registro.archivo)}, status=status.HTTP_201_CREATED)
+
+
+class EliminarRegistroEnsayoCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaUser]
+
+    def delete(self, request, pk):
+        registro = get_object_or_404(RegistroEnsayoCicloIA, pk=pk)
+        solicitud = registro.ciclo_ia.nro_solicitudInterarea
+        if not user_can_manage_ciclo_ia(request.user, solicitud):
+            return Response({'error': 'No tiene permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        ciclo_ia = registro.ciclo_ia
+        registro.delete()
+        _log(request, 'eliminar_registro_ensayo_ia',
+             f'Registro de ensayo inter-area eliminado — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubirInformeServicioCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
+    def post(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_editable_document(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo_ia.adjunto_informeServicio = archivo
+        ciclo_ia.fecha_informeServicio = timezone.now().date()
+        ciclo_ia.save()
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        _log(request, 'subir_informe_servicio_ia',
+             f'Informe de servicio inter-area #{ciclo_ia.numero} subido — circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class GenerarPDFCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
+    def post(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        if not ciclo_ia.adjunto_informeServicio:
+            return Response({'error': 'No hay informe de servicio para convertir.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            pdf_bytes = _convertir_docx_a_pdf_bytes(ciclo_ia.adjunto_informeServicio.path)
+        except subprocess.CalledProcessError:
+            return Response(
+                {'error': 'Error al convertir el archivo. Verificá que LibreOffice esté instalado en el servidor.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except subprocess.TimeoutExpired:
+            return Response({'error': 'Tiempo de conversión agotado.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if ciclo_ia.adjunto_informeServicio_pdf:
+            ciclo_ia.adjunto_informeServicio_pdf.delete(save=False)
+
+        nombre_base = os.path.splitext(os.path.basename(ciclo_ia.adjunto_informeServicio.name))[0]
+        ciclo_ia.adjunto_informeServicio_pdf.save(
+            f'{nombre_base}.pdf',
+            ContentFile(pdf_bytes),
+            save=False,
+        )
+        ciclo_ia.pdf_confirmado_admin = True
+        ciclo_ia.save()
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        _log(request, 'generar_pdf_ia',
+             f'PDF inter-area generado — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class AdvertirCorreccionesCicloIA(APIView):
+    def put(self, request, ciclo_id):
+        correcciones_nuevas = request.data.get('correcciones')
+        if not correcciones_nuevas:
+            return Response({'error': 'Las correcciones son requeridas.'}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        ciclo_ia.correcciones = correcciones_nuevas
+        ciclo_ia.corregir = True
+        ciclo_ia.revision_confirmada = False
+        ciclo_ia.save()
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class CorregirCicloIA(APIView):
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        ciclo_ia.corregir = False
+        ciclo_ia.save()
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class ConfirmarRevisionCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        ciclo_ia.historial_correcciones.filter(estado='pendiente').update(estado='confirmada')
+        ciclo_ia.revision_confirmada = True
+        ciclo_ia.save()
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        _log(request, 'confirmar_revision_ia',
+             f'Revisión ST confirmada — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Revisión inter-area confirmada correctamente.'})
+
+
+class RechazarRevisionSTCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        destino = request.data.get('destino')
+        nota = request.data.get('nota', '').strip()
+        if destino not in ('administracion', 'area'):
+            return Response({'error': 'Destino inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not nota:
+            return Response({'error': 'La nota es requerida.'}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo_ia.nota_rechazo_st = nota
+        ciclo_ia.rechazo_st_destino = destino
+        ciclo_ia.revision_confirmada = False
+        if destino == 'administracion':
+            if ciclo_ia.adjunto_informeServicio_pdf:
+                ciclo_ia.adjunto_informeServicio_pdf.delete(save=False)
+                ciclo_ia.adjunto_informeServicio_pdf = None
+            ciclo_ia.pdf_confirmado_admin = False
+        ciclo_ia.save()
+        CorreccionIA.objects.create(
+            ciclo_ia=ciclo_ia,
+            tipo='st',
+            destinatario=destino,
+            descripcion=nota,
+            autor=request.user,
+        )
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        _log(request, 'rechazar_revision_st_ia',
+             f'Revisión ST inter-area rechazada → {destino} — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class SubirInformeSTCorregidoCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def post(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_editable_document(archivo)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        ciclo_ia.adjunto_informeServicio = archivo
+        ciclo_ia.save()
+        return Response(CicloInterareaSerializer(ciclo_ia).data, status=status.HTTP_200_OK)
+
+
+class ConfirmarFirmaResponsableAreaCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        solicitud = ciclo_ia.nro_solicitudInterarea
+
+        # Only the inter-area chief (inter_areaTematica) can sign
+        try:
+            if request.user.userprofile.rol not in PRIVILEGED_ROLES and \
+               request.user.userprofile.area_tematica != solicitud.inter_areaTematica:
+                return JsonResponse({'error': 'No tiene permisos para firmar este informe inter-area.'}, status=403)
+        except AttributeError:
+            return JsonResponse({'error': 'No tiene permisos.'}, status=403)
+
+        sig_bytes = None
+        profile = getattr(request.user, 'userprofile', None)
+        if profile and profile.firma:
+            sig_bytes = profile.firma.read()
+        else:
+            firma_b64 = request.data.get('firma_imagen', '')
+            if firma_b64:
+                _, data = firma_b64.split(',', 1)
+                sig_bytes = b64lib.b64decode(data)
+
+        if sig_bytes and ciclo_ia.adjunto_informeServicio_pdf:
+            try:
+                pdf_path = ciclo_ia.adjunto_informeServicio_pdf.path
+                doc = fitz.open(pdf_path)
+
+                for pg in doc:
+                    pw, ph = pg.rect.width, pg.rect.height
+                    sig_rect = fitz.Rect(15, ph - 150, 190, ph - 100)
+                    pg.insert_image(sig_rect, stream=sig_bytes)
+
+                page = doc[-1]
+                pw, ph = page.rect.width, page.rect.height
+                leyenda = (profile.leyenda.strip() if profile and profile.leyenda else '') or \
+                          f"{request.user.first_name} {request.user.last_name}".strip() or \
+                          request.user.username
+                page.insert_textbox(
+                    fitz.Rect(15, ph - 98, 190, ph - 72),
+                    leyenda,
+                    fontsize=7.5,
+                    align=fitz.TEXT_ALIGN_CENTER,
+                )
+
+                buf = BytesIO()
+                doc.save(buf)
+                doc.close()
+                buf.seek(0)
+
+                original_name = os.path.basename(ciclo_ia.adjunto_informeServicio_pdf.name)
+                nombre_base, ext = os.path.splitext(original_name)
+                ciclo_ia.adjunto_firmado_area.save(
+                    f"{nombre_base}_firmado_area{ext}",
+                    ContentFile(buf.read()),
+                    save=False,
+                )
+            except Exception:
+                logger.exception("Error al insertar firma de área inter-area en PDF")
+
+        ciclo_ia.firma_responsable_area = True
+        ciclo_ia.save()
+        _log(request, 'firma_responsable_area_ia',
+             f'Firma del responsable inter-area registrada — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Firma del responsable inter-area confirmada correctamente.'})
+
+
+class RechazarFirmaResponsableAreaCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        solicitud = ciclo_ia.nro_solicitudInterarea
+
+        try:
+            if request.user.userprofile.rol not in PRIVILEGED_ROLES and \
+               request.user.userprofile.area_tematica != solicitud.inter_areaTematica:
+                return JsonResponse({'error': 'No tiene permisos para rechazar este informe inter-area.'}, status=403)
+        except AttributeError:
+            return JsonResponse({'error': 'No tiene permisos.'}, status=403)
+
+        destino = request.data.get('destino', 'st')
+        nota = request.data.get('nota_rechazo', '')
+
+        if ciclo_ia.adjunto_firmado_area:
+            ciclo_ia.adjunto_firmado_area.delete(save=False)
+            ciclo_ia.adjunto_firmado_area = None
+        if ciclo_ia.adjunto_firmado_direccion:
+            ciclo_ia.adjunto_firmado_direccion.delete(save=False)
+            ciclo_ia.adjunto_firmado_direccion = None
+        if ciclo_ia.adjunto_informeServicio_pdf:
+            ciclo_ia.adjunto_informeServicio_pdf.delete(save=False)
+            ciclo_ia.adjunto_informeServicio_pdf = None
+        ciclo_ia.pdf_confirmado_admin = False
+        ciclo_ia.firma_responsable_area = False
+        ciclo_ia.firma_direccion = False
+        ciclo_ia.revision_confirmada = False
+        ciclo_ia.nota_rechazo_area = nota
+        ciclo_ia.rechazo_area_destino = destino
+        ciclo_ia.nota_rechazo_direccion = None
+        ciclo_ia.rechazo_destino = None
+        ciclo_ia.save()
+        if nota:
+            CorreccionIA.objects.create(
+                ciclo_ia=ciclo_ia,
+                tipo='area',
+                destinatario=destino,
+                descripcion=nota,
+                autor=request.user,
+            )
+        _log(request, 'rechazar_firma_area_ia',
+             f'Firma inter-area rechazada → {destino} — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Informe inter-area rechazado por responsable de área correctamente.'})
+
+
+class ConfirmarFirmaDireccionCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsDireccion]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+
+        sig_bytes = None
+        profile = getattr(request.user, 'userprofile', None)
+        if profile and profile.firma:
+            sig_bytes = profile.firma.read()
+        else:
+            firma_b64 = request.data.get('firma_imagen', '')
+            if firma_b64:
+                _, data = firma_b64.split(',', 1)
+                sig_bytes = b64lib.b64decode(data)
+
+        fuente = ciclo_ia.adjunto_firmado_area or ciclo_ia.adjunto_informeServicio_pdf
+        if sig_bytes and fuente:
+            try:
+                doc = fitz.open(fuente.path)
+                page = doc[-1]
+                pw, ph = page.rect.width, page.rect.height
+
+                sig_rect = fitz.Rect(pw - 190, ph - 150, pw - 15, ph - 100)
+                page.insert_image(sig_rect, stream=sig_bytes)
+
+                leyenda = (profile.leyenda.strip() if profile and profile.leyenda else '') or \
+                          f"{request.user.first_name} {request.user.last_name}".strip() or \
+                          request.user.username
+                page.insert_textbox(
+                    fitz.Rect(pw - 190, ph - 98, pw - 15, ph - 72),
+                    leyenda,
+                    fontsize=7.5,
+                    align=fitz.TEXT_ALIGN_CENTER,
+                )
+
+                buf = BytesIO()
+                doc.save(buf)
+                doc.close()
+                buf.seek(0)
+
+                original_name = os.path.basename(fuente.name)
+                nombre_base, _ = os.path.splitext(original_name)
+                ciclo_ia.adjunto_firmado_direccion.save(
+                    f"{nombre_base}_firmado_dir.pdf",
+                    ContentFile(buf.read()),
+                    save=False,
+                )
+            except Exception:
+                logger.exception("Error al insertar firma de dirección inter-area en PDF")
+
+        ciclo_ia.firma_direccion = True
+        ciclo_ia.save()
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        _log(request, 'firma_direccion_ia',
+             f'Firma de Dirección inter-area registrada — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Firma de Dirección inter-area confirmada correctamente.'})
+
+
+class RechazarFirmaDireccionCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsDireccion]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        destino = request.data.get('destino', 'st')
+        nota = request.data.get('nota_rechazo', '')
+
+        if ciclo_ia.adjunto_firmado_area:
+            ciclo_ia.adjunto_firmado_area.delete(save=False)
+            ciclo_ia.adjunto_firmado_area = None
+        if ciclo_ia.adjunto_firmado_direccion:
+            ciclo_ia.adjunto_firmado_direccion.delete(save=False)
+            ciclo_ia.adjunto_firmado_direccion = None
+        if ciclo_ia.adjunto_informeServicio_pdf:
+            ciclo_ia.adjunto_informeServicio_pdf.delete(save=False)
+            ciclo_ia.adjunto_informeServicio_pdf = None
+        ciclo_ia.pdf_confirmado_admin = False
+        ciclo_ia.firma_direccion = False
+        ciclo_ia.firma_responsable_area = False
+        ciclo_ia.revision_confirmada = False
+
+        if destino == 'area':
+            if ciclo_ia.adjunto_informeServicio:
+                ciclo_ia.adjunto_informeServicio.delete(save=False)
+                ciclo_ia.adjunto_informeServicio = None
+            if ciclo_ia.adjunto_informeArea:
+                ciclo_ia.adjunto_informeArea.delete(save=False)
+                ciclo_ia.adjunto_informeArea = None
+            for registro in ciclo_ia.registros_ensayo.all():
+                registro.archivo.delete(save=False)
+                registro.delete()
+
+        ciclo_ia.nota_rechazo_direccion = nota
+        ciclo_ia.rechazo_destino = destino
+        ciclo_ia.save()
+        if nota:
+            CorreccionIA.objects.create(
+                ciclo_ia=ciclo_ia,
+                tipo='direccion',
+                destinatario=destino,
+                descripcion=nota,
+                autor=request.user,
+            )
+        solicitud = ciclo_ia.nro_solicitudInterarea
+        _log(request, 'rechazar_firma_direccion_ia',
+             f'Firma de Dirección inter-area rechazada → {destino} — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Informe inter-area rechazado por Dirección correctamente.'})
 
 
 class ArchivarCircuito(APIView):

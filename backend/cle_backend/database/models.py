@@ -388,6 +388,68 @@ class RegistroEnsayoCiclo(models.Model):
         ordering = ['fecha']
 
 
+class CicloInterarea(models.Model):
+    nro_solicitudInterarea = models.ForeignKey('SolicitudInterarea', on_delete=models.CASCADE, related_name='ciclos')
+    numero = models.PositiveIntegerField(default=1)
+    tipo = models.CharField(choices=TIPO_CICLO_CHOICES, max_length=20, default='parcial')
+
+    adjunto_informeArea = models.FileField(upload_to='informes_ia_area/', null=True, blank=True)
+    fecha_informeArea = models.DateField(null=True, blank=True)
+
+    adjunto_informeServicio = models.FileField(upload_to='informes_ia_servicio/', null=True, blank=True)
+    fecha_informeServicio = models.DateField(null=True, blank=True)
+    adjunto_informeServicio_pdf = models.FileField(upload_to='informes_ia_pdf/', null=True, blank=True)
+    pdf_confirmado_admin = models.BooleanField(default=False)
+
+    correcciones = models.TextField(max_length=2500, null=True, blank=True)
+    corregir = models.BooleanField(default=False)
+    revision_confirmada = models.BooleanField(default=False)
+
+    nota_rechazo_st = models.TextField(null=True, blank=True)
+    rechazo_st_destino = models.CharField(max_length=20, null=True, blank=True)
+    nota_rechazo_area = models.TextField(null=True, blank=True)
+    rechazo_area_destino = models.CharField(max_length=20, null=True, blank=True)
+    nota_rechazo_direccion = models.TextField(null=True, blank=True)
+    rechazo_destino = models.CharField(max_length=20, null=True, blank=True)
+
+    firma_responsable_area = models.BooleanField(default=False)
+    adjunto_firmado_area = models.FileField(upload_to='informes_ia_firmados/', null=True, blank=True)
+    firma_direccion = models.BooleanField(default=False)
+    adjunto_firmado_direccion = models.FileField(upload_to='informes_ia_firmados/', null=True, blank=True)
+
+    class Meta:
+        ordering = ['numero']
+
+    def __str__(self):
+        return f"CicloIA {self.numero} ({self.tipo}) - SolicitudIA #{self.nro_solicitudInterarea_id}"
+
+
+class RegistroEnsayoCicloIA(models.Model):
+    ciclo_ia = models.ForeignKey(CicloInterarea, on_delete=models.CASCADE, related_name='registros_ensayo')
+    archivo = models.FileField(upload_to='registros_ensayo_ia/')
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['fecha']
+
+
+class CorreccionIA(models.Model):
+    TIPO_CHOICES = [('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
+    DEST_CHOICES = [('administracion', 'Administración'), ('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
+    ESTADO_CHOICES = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada')]
+
+    ciclo_ia = models.ForeignKey(CicloInterarea, on_delete=models.CASCADE, related_name='historial_correcciones')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    destinatario = models.CharField(max_length=20, choices=DEST_CHOICES, default='administracion')
+    descripcion = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    autor = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ['fecha']
+
+
 class Correccion(models.Model):
     TIPO_CHOICES = [('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
     DEST_CHOICES = [('administracion', 'Administración'), ('st', 'ST'), ('area', 'Área'), ('direccion', 'Dirección')]
