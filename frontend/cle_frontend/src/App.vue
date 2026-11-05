@@ -71,6 +71,13 @@ export default {
     const EVENTOS_ACTIVIDAD = ['click', 'keydown', 'touchstart', 'mousemove'];
     let intervaloCheck = null;
 
+    const handleRowSelection = (e) => {
+      const tr = e.target.closest('tbody tr');
+      if (!tr) return;
+      document.querySelectorAll('tr.row-selected').forEach(r => r.classList.remove('row-selected'));
+      tr.classList.add('row-selected');
+    };
+
     onMounted(() => {
       document.title = "Circuito Legajo Electronico";
       registrarActividad();
@@ -82,6 +89,7 @@ export default {
         checkTokenExpiry();
         checkInactividad();
       }, 60000);
+      document.addEventListener('click', handleRowSelection);
     });
 
     onUnmounted(() => {
@@ -89,6 +97,7 @@ export default {
         document.removeEventListener(ev, registrarActividad)
       );
       clearInterval(intervaloCheck);
+      document.removeEventListener('click', handleRowSelection);
     });
 
     return {
@@ -162,6 +171,9 @@ body {
   font-size: 0.72em;
   opacity: 0.75;
   margin-left: 3px;
+}
+tr.row-selected td {
+  background-color: #cce8f4 !important;
 }
 
 .custom-shadow-btn {
