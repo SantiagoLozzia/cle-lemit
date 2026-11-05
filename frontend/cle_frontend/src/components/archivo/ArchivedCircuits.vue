@@ -1,6 +1,8 @@
 <template>
   <div class="archivo-container">
 
+    <PageHeader title="Circuitos archivados" :subtitle="sortedArchivados.length + ' registros'" icon="bi bi-archive-fill" />
+
     <!-- Filtros -->
     <div class="filter-bar mb-3 d-flex flex-wrap align-items-center gap-2">
       <input
@@ -35,7 +37,6 @@
         @click="clearFilters"
         class="btn btn-sm btn-outline-secondary"
       >✕ Limpiar</button>
-      <span class="ms-auto text-muted small">{{ sortedArchivados.length }} registros</span>
     </div>
 
     <!-- Tabla -->
@@ -228,8 +229,10 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api.js';
 import { AREAS_TEMATICAS } from '@/constants/areas.js';
+import PageHeader from '@/components/PageHeader.vue';
 
 export default {
+  components: { PageHeader },
   setup() {
     const archivados = ref([]);
     const uniqueAreas = AREAS_TEMATICAS;

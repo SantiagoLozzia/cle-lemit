@@ -379,14 +379,20 @@ body {
   margin-top: 10px;
 }
 
-.alert-success {
-  position: fixed !important;
-  width: 100%;
-}
-
+.alert-success,
 .alert-danger {
   position: fixed !important;
-  width: 100%;
+  top: 135px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  min-width: 300px;
+  max-width: 520px;
+  z-index: 1200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  border-radius: 8px !important;
+  text-align: center;
+  padding: 12px 24px;
 }
 
 .form-select {

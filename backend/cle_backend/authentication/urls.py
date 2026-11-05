@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, MyTokenObtainPairView, NombreYApellidoUser, FirmaUsuario
+from .views import UserViewSet, MyTokenObtainPairView, NombreYApellidoUser, FirmaUsuario, LeyendaUsuario
 
 # Crea un enrutador y regístralo con el UserViewSet
 router = DefaultRouter()
@@ -11,6 +11,7 @@ urlpatterns = [
     path('', MyTokenObtainPairView.as_view(), name='token-obtain-pair'),
     path('user_info/', NombreYApellidoUser.as_view(), name='nombre-y-apellido-user'),
     path('firma_usuario/', FirmaUsuario.as_view(), name='firma-usuario'),
+    path('leyenda_usuario/', LeyendaUsuario.as_view(), name='leyenda-usuario'),
 
     # Rutas para los usuarios gestionados por el enrutador
     path('users/', include(router.urls)),

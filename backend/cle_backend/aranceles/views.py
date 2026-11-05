@@ -38,7 +38,7 @@ def obtener_modulo(request):
 @api_view(['POST'])
 def actualizar_modulo(request):
     rol = getattr(getattr(request.user, 'userprofile', None), 'rol', None)
-    if rol not in ('administracion', 'direccion'):
+    if rol not in ('administracion', 'direccion', 'servicios_tecnologicos'):
         return JsonResponse({'error': 'No tiene permisos para actualizar el módulo.'}, status=403)
 
     try:

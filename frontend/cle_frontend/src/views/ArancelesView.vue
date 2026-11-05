@@ -4,7 +4,7 @@
       <UpdateModule />
       <NewService @arancel-creado="fetchAranceles" />
     </div>
-    <ArancelesTable :data="arancelesData" />
+    <ArancelesTable :data="arancelesData" @arancel-editado="fetchAranceles" />
   </div>
 </template>
 

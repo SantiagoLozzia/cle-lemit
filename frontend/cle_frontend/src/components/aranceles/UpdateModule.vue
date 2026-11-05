@@ -14,12 +14,14 @@
             <div v-if="success" class="alert alert-success">{{ success }}</div>
             <div class="mb-3">
               <label for="nuevoModulo" class="form-label">Nuevo valor del módulo</label>
-              <input v-model.number="nuevoModulo" id="nuevoModulo" type="number" class="form-control" />
+              <input v-model.number="nuevoModulo" id="nuevoModulo" type="number" min="1" class="form-control" />
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" @click="actualizarModulo">Actualizar</button>
-            <button type="button" class="btn btn-secondary" @click="cerrarModal">Cerrar</button>
+          <div class="modal-footer" style="gap:8px">
+            <button type="button" class="btn btn-primary" style="flex:1" :disabled="!nuevoModulo || guardando" @click="actualizarModulo">
+              {{ guardando ? 'Actualizando...' : 'Actualizar' }}
+            </button>
+            <button type="button" class="btn btn-secondary" style="flex:1" @click="cerrarModal">Cerrar</button>
           </div>
         </div>
       </div>
@@ -37,6 +39,7 @@ export default {
     const mostrarModal = ref(false);
     const error = ref('');
     const success = ref('');
+    const guardando = ref(false);
 
     const abrirModal = () => {
       nuevoModulo.value = null;
@@ -50,30 +53,43 @@ export default {
     };
 
     const actualizarModulo = async () => {
+      if (!nuevoModulo.value || nuevoModulo.value <= 0) {
+        error.value = 'Ingresá un valor válido mayor a 0.';
+        return;
+      }
+      guardando.value = true;
+      error.value = '';
       try {
-        const response = await api.post('/aranceles/actualizar_modulo/', {
-          nuevo_valor: nuevoModulo.value,
-        });
-        if (response.data.success) {
-          success.value = 'El módulo se actualizó correctamente.';
-          error.value = '';
-        } else {
-          error.value = 'Hubo un error al actualizar el módulo.';
-          success.value = '';
-        }
+        await api.post('/aranceles/actualizar_modulo/', { nuevo_valor: nuevoModulo.value });
+        success.value = 'Módulo actualizado correctamente.';
         setTimeout(() => {
           success.value = '';
-          error.value = '';
           cerrarModal();
-        }, 2000);
+        }, 1800);
       } catch (err) {
-        error.value = 'Hubo un error al contactar al servidor.';
-        success.value = '';
+        error.value = err.response?.data?.error || 'Error al contactar al servidor.';
         setTimeout(() => { error.value = ''; }, 3000);
+      } finally {
+        guardando.value = false;
       }
     };
 
-    return { nuevoModulo, mostrarModal, error, success, abrirModal, cerrarModal, actualizarModulo };
+    return { nuevoModulo, mostrarModal, error, success, guardando, abrirModal, cerrarModal, actualizarModulo };
   },
 };
 </script>
+
+<style scoped>
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

@@ -58,7 +58,25 @@ class FirmaUsuario(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class LeyendaUsuario(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def _get_profile(self, user):
+        from database.models import UserProfile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        return profile
+
+    def get(self, request):
+        profile = self._get_profile(request.user)
+        return Response({'leyenda': profile.leyenda or ''})
+
+    def post(self, request):
+        leyenda = request.data.get('leyenda', '').strip()
+        profile = self._get_profile(request.user)
+        profile.leyenda = leyenda
+        profile.save(update_fields=['leyenda'])
+        return Response({'leyenda': profile.leyenda})
+
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
-    
-

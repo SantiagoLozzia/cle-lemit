@@ -5,7 +5,7 @@
     </div>
     <div class="user-info" v-if="userLoaded">
       <span>{{ fullName }}</span>
-      <i class="bi bi-pen-fill firma-icon" @click="abrirModalFirma" title="Mi firma"></i>
+      <i class="bi bi-pen-fill firma-icon" @click="abrirModalFirma" title="Mi firma y leyenda"></i>
       <i class="bi bi-box-arrow-in-right logout-icon" @click="logout"></i>
     </div>
   </header>
@@ -15,24 +15,45 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Mi Firma</h5>
+          <h5 class="modal-title">Mi Firma y Leyenda</h5>
           <button type="button" class="btn-close" @click="cerrarModalFirma"></button>
         </div>
         <div class="modal-body">
-          <div v-if="firmaUrl" class="text-center mb-3">
-            <p class="text-muted small mb-1">Firma actual:</p>
+
+          <!-- Firma imagen -->
+          <p class="fw-semibold mb-1" style="font-size:0.85rem">Imagen de firma</p>
+          <div v-if="firmaUrl" class="text-center mb-2">
             <img :src="firmaUrl" alt="Mi firma" style="max-width:100%; max-height:120px; border:1px solid #dee2e6; border-radius:4px; background:#fafafa; padding:8px;">
           </div>
-          <div v-else class="text-muted small text-center mb-3">
+          <div v-else class="text-muted small text-center mb-2">
             No tenés ninguna firma cargada.
           </div>
-          <label class="btn btn-outline-primary btn-sm w-100">
-            <i class="bi bi-upload"></i> {{ firmaUrl ? 'Reemplazar firma' : 'Subir firma (PNG)' }}
+          <label class="btn btn-outline-primary btn-sm w-100 mb-1">
+            <i class="bi bi-upload"></i> {{ firmaUrl ? 'Reemplazar firma' : 'Subir firma (PNG/JPG)' }}
             <input type="file" accept="image/png,image/jpeg" style="display:none;" @change="subirFirma">
           </label>
-          <button v-if="firmaUrl" class="btn btn-outline-danger btn-sm w-100 mt-2" @click="eliminarFirma">
+          <button v-if="firmaUrl" class="btn btn-outline-danger btn-sm w-100 mb-3" @click="eliminarFirma">
             <i class="bi bi-trash"></i> Eliminar firma
           </button>
+
+          <hr class="my-2">
+
+          <!-- Leyenda -->
+          <p class="fw-semibold mb-1" style="font-size:0.85rem">Leyenda bajo la firma</p>
+          <p class="text-muted small mb-2">Texto que aparece debajo de tu firma en los informes firmados.</p>
+          <textarea
+            v-model="leyendaTexto"
+            class="form-control form-control-sm mb-2"
+            rows="2"
+            placeholder="Ej: Ing. Gustavo Veloso"
+            maxlength="200"
+          ></textarea>
+          <div v-if="leyendaGuardada" class="alert alert-success py-1 small mb-2">Leyenda guardada.</div>
+          <div v-if="errorLeyenda" class="alert alert-danger py-1 small mb-2">{{ errorLeyenda }}</div>
+          <button class="btn btn-primary btn-sm w-100" :disabled="guardandoLeyenda" @click="guardarLeyenda">
+            {{ guardandoLeyenda ? 'Guardando...' : 'Guardar leyenda' }}
+          </button>
+
         </div>
       </div>
     </div>
@@ -54,13 +75,18 @@ export default {
     const mostrarModalFirma = ref(false);
     const firmaUrl = ref(null);
 
+    const leyendaTexto     = ref('');
+    const guardandoLeyenda = ref(false);
+    const leyendaGuardada  = ref(false);
+    const errorLeyenda     = ref('');
+
     const fullName = computed(() => {
       return firstName.value || lastName.value ? `${firstName.value} ${lastName.value}` : 'Invitado';
     });
 
     const loadUserFromSession = () => {
       firstName.value = sessionStorage.getItem('first_name') || '';
-      lastName.value = sessionStorage.getItem('last_name') || '';
+      lastName.value  = sessionStorage.getItem('last_name')  || '';
       userLoaded.value = true;
     };
 
@@ -68,11 +94,20 @@ export default {
       try {
         const res = await api.get('/auth/firma_usuario/');
         firmaUrl.value = res.data.firma_url || null;
-      } catch (e) { /* silenciar error de red */ }
+      } catch (e) { /* silenciar */ }
+    };
+
+    const cargarLeyenda = async () => {
+      try {
+        const res = await api.get('/auth/leyenda_usuario/');
+        leyendaTexto.value = res.data.leyenda || '';
+      } catch (e) { /* silenciar */ }
     };
 
     const abrirModalFirma = async () => {
-      await cargarFirma();
+      await Promise.all([cargarFirma(), cargarLeyenda()]);
+      leyendaGuardada.value = false;
+      errorLeyenda.value = '';
       mostrarModalFirma.value = true;
     };
 
@@ -92,7 +127,6 @@ export default {
         firmaUrl.value = res.data.firma_url;
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: res.data.firma_url } }));
       } catch (err) {
-        console.error('Error al subir firma:', err.response?.data || err.message);
         alert('Error al subir la firma: ' + (err.response?.data?.error || err.message));
       }
       e.target.value = '';
@@ -103,7 +137,21 @@ export default {
         await api.delete('/auth/firma_usuario/');
         firmaUrl.value = null;
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: null } }));
-      } catch (e) { /* silenciar error de red */ }
+      } catch (e) { /* silenciar */ }
+    };
+
+    const guardarLeyenda = async () => {
+      guardandoLeyenda.value = true;
+      errorLeyenda.value = '';
+      try {
+        await api.post('/auth/leyenda_usuario/', { leyenda: leyendaTexto.value });
+        leyendaGuardada.value = true;
+        setTimeout(() => { leyendaGuardada.value = false; }, 2500);
+      } catch (err) {
+        errorLeyenda.value = 'Error al guardar la leyenda.';
+      } finally {
+        guardandoLeyenda.value = false;
+      }
     };
 
     const logout = () => {
@@ -128,6 +176,7 @@ export default {
       logoPath, fullName, logout, userLoaded,
       mostrarModalFirma, firmaUrl,
       abrirModalFirma, cerrarModalFirma, subirFirma, eliminarFirma,
+      leyendaTexto, guardandoLeyenda, leyendaGuardada, errorLeyenda, guardarLeyenda,
     };
   }
 };
@@ -174,4 +223,18 @@ export default {
   transition: color 0.3s;
 }
 .logout-icon:hover { color: #ddd; }
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1100;
+}
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
