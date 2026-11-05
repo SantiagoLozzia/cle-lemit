@@ -1,5 +1,6 @@
 <template>
   <div class="cancelados-container">
+    <PageHeader title="Presupuestos descartados" :subtitle="sortedPresupuestos.length + ' presupuestos'" icon="bi bi-x-circle-fill" />
     <div class="table-container">
       <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
         <select v-model="filterArea" class="form-select form-select-sm w-auto">
@@ -36,31 +37,12 @@
             <td class="text-left">{{ presupuesto.nombre_solicitante }}</td>
             <td>{{ presupuesto.area_tematica }}</td>
             <td>{{ presupuesto.estado_presupuesto }}</td>
-            <td class="text-left motivo-cell" :title="presupuesto.motivo_cancelacion">{{ presupuesto.motivo_cancelacion || '—' }}</td>
+            <td class="text-left motivo-cell" :title="presupuesto.motivo_descarte_label">{{ presupuesto.motivo_descarte_label || '—' }}</td>
             <td><i class="bi bi-file-earmark-check-fill text-success"  style="cursor: pointer;" @click="abrirPresupuesto(presupuesto.nro_presupuesto)"></i></td>
             <td>
-              <div class="acciones">
-                <button @click="mostrarMenu(index)" class="btn btn-link"><i class="bi bi-arrow-right-square"></i></button>
-                <div v-if="presupuesto.mostrarMenu" class="menu">
-                  <select v-model="presupuesto.nuevoEstado" class="form-select">
-                      <option value="" disabled>— Seleccionar —</option>
-                      <option value="en_espera">En Espera</option>
-                      <option value="rechazado">Rechazado</option>
-                      <option value="modificado">Modificado</option>
-                      <option value="actualizado">Actualizado</option>
-                  </select>
-                  <textarea
-                    v-if="['rechazado','modificado','actualizado'].includes(presupuesto.nuevoEstado)"
-                    v-model="presupuesto.motivo"
-                    class="form-control mt-1"
-                    rows="2"
-                    placeholder="Motivo (requerido)..."
-                    style="min-width:200px"
-                  ></textarea>
-                  <button @click="cambiarEstado(presupuesto)" class="btn btn-primary mt-1">Guardar</button>
-                  <button @click="cerrarMenu(index)" class="btn btn-danger mt-1">✖</button>
-                </div>
-              </div>
+              <button @click="reactivarPresupuesto(presupuesto)" class="btn btn-sm btn-outline-success" title="Reactivar presupuesto">
+                <i class="bi bi-arrow-counterclockwise"></i>
+              </button>
             </td>
           </tr>
           <!-- Fila para mensaje cuando no hay datos -->
@@ -77,9 +59,9 @@
       <div class="modal-dialog-a4">
         <div class="modal-content">
           <!-- Modal Header -->
-          <div class="modal-header">
-            <div class="modal-logo"></div>
-            <div class="d-flex align-items-center gap-2 no-print">
+          <div class="modal-header" style="flex-direction: column; align-items: stretch; gap: 6px;">
+            <ISOHeader :config="configFormularioPresupuesto" :versionDoc="versionPresupuesto" />
+            <div class="d-flex justify-content-end gap-2 no-print">
               <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirPresupuesto" title="Imprimir / Guardar como PDF">
                 <i class="bi bi-printer"></i>
               </button>
@@ -174,12 +156,36 @@
                 <input v-model="observacionesPresupuesto" type="text" class="form-control" id="observacionesPresupuesto" name="observacionesPresupuesto" readonly />
               </div>
 
-              <div v-if="motivoCancelacionPresupuesto" class="mb-3">
-                <label class="form-label text-left fw-bold text-danger">Motivo de cancelación:</label>
-                <p class="form-control-plaintext border rounded px-2 py-1">{{ motivoCancelacionPresupuesto }}</p>
+              <div v-if="motivoDescartePresupuesto" class="mb-3">
+                <label class="form-label text-left fw-bold text-danger">Motivo de descarte:</label>
+                <p class="form-control-plaintext border rounded px-2 py-1">{{ motivoDescartePresupuesto }}</p>
               </div>
 
             </form>
+          </div>
+          <!-- Historial de revisiones del formulario -->
+          <div v-if="configFormularioPresupuesto.revisiones && configFormularioPresupuesto.revisiones.length" class="revision-history-wrapper">
+            <table class="revision-history-table">
+              <thead>
+                <tr>
+                  <th colspan="4" class="revision-title">Historial de Revisiones</th>
+                </tr>
+                <tr>
+                  <th>Versión</th>
+                  <th>Fecha</th>
+                  <th>Descripción</th>
+                  <th>Aprobado por</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="rev in configFormularioPresupuesto.revisiones" :key="rev.version">
+                  <td class="text-center">{{ rev.version }}</td>
+                  <td class="text-center">{{ rev.fecha }}</td>
+                  <td>{{ rev.descripcion }}</td>
+                  <td>{{ rev.aprobado_por }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <!-- Modal Footer -->
           <div class="modal-footer-a4">
@@ -195,8 +201,11 @@
 import { ref, computed, onMounted } from 'vue';
 import api from '@/api.js';
 import { AREAS_TEMATICAS } from '@/constants/areas.js';
+import PageHeader from '@/components/PageHeader.vue';
+import ISOHeader from '@/components/ISOHeader.vue';
 
 export default {
+  components: { PageHeader, ISOHeader },
   setup() {
       const presupuestos = ref([]);
 
@@ -246,23 +255,21 @@ export default {
       const descuentoPresupuesto = ref();
       const arancelPresupuesto = ref();
       const observacionesPresupuesto = ref();
-      const motivoCancelacionPresupuesto = ref();
+      const motivoDescartePresupuesto = ref('');
       const detallesPresupuesto = ref();
+      const versionPresupuesto = ref('01');
+      const configFormularioPresupuesto = ref({ nombre: '', codigo: '', version_actual: '', fecha_version_actual: '', revisiones: [] });
 
       const mostrarModalPresupuesto = ref(false);
 
       const fetchPresupuestos = async () => {
           try {
           const response = await api.get('/presupuestos/cancelados/');
-          // Formatear los datos antes de asignarlos a presupuestos.value
           presupuestos.value = response.data.map(presupuesto => ({
               ...presupuesto,
               fecha: formatDate(presupuesto.fecha_presupuesto),
               area_tematica: formatAreaTematica(presupuesto.area_tematica),
               estado_presupuesto: formatEstadoPresupuesto(presupuesto.estado_presupuesto),
-              mostrarMenu: false,
-              nuevoEstado: '',
-              motivo: '',
           }));
           } catch (error) {
           console.error('Error al obtener presupuestos:', error);
@@ -285,34 +292,35 @@ export default {
           return estadoPresupuesto.replace(/_/g, ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
       };
 
-      const abrirPresupuesto = (nro_presupuesto) => {
-        api.get(`/presupuestos/obtener_presupuesto/${nro_presupuesto}/`)
-            .then(response => {
-                // Obtener los datos del presupuesto de la respuesta
-                const { nro_presupuesto, fecha_presupuesto, contacto, telefono, telefono2, email, email2, area_tematica, subtotal, descuento, arancel_presupuesto, observaciones, motivo_cancelacion, nro_solicitante, nombre_solicitante, detalles_presupuesto  } = response.data;
-
-                nroPresupuesto.value = nro_presupuesto;
-                fechaPresupuesto.value = formatDate(fecha_presupuesto);
-                nroSolicitantePresupuesto.value = nro_solicitante;
-                solicitantePresupuesto.value = nombre_solicitante;
-                contactoPresupuesto.value = contacto;
-                telefonoPresupuesto.value = telefono;
-                telefono2Presupuesto.value = telefono2;
-                emailPresupuesto.value = email;
-                email2Presupuesto.value = email2;
-                areaPresupuesto.value = formatAreaTematica(area_tematica);
-                subTotalPresupuesto.value = formatArancel(subtotal);
-                descuentoPresupuesto.value = descuento;
-                arancelPresupuesto.value = formatArancel(arancel_presupuesto);
-                observacionesPresupuesto.value = observaciones;
-                motivoCancelacionPresupuesto.value = motivo_cancelacion;
-                detallesPresupuesto.value = detalles_presupuesto;
-
-                mostrarModalPresupuesto.value = true;
-            })
-            .catch(error => {
-                console.error('Error al obtener los datos del legajo:', error);
-            });
+      const abrirPresupuesto = async (nro_presupuesto) => {
+        try {
+          const [resPresupuesto, resConfig] = await Promise.all([
+            api.get(`/presupuestos/obtener_presupuesto/${nro_presupuesto}/`),
+            api.get('/encurso/config_formulario/presupuesto/'),
+          ]);
+          const { nro_presupuesto: nro, fecha_presupuesto, contacto, telefono, telefono2, email, email2, area_tematica, subtotal, descuento, arancel_presupuesto, observaciones, nro_solicitante, nombre_solicitante, detalles_presupuesto, version_formulario } = resPresupuesto.data;
+          nroPresupuesto.value = nro;
+          fechaPresupuesto.value = formatDate(fecha_presupuesto);
+          nroSolicitantePresupuesto.value = nro_solicitante;
+          solicitantePresupuesto.value = nombre_solicitante;
+          contactoPresupuesto.value = contacto;
+          telefonoPresupuesto.value = telefono;
+          telefono2Presupuesto.value = telefono2;
+          emailPresupuesto.value = email;
+          email2Presupuesto.value = email2;
+          areaPresupuesto.value = formatAreaTematica(area_tematica);
+          subTotalPresupuesto.value = formatArancel(subtotal);
+          descuentoPresupuesto.value = descuento;
+          arancelPresupuesto.value = formatArancel(arancel_presupuesto);
+          observacionesPresupuesto.value = observaciones;
+          motivoDescartePresupuesto.value = resPresupuesto.data.motivo_descarte || '';
+          detallesPresupuesto.value = detalles_presupuesto;
+          versionPresupuesto.value = version_formulario || '01';
+          configFormularioPresupuesto.value = resConfig.data;
+          mostrarModalPresupuesto.value = true;
+        } catch (error) {
+          console.error('Error al obtener los datos del presupuesto:', error);
+        }
       };
 
       const cerrarModalPresupuesto = () => {
@@ -332,49 +340,19 @@ export default {
           }
       };
 
-      // Función para mostrar u ocultar el menú desplegable
-      const mostrarMenu = (index) => {
-          presupuestos.value.forEach((presupuesto, i) => {
-          if (i === index) {
-              presupuesto.mostrarMenu = !presupuesto.mostrarMenu;
-          } else {
-              presupuesto.mostrarMenu = false;
+      const reactivarPresupuesto = async (presupuesto) => {
+          if (!confirm(`¿Reactivar el presupuesto N° ${presupuesto.nro_presupuesto}? Volverá a la solapa Nuevos.`)) return;
+          try {
+              const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, {
+                  estado_presupuesto: 'en_espera',
+              });
+              if (response.status === 200) {
+                  fetchPresupuestos();
+              }
+          } catch (error) {
+              console.error('Error al reactivar el presupuesto:', error);
           }
-          });
       };
-
-      const cerrarMenu = (index) => {
-          presupuestos.value[index].mostrarMenu = false;
-          presupuestos.value[index].nuevoEstado = '';
-          presupuestos.value[index].motivo = '';
-      };
-
-      const ESTADOS_CANCELADOS = ['rechazado', 'modificado', 'actualizado'];
-
-      const cambiarEstado = async (presupuesto) => {
-            if (!presupuesto.nuevoEstado) return;
-            if (ESTADOS_CANCELADOS.includes(presupuesto.nuevoEstado) && !presupuesto.motivo.trim()) {
-                alert('Por favor, ingresá un motivo para este cambio de estado.');
-                return;
-            }
-            try {
-                const payload = { estado_presupuesto: presupuesto.nuevoEstado };
-                if (ESTADOS_CANCELADOS.includes(presupuesto.nuevoEstado)) {
-                    payload.motivo_cancelacion = presupuesto.motivo.trim();
-                }
-                const response = await api.put(`/presupuestos/actualizar_estado/${presupuesto.nro_presupuesto}/`, payload);
-        
-                // Verificar si la actualización fue exitosa
-                if (response.status === 200) {
-                console.log('Estado del presupuesto actualizado correctamente:', presupuesto.nuevoEstado);
-                fetchPresupuestos();
-                } else {
-                console.error('Error al actualizar el estado del presupuesto:', response.statusText);
-                }
-            } catch (error) {
-                console.error('Error al cambiar el estado del presupuesto:', error);
-            }
-        };
 
       onMounted(fetchPresupuestos); // Utilizamos onMounted para llamar a fetchPresupuestos en la creación del componente
   
@@ -396,18 +374,18 @@ export default {
         nroSolicitantePresupuesto,
         solicitantePresupuesto,
         observacionesPresupuesto,
-        motivoCancelacionPresupuesto,
+        motivoDescartePresupuesto,
         detallesPresupuesto,
+        versionPresupuesto,
+        configFormularioPresupuesto,
         formatDate,
         formatAreaTematica,
         formatArancel,
         mostrarModalPresupuesto,
         cerrarModalPresupuesto,
         imprimirPresupuesto,
-        mostrarMenu,
-        cambiarEstado,
-        cerrarMenu,
         abrirPresupuesto,
+        reactivarPresupuesto,
       };
   }
 };
@@ -466,7 +444,40 @@ export default {
 }
 
 .info-contenedor span {
-  margin-right: 1rem; /* Espacio entre los elementos */
-  /* O usa `margin-right: 0.5rem;` para espacio más pequeño */
+  margin-right: 1rem;
+}
+
+.revision-history-wrapper {
+  padding: 0 1rem 0.5rem;
+}
+
+.revision-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  margin-top: 12px;
+}
+
+.revision-history-table th,
+.revision-history-table td {
+  border: 1px solid #aaa;
+  padding: 3px 6px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.revision-history-table th {
+  background-color: #e8f0f7 !important;
+  color: #333 !important;
+  font-weight: 600;
+}
+
+.revision-title {
+  text-align: center !important;
+  font-weight: 700;
+  background-color: #cfe0f0 !important;
+  color: #1a3a5c !important;
+  padding: 4px !important;
+  font-size: 0.75rem;
 }
 </style>

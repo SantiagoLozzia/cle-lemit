@@ -12,6 +12,7 @@ import LoginView from '@/views/LoginView.vue';
 import EnEsperaView from '@/views/SubmenuPresupuestos/EnEsperaView.vue';
 import AceptadosView from '@/views/SubmenuPresupuestos/AceptadosView.vue';
 import CanceladosView from '@/views/SubmenuPresupuestos/CanceladosView.vue';
+import HistorialView from '@/views/SubmenuPresupuestos/HistorialView.vue';
 
 // Función para verificar si el usuario está autenticado
 function isAuthenticated() {
@@ -25,13 +26,17 @@ const routes = [
   { path: '/', component: EnCursoView, meta: { requiresAuth: true } },
   { path: '/encurso', component: EnCursoView, meta: { requiresAuth: true } },
   { path: '/aranceles', component: ArancelesView, meta: { requiresAuth: true } },
-  { path: '/presupuestos', 
+  { path: '/presupuestos',
     component: PresupuestosView,
     meta: { requiresAuth: true },
+    redirect: '/presupuestos/nuevos',
     children: [
-      { path: 'enespera', component: EnEsperaView, meta: { requiresAuth: true } },
+      { path: 'nuevos', component: EnEsperaView, meta: { requiresAuth: true } },
+      { path: 'enespera', redirect: '/presupuestos/nuevos' },
       { path: 'aceptados', component: AceptadosView, meta: { requiresAuth: true } },
-      { path: 'cancelados', component: CanceladosView, meta: { requiresAuth: true } }
+      { path: 'descartados', component: CanceladosView, meta: { requiresAuth: true } },
+      { path: 'cancelados', redirect: '/presupuestos/descartados' },
+      { path: 'historial', component: HistorialView, meta: { requiresAuth: true } }
     ]
   },
   { path: '/archivo', component: ArchivoView, meta: { requiresAuth: true } },

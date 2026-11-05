@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PresupuestoListView, PresupuestoDetailView, obtener_todos_los_presupuestos, buscar_solicitantes, seleccionar_solicitante, buscar_servicios, seleccionar_servicio, presupuestos_enEspera, actualizar_estado_presupuesto, presupuestos_cancelados, presupuestos_aceptados, obtener_presupuesto, generar_pdf_presupuesto
+from .views import PresupuestoListView, PresupuestoDetailView, obtener_todos_los_presupuestos, buscar_solicitantes, seleccionar_solicitante, buscar_servicios, seleccionar_servicio, presupuestos_enEspera, actualizar_estado_presupuesto, presupuestos_cancelados, presupuestos_aceptados, presupuestos_historial, obtener_presupuesto, generar_pdf_presupuesto
 
 urlpatterns = [
     path('', PresupuestoListView.as_view(), name='presupuestos-list'),
@@ -12,6 +12,7 @@ urlpatterns = [
     path('en_espera/', presupuestos_enEspera, name='presupuestos_enEspera'),
     path('aceptados/', presupuestos_aceptados, name='presupuestos_aceptados'),
     path('cancelados/', presupuestos_cancelados, name='presupuestos_cancelados'),
+    path('historial/', presupuestos_historial, name='presupuestos_historial'),
     path('actualizar_estado/<int:nro_presupuesto>/', actualizar_estado_presupuesto, name='actualizar_estado_presupuesto'),
     # path('obtener_modulo/', obtener_modulo, name='obtener-modulo'),
     path('obtener_presupuesto/<int:nro_presupuesto>/', obtener_presupuesto, name='obtener-presupuesto'),

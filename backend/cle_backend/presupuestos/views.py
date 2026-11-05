@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from weasyprint import HTML
 
-from database.models import Presupuesto, Solicitante, Servicio, Modulo
+from database.models import Presupuesto, Solicitante, Servicio, Modulo, DataServicio
 from .serializers import *
 
 logger = logging.getLogger(__name__)
@@ -48,24 +48,33 @@ def presupuestos_enEspera(request):
     
     return JsonResponse(presupuestos_con_solicitante, safe=False)
 
+MOTIVO_DESCARTE_LABELS = {
+    'nuevo_presupuesto': 'Se generó un nuevo presupuesto',
+    'rechazo': 'Rechazado por el cliente',
+    'sin_respuesta': 'Sin respuesta del cliente',
+    'otro': 'Otro',
+}
+
 @require_http_methods(["GET"])
 def presupuestos_cancelados(request):
     presupuestos = Presupuesto.objects.filter(
-                                                Q(estado_presupuesto='rechazado') |
-                                                Q(estado_presupuesto='modificado') |
-                                                Q(estado_presupuesto='actualizado')
-                                            ).select_related('nro_solicitante')
-    
-    # Ahora cada presupuesto en la lista debería tener el nombre del solicitante
+        Q(estado_presupuesto='descartado') |
+        Q(estado_presupuesto='rechazado') |
+        Q(estado_presupuesto='modificado') |
+        Q(estado_presupuesto='actualizado')
+    ).select_related('nro_solicitante')
+
     presupuestos_con_solicitante = []
     for presupuesto in presupuestos:
+        motivo_key = presupuesto.motivo_descarte or ''
         presupuesto_dict = {
             'nro_presupuesto': presupuesto.nro_presupuesto,
             'fecha_presupuesto': presupuesto.fecha_presupuesto,
             'area_tematica': presupuesto.area_tematica,
             'estado_presupuesto': presupuesto.estado_presupuesto,
             'nombre_solicitante': presupuesto.nro_solicitante.nombre_solicitante,
-            'motivo_cancelacion': presupuesto.motivo_cancelacion,
+            'motivo_descarte': motivo_key,
+            'motivo_descarte_label': MOTIVO_DESCARTE_LABELS.get(motivo_key, presupuesto.motivo_cancelacion or ''),
         }
         presupuestos_con_solicitante.append(presupuesto_dict)
 
@@ -73,9 +82,71 @@ def presupuestos_cancelados(request):
 
 @require_http_methods(["GET"])
 def presupuestos_aceptados(request):
-    presupuestos = Presupuesto.objects.filter(estado_presupuesto='aceptado').select_related('nro_solicitante')
+    presupuestos = (
+        Presupuesto.objects
+        .filter(estado_presupuesto='aceptado')
+        .exclude(dataservicio__nro_circuito__finalizado=True)
+        .select_related('nro_solicitante')
+    )
     serializer = PresupuestosAceptadosSerializer(presupuestos, many=True)
     return JsonResponse(serializer.data, safe=False)
+
+
+@require_http_methods(["GET"])
+def presupuestos_historial(request):
+    nro = request.GET.get('nro', '').strip()
+    solicitante = request.GET.get('solicitante', '').strip()
+    desde = request.GET.get('desde', '').strip()
+    hasta = request.GET.get('hasta', '').strip()
+    area = request.GET.get('area', '').strip()
+    estado = request.GET.get('estado', '').strip()
+
+    if not any([nro, solicitante, desde, hasta, area, estado]):
+        return JsonResponse({'error': 'Se requiere al menos un filtro.'}, status=400)
+
+    qs = Presupuesto.objects.select_related('nro_solicitante').all()
+
+    if nro:
+        qs = qs.filter(nro_presupuesto=nro)
+    if solicitante:
+        qs = qs.filter(nro_solicitante__nombre_solicitante__icontains=solicitante)
+    if desde:
+        qs = qs.filter(fecha_presupuesto__gte=desde)
+    if hasta:
+        qs = qs.filter(fecha_presupuesto__lte=hasta)
+    if area:
+        qs = qs.filter(area_tematica=area)
+    if estado:
+        if estado == 'descartado':
+            qs = qs.filter(estado_presupuesto__in=['descartado', 'rechazado', 'modificado', 'actualizado'])
+        else:
+            qs = qs.filter(estado_presupuesto=estado)
+
+    qs = qs.order_by('-fecha_presupuesto')
+
+    result = []
+    for p in qs:
+        data_servicio = DataServicio.objects.select_related('nro_circuito__legajo').filter(nro_presupuesto=p).first()
+        nro_ds = data_servicio.nro_dataServicio if data_servicio else None
+        nro_legajo = None
+        if data_servicio and data_servicio.nro_circuito:
+            try:
+                nro_legajo = data_servicio.nro_circuito.legajo.nro_legajo
+            except Exception:
+                pass
+
+        result.append({
+            'nro_presupuesto': p.nro_presupuesto,
+            'fecha_presupuesto': str(p.fecha_presupuesto),
+            'nombre_solicitante': p.nro_solicitante.nombre_solicitante,
+            'area_tematica': p.area_tematica,
+            'estado_presupuesto': p.estado_presupuesto,
+            'motivo_descarte_label': MOTIVO_DESCARTE_LABELS.get(p.motivo_descarte, ''),
+            'nro_dataServicio': nro_ds,
+            'nro_legajo': nro_legajo,
+        })
+
+    return JsonResponse(result, safe=False)
 
 @api_view(['PUT'])
 def actualizar_estado_presupuesto(request, nro_presupuesto):
@@ -86,23 +157,27 @@ def actualizar_estado_presupuesto(request, nro_presupuesto):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    MOTIVOS_VALIDOS = {'nuevo_presupuesto', 'rechazo', 'sin_respuesta', 'otro'}
+
     try:
         presupuesto = Presupuesto.objects.get(nro_presupuesto=nro_presupuesto)
         nuevo_estado = request.data.get('estado_presupuesto')
 
-        ESTADOS_CANCELADOS = {'rechazado', 'modificado', 'actualizado'}
-        if nuevo_estado in ['en_espera', 'rechazado', 'modificado', 'actualizado']:
-            presupuesto.estado_presupuesto = nuevo_estado
-            if nuevo_estado in ESTADOS_CANCELADOS:
-                motivo = request.data.get('motivo_cancelacion', '').strip()
-                if not motivo:
-                    return JsonResponse({'mensaje': 'El motivo es requerido para este cambio de estado.'}, status=status.HTTP_400_BAD_REQUEST)
-                presupuesto.motivo_cancelacion = motivo
-            else:
-                presupuesto.motivo_cancelacion = None
+        if nuevo_estado == 'descartado':
+            motivo = request.data.get('motivo_descarte', '').strip()
+            if motivo not in MOTIVOS_VALIDOS:
+                return JsonResponse({'mensaje': 'El motivo es requerido para descartar un presupuesto.'}, status=status.HTTP_400_BAD_REQUEST)
+            presupuesto.estado_presupuesto = 'descartado'
+            presupuesto.motivo_descarte = motivo
             presupuesto.save()
+            return JsonResponse({'mensaje': 'Presupuesto descartado correctamente'}, status=status.HTTP_200_OK)
 
-            return JsonResponse({'mensaje': 'Estado del presupuesto actualizado correctamente'}, status=status.HTTP_200_OK)
+        elif nuevo_estado == 'en_espera':
+            presupuesto.estado_presupuesto = 'en_espera'
+            presupuesto.motivo_descarte = ''
+            presupuesto.save()
+            return JsonResponse({'mensaje': 'Presupuesto reactivado correctamente'}, status=status.HTTP_200_OK)
+
         else:
             return JsonResponse({'mensaje': 'El estado proporcionado no es válido'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -204,12 +279,13 @@ def obtener_presupuesto(request, nro_presupuesto):
            'descuento': presupuesto_data['descuento'],
            'arancel_presupuesto': presupuesto_data['arancel_presupuesto'],
            'observaciones': presupuesto_data['observaciones'],
-           'motivo_cancelacion': presupuesto_data.get('motivo_cancelacion'),
+           'motivo_descarte': presupuesto_data.get('motivo_descarte', ''),
            'nro_solicitante': nro_solicitante,
            'nombre_solicitante': nombre_solicitante,
            'telefono': telefono,
            'email': email,
-           'detalles_presupuesto': detalles_con_servicio
+           'detalles_presupuesto': detalles_con_servicio,
+           'version_formulario': presupuesto_data.get('version_formulario') or '01',
         }
 
         return JsonResponse(response_data, status=200)

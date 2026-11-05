@@ -1,14 +1,17 @@
 <template>
   <div id="app">
     <nav>
-      <router-link to="/presupuestos/enespera" class="router-link-item" :class="{ active: isRouteActive('/presupuestos/enespera') || isRouteActive('/') }">
-        <div @click="navigateTo('EnCurso')">En Espera</div>
+      <router-link to="/presupuestos/nuevos" class="router-link-item" :class="{ active: isRouteActive('/presupuestos/nuevos') || isRouteActive('/') }">
+        <div @click="navigateTo('Nuevos')">Nuevos</div>
       </router-link>
       <router-link to="/presupuestos/aceptados" class="router-link-item" :class="{ active: isRouteActive('/presupuestos/aceptados') }">
         <div @click="navigateTo('Aceptados')">Aceptados</div>
       </router-link>
-      <router-link to="/presupuestos/cancelados" class="router-link-item" :class="{ active: isRouteActive('/presupuestos/cancelados') }">
-        <div @click="navigateTo('Cancelados')">Cancelados</div>
+      <router-link to="/presupuestos/descartados" class="router-link-item" :class="{ active: isRouteActive('/presupuestos/descartados') }">
+        <div @click="navigateTo('Descartados')">Descartados</div>
+      </router-link>
+      <router-link to="/presupuestos/historial" class="router-link-item" :class="{ active: isRouteActive('/presupuestos/historial') }">
+        <div @click="navigateTo('Historial')">Historial</div>
       </router-link>
     </nav>
   </div>

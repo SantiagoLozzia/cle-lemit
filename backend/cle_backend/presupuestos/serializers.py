@@ -1,6 +1,6 @@
 # pylint: disable=import-error
 from rest_framework import serializers
-from database.models import Presupuesto, DetallePresupuesto, Solicitante, Servicio, DataServicio
+from database.models import Presupuesto, DetallePresupuesto, Solicitante, Servicio, DataServicio, ConfigFormulario
 import logging
 
 # Configurar el logger
@@ -21,7 +21,15 @@ class PresupuestoSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         detalles_presupuesto_data = validated_data.pop('detalles_presupuesto', [])
-        
+
+        # Snapshot: capturar versión vigente del formulario al momento de creación
+        if not validated_data.get('version_formulario'):
+            try:
+                config = ConfigFormulario.objects.get(tipo='presupuesto')
+                validated_data['version_formulario'] = config.version_actual
+            except ConfigFormulario.DoesNotExist:
+                validated_data['version_formulario'] = '01'
+
         try:
             presupuesto = Presupuesto.objects.create(**validated_data)
         except Exception as e:
@@ -67,11 +75,21 @@ class SeleccionarServicioSerializer(serializers.ModelSerializer):
 class PresupuestosAceptadosSerializer(serializers.ModelSerializer):
     nombre_solicitante = serializers.CharField(source='nro_solicitante.nombre_solicitante')
     nro_dataServicio = serializers.SerializerMethodField()
+    nro_legajo = serializers.SerializerMethodField()
 
     class Meta:
         model = Presupuesto
-        fields = ['nro_presupuesto', 'fecha_presupuesto', 'area_tematica', 'estado_presupuesto', 'nombre_solicitante', 'nro_dataServicio']
+        fields = ['nro_presupuesto', 'fecha_presupuesto', 'area_tematica', 'estado_presupuesto', 'nombre_solicitante', 'nro_dataServicio', 'nro_legajo']
 
     def get_nro_dataServicio(self, obj):
         data_servicio = DataServicio.objects.filter(nro_presupuesto=obj).first()
         return data_servicio.nro_dataServicio if data_servicio else None
+
+    def get_nro_legajo(self, obj):
+        data_servicio = DataServicio.objects.select_related('nro_circuito__legajo').filter(nro_presupuesto=obj).first()
+        if data_servicio and data_servicio.nro_circuito:
+            try:
+                return data_servicio.nro_circuito.legajo.nro_legajo
+            except Exception:
+                return None
+        return None
