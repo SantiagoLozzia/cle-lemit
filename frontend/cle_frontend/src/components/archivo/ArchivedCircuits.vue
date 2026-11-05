@@ -12,31 +12,53 @@
         class="form-control form-control-sm w-auto"
         style="min-width:180px"
       >
+      <input
+        v-model="filterNroDoc"
+        type="text"
+        placeholder="N° (servicio / presupuesto / legajo)..."
+        class="form-control form-control-sm w-auto"
+        style="min-width:200px"
+        title="Buscar por N° de Servicio, Presupuesto, Legajo o Circuito"
+      >
       <select v-model="filterArea" class="form-select form-select-sm w-auto">
         <option value="">Todas las áreas</option>
         <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
       </select>
+      <select v-model="filterMotivo" class="form-select form-select-sm w-auto">
+        <option value="">Todos los motivos</option>
+        <option value="exito">Finalizado con éxito</option>
+        <option value="falta_pago">Falta de pago</option>
+        <option value="vencimiento_muestras">Vencimiento de muestras</option>
+        <option value="desistimiento">Desistimiento</option>
+        <option value="otro">Otro</option>
+      </select>
+      <select v-model="filterPago" class="form-select form-select-sm w-auto">
+        <option value="">Estado de pago</option>
+        <option value="100">100% pagado</option>
+        <option value="no_arancelado">No arancelado</option>
+        <option value="pago_diferido">Pago diferido</option>
+        <option value="sin_pago">Sin pago</option>
+      </select>
       <div class="d-flex align-items-center gap-1">
-        <small class="text-muted">Desde</small>
+        <small class="text-muted">Archivo desde</small>
         <input type="date" v-model="filterDesde" class="form-control form-control-sm w-auto">
       </div>
       <div class="d-flex align-items-center gap-1">
-        <small class="text-muted">Hasta</small>
+        <small class="text-muted">hasta</small>
         <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
       </div>
-      <input
-        v-model="filterNroDoc"
-        type="text"
-        placeholder="N° documento..."
-        class="form-control form-control-sm w-auto"
-        style="min-width:130px"
-        title="Buscar por N° de Servicio, Presupuesto, Legajo o Circuito"
-      >
       <button
-        v-if="filterEmpresa || filterArea || filterDesde || filterHasta || filterNroDoc"
+        v-if="hayFiltros"
         @click="clearFilters"
         class="btn btn-sm btn-outline-secondary"
       >✕ Limpiar</button>
+      <button
+        class="btn btn-sm btn-success ms-auto"
+        @click="exportarExcel"
+        title="Exportar tabla actual a Excel"
+      >
+        <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+      </button>
     </div>
 
     <!-- Tabla -->
@@ -227,6 +249,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import * as XLSX from 'xlsx';
 import api from '@/api.js';
 import { AREAS_TEMATICAS } from '@/constants/areas.js';
 import PageHeader from '@/components/PageHeader.vue';
@@ -239,17 +262,26 @@ export default {
 
     // Filtros
     const filterEmpresa = ref('');
-    const filterArea = ref('');
-    const filterDesde = ref('');
-    const filterHasta = ref('');
-    const filterNroDoc = ref('');
+    const filterArea    = ref('');
+    const filterDesde   = ref('');
+    const filterHasta   = ref('');
+    const filterNroDoc  = ref('');
+    const filterMotivo  = ref('');
+    const filterPago    = ref('');
+
+    const hayFiltros = computed(() =>
+      filterEmpresa.value || filterArea.value || filterDesde.value ||
+      filterHasta.value || filterNroDoc.value || filterMotivo.value || filterPago.value
+    );
 
     const clearFilters = () => {
       filterEmpresa.value = '';
-      filterArea.value = '';
-      filterDesde.value = '';
-      filterHasta.value = '';
-      filterNroDoc.value = '';
+      filterArea.value    = '';
+      filterDesde.value   = '';
+      filterHasta.value   = '';
+      filterNroDoc.value  = '';
+      filterMotivo.value  = '';
+      filterPago.value    = '';
     };
 
     // Ordenamiento
@@ -265,15 +297,19 @@ export default {
         item.nombre_solicitante.toLowerCase().includes(filterEmpresa.value.toLowerCase());
       const areaOk = !filterArea.value ||
         formatAreaTematica(item.area_tematica) === filterArea.value;
-      const desdeOk = !filterDesde.value || item.fecha_dataServicio >= filterDesde.value;
-      const hastaOk = !filterHasta.value || item.fecha_dataServicio <= filterHasta.value;
+      // Fecha filtra por fecha_archivo (finalización), con fallback a fecha_dataServicio
+      const fechaRef = item.fecha_archivo || item.fecha_dataServicio || '';
+      const desdeOk = !filterDesde.value || fechaRef >= filterDesde.value;
+      const hastaOk = !filterHasta.value || fechaRef <= filterHasta.value;
       const nroOk = !filterNroDoc.value || [
         String(item.nro_dataServicio),
         String(item.nro_presupuesto),
         String(item.nro_legajo || ''),
         String(item.nro_circuito || ''),
       ].some(n => n.includes(filterNroDoc.value));
-      return empresaOk && areaOk && desdeOk && hastaOk && nroOk;
+      const motivoOk = !filterMotivo.value || item.motivo_archivo === filterMotivo.value;
+      const pagoOk = !filterPago.value || String(item.pago) === filterPago.value;
+      return empresaOk && areaOk && desdeOk && hastaOk && nroOk && motivoOk && pagoOk;
     }));
 
     const NUMERIC_KEYS = ['nro_dataServicio', 'nro_presupuesto', 'nro_legajo'];
@@ -348,14 +384,48 @@ export default {
       return 'badge bg-dark';
     };
 
+    const exportarExcel = () => {
+      const filas = sortedArchivados.value.map(item => ({
+        'N° Servicio':    item.nro_dataServicio,
+        'Fecha servicio': formatDate(item.fecha_dataServicio),
+        'Empresa':        item.nombre_solicitante,
+        'CUIT':           item.cuit_solicitante || '',
+        'Área temática':  formatAreaTematica(item.area_tematica),
+        'N° Presupuesto': item.nro_presupuesto,
+        'N° Legajo':      item.nro_legajo || '',
+        'N° Circuito':    item.nro_circuito || '',
+        'Total ($)':      item.arancel_presupuesto != null ? parseFloat(item.arancel_presupuesto) : '',
+        'Descuento (%)':  item.descuento || 0,
+        'Estado de pago': labelPago(item.pago),
+        'Motivo de archivo': item.motivo_archivo_display || item.motivo_archivo || '',
+        'Nota de archivo':   item.nota_archivo || '',
+        'Fecha finalización': formatDate(item.fecha_archivo),
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(filas);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Archivo');
+
+      // Ancho automático por columna
+      const cols = Object.keys(filas[0] || {}).map(k => ({
+        wch: Math.max(k.length, ...filas.map(r => String(r[k] ?? '').length)) + 2
+      }));
+      ws['!cols'] = cols;
+
+      const fecha = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `archivo_circuitos_${fecha}.xlsx`);
+    };
+
     onMounted(fetchArchivados);
 
     return {
       uniqueAreas,
-      filterEmpresa, filterArea, filterDesde, filterHasta, filterNroDoc, clearFilters,
+      filterEmpresa, filterArea, filterDesde, filterHasta, filterNroDoc,
+      filterMotivo, filterPago, hayFiltros, clearFilters,
       sortKey, sortDir, setSort, sortedArchivados,
       mostrarModal, detalle, abrirDetalle, cerrarModal,
       formatDate, formatAreaTematica, formatMonto, labelPago, badgePago, badgeMotivo,
+      exportarExcel,
     };
   }
 };

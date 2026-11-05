@@ -13,7 +13,8 @@
     "caniuse-lite": "^1.0.30001658",
     "core-js": "^3.8.3",
     "vue-router": "^4.2.5",
-    "vue3-select": "^0.1.2"
+    "vue3-select": "^0.1.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
