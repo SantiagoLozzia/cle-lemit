@@ -66,4 +66,6 @@ urlpatterns = [
     # Auditoría
     path('auditoria/', ObtenerEventosAuditoria.as_view(), name='auditoria'),
     path('historial_circuito/<int:nro_circuito>/', HistorialCircuito.as_view(), name='historial-circuito'),
+    # ISO 17025 - Configuración de formularios
+    path('config_formulario/<str:tipo>/', ConfigFormularioView.as_view(), name='config-formulario'),
 ]

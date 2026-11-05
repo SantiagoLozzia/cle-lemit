@@ -410,6 +410,14 @@ class CrearLegajo(APIView):
             legajo_data = request.data.copy()
             legajo_data['nro_circuito'] = circuito_instance.pk  # Clave primaria (ID) del circuito
 
+            # Snapshot: capturar versión vigente del formulario al momento de creación
+            if not legajo_data.get('version_formulario'):
+                try:
+                    config = ConfigFormulario.objects.get(tipo='legajo')
+                    legajo_data['version_formulario'] = config.version_actual
+                except ConfigFormulario.DoesNotExist:
+                    legajo_data['version_formulario'] = '01'
+
             # Serializar los datos del legajo
             serializer = LegajoEnCursoSerializer(data=legajo_data)
             if serializer.is_valid():
@@ -452,7 +460,8 @@ def obtener_legajo(request, nro_circuito):
             'nro_legajo': nro_legajo,
             'fecha_legajo': fecha_legajo,
             'rangos_laboratorios': rangos_laboratorios,
-            'nombre_solicitante': nombre_solicitante
+            'nombre_solicitante': nombre_solicitante,
+            'version_formulario': legajo.version_formulario or '01',
         }
 
         print(type(response_data['fecha_legajo']))  # Debería mostrar <class 'datetime.date'>
@@ -664,7 +673,18 @@ class CrearOrdenServicio(APIView):
                 return JsonResponse({'mensaje': 'Ya existe una Orden de Servicio con este número de circuito', 'nro_circuito': nro_circuito}, status=400)
 
             fecha_actual = timezone.now()
-            nueva_instancia = OrdenServicio.objects.create(nro_circuito=circuito, fecha_ordenServicio=fecha_actual, observaciones='', completo=True)
+            try:
+                config_os = ConfigFormulario.objects.get(tipo='orden_servicio')
+                version_os = config_os.version_actual
+            except ConfigFormulario.DoesNotExist:
+                version_os = '01'
+            nueva_instancia = OrdenServicio.objects.create(
+                nro_circuito=circuito,
+                fecha_ordenServicio=fecha_actual,
+                observaciones='',
+                completo=True,
+                version_formulario=version_os,
+            )
             return JsonResponse({'mensaje': 'Orden de servicio creada exitosamente', 'nro_circuito': nro_circuito}, status=201)
         except Circuito.DoesNotExist:
             return JsonResponse({'mensaje': 'Circuito no encontrado', 'nro_circuito': nro_circuito}, status=404)
@@ -763,6 +783,7 @@ def obtener_ordenServicio(request, nro_circuito):
             'servicio_solicitado': servicio_solicitado,
             'muestras': muestras,
             'observaciones': observaciones,
+            'version_formulario': orden_servicio.version_formulario or '01',
         }
 
         return JsonResponse(response_data, status=200)
@@ -1417,20 +1438,24 @@ class ConfirmarFirmaResponsableAreaCiclo(APIView):
                 # Leer el PDF generado por Administración
                 pdf_path = ciclo.adjunto_informeServicio_pdf.path
                 doc = fitz.open(pdf_path)
+
+                # Firma del área: imagen en TODAS las páginas
+                for pg in doc:
+                    pw, ph = pg.rect.width, pg.rect.height
+                    sig_rect = fitz.Rect(15, ph - 150, 190, ph - 100)
+                    pg.insert_image(sig_rect, stream=sig_bytes)
+
+                # Leyenda solo en la última página
                 page = doc[-1]
                 pw, ph = page.rect.width, page.rect.height
-
-                # Imagen de la firma (esquina inferior izquierda)
-                sig_rect = fitz.Rect(15, ph - 80, 205, ph - 32)
-                page.insert_image(sig_rect, stream=sig_bytes)
-
-                # Texto debajo: nombre + fecha
-                signer = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
-                fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
+                profile = getattr(request.user, 'userprofile', None)
+                leyenda = (profile.leyenda.strip() if profile and profile.leyenda else '') or \
+                          f"{request.user.first_name} {request.user.last_name}".strip() or \
+                          request.user.username
                 page.insert_textbox(
-                    fitz.Rect(15, ph - 30, 205, ph - 8),
-                    f"Firmado por: {signer}  —  {fecha}",
-                    fontsize=7,
+                    fitz.Rect(15, ph - 98, 190, ph - 72),
+                    leyenda,
+                    fontsize=7.5,
                     align=fitz.TEXT_ALIGN_CENTER,
                 )
 
@@ -1492,19 +1517,22 @@ class ConfirmarFirmaDireccionCiclo(APIView):
         if sig_bytes and fuente:
             try:
                 doc = fitz.open(fuente.path)
+
+                # Firma del director: solo en la última página, completa
                 page = doc[-1]
                 pw, ph = page.rect.width, page.rect.height
 
-                # Imagen de la firma (esquina inferior derecha)
-                sig_rect = fitz.Rect(pw - 205, ph - 80, pw - 15, ph - 32)
+                sig_rect = fitz.Rect(pw - 190, ph - 150, pw - 15, ph - 100)
                 page.insert_image(sig_rect, stream=sig_bytes)
 
-                signer = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.username
-                fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
+                profile = getattr(request.user, 'userprofile', None)
+                leyenda = (profile.leyenda.strip() if profile and profile.leyenda else '') or \
+                          f"{request.user.first_name} {request.user.last_name}".strip() or \
+                          request.user.username
                 page.insert_textbox(
-                    fitz.Rect(pw - 205, ph - 30, pw - 15, ph - 8),
-                    f"Firmado por: {signer}  —  {fecha}",
-                    fontsize=7,
+                    fitz.Rect(pw - 190, ph - 98, pw - 15, ph - 72),
+                    leyenda,
+                    fontsize=7.5,
                     align=fitz.TEXT_ALIGN_CENTER,
                 )
 
@@ -1766,4 +1794,37 @@ class HistorialCircuito(APIView):
             .order_by('fecha')
         )
         return Response(EventoAuditoriaSerializer(eventos, many=True).data)
+
+
+# Configuración ISO 17025
+class ConfigFormularioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, tipo):
+        try:
+            config = ConfigFormulario.objects.prefetch_related('revisiones').get(tipo=tipo)
+        except ConfigFormulario.DoesNotExist:
+            return Response({'error': 'Formulario no encontrado'}, status=404)
+
+        revisiones = [
+            {
+                'version': r.version,
+                'fecha': r.fecha.strftime('%d/%m/%Y'),
+                'descripcion': r.descripcion,
+                'aprobado_por': r.aprobado_por,
+            }
+            for r in config.revisiones.all()
+        ]
+        # Fecha de la versión actual
+        revision_actual = config.revisiones.filter(version=config.version_actual).first()
+        fecha_version_actual = revision_actual.fecha.strftime('%d/%m/%Y') if revision_actual else ''
+
+        return Response({
+            'tipo': config.tipo,
+            'nombre': config.nombre,
+            'codigo': config.codigo,
+            'version_actual': config.version_actual,
+            'fecha_version_actual': fecha_version_actual,
+            'revisiones': revisiones,
+        })
     

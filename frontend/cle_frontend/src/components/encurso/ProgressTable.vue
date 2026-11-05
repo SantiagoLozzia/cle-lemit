@@ -1137,9 +1137,9 @@
       <div class="modal-dialog-a4">
         <div class="modal-content">
           <!-- Modal Header -->
-          <div class="modal-header">
-            <div class="modal-logo"></div>
-            <div class="d-flex align-items-center gap-2 no-print">
+          <div class="modal-header" style="flex-direction: column; align-items: stretch; gap: 6px;">
+            <ISOHeader :config="configFormularioLegajo" :versionDoc="versionLegajo" />
+            <div class="d-flex justify-content-end gap-2 no-print">
               <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirLegajo" title="Imprimir / Guardar como PDF">
                 <i class="bi bi-printer"></i>
               </button>
@@ -1166,6 +1166,23 @@
                 <span class="lg-value">{{ rangosLaboratorios }}</span>
               </div>
             </div>
+          </div>
+          <!-- Historial de revisiones -->
+          <div v-if="configFormularioLegajo.revisiones && configFormularioLegajo.revisiones.length" class="revision-history-wrapper">
+            <table class="revision-history-table">
+              <thead>
+                <tr><th colspan="4" class="revision-title">Historial de Revisiones</th></tr>
+                <tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Aprobado por</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="rev in configFormularioLegajo.revisiones" :key="rev.version">
+                  <td class="text-center">{{ rev.version }}</td>
+                  <td class="text-center">{{ rev.fecha }}</td>
+                  <td>{{ rev.descripcion }}</td>
+                  <td>{{ rev.aprobado_por }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <!-- Modal Footer -->
           <div class="modal-footer-a4">
@@ -1346,10 +1363,17 @@
     <div class="modal" :class="{ 'show': mostrarModalCrearOrdenServicio }" id="mostrarModalCrearOrdenServicio">
       <div class="modal-dialog-a4">
         <div class="modal-content">
-          <div class="modal-header">
-            <div class="modal-logo"></div>
-            <h1 class="modal-title fs-5 fw-bold">{{ osReadOnly ? 'Orden de Servicio N°' + nroOS : 'Crear Orden de Servicio' }}</h1>
-            <button v-if="!osModificadaActual" type="button" class="btn-close" @click="cerrarModalCrearOrdenServicio"></button>
+          <div class="modal-header" :style="osReadOnly ? 'flex-direction: column; align-items: stretch; gap: 6px;' : ''">
+            <ISOHeader v-if="osReadOnly" :config="configFormularioOS" :versionDoc="versionOS" />
+            <div class="d-flex align-items-center gap-2" :class="osReadOnly ? 'justify-content-between' : ''">
+              <h1 class="modal-title fs-5 fw-bold">{{ osReadOnly ? 'Orden de Servicio N°' + nroOS : 'Crear Orden de Servicio' }}</h1>
+              <div class="d-flex gap-2 no-print">
+                <button v-if="osReadOnly" type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirOS" title="Imprimir / Guardar como PDF">
+                  <i class="bi bi-printer"></i>
+                </button>
+                <button v-if="!osModificadaActual" type="button" class="btn-close" @click="cerrarModalCrearOrdenServicio"></button>
+              </div>
+            </div>
           </div>
           <div class="modal-body">
             <form class="was-validated">
@@ -1409,12 +1433,31 @@
               </div>
             </form>
           </div>
-          <div class="modal-footer">
-            <button v-if="!osReadOnly" type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
-            <button v-if="osReadOnly && osModificadaActual" type="button" class="btn btn-primary" @click="aceptarOrdenServicio">
-              Aceptar cambios
-            </button>
-            <button v-if="!osModificadaActual" type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">{{ osReadOnly ? 'Cerrar' : 'Cancelar' }}</button>
+          <!-- Historial de revisiones (solo en modo lectura) -->
+          <div v-if="osReadOnly && configFormularioOS.revisiones && configFormularioOS.revisiones.length" class="revision-history-wrapper">
+            <table class="revision-history-table">
+              <thead>
+                <tr><th colspan="4" class="revision-title">Historial de Revisiones</th></tr>
+                <tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Aprobado por</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="rev in configFormularioOS.revisiones" :key="rev.version">
+                  <td class="text-center">{{ rev.version }}</td>
+                  <td class="text-center">{{ rev.fecha }}</td>
+                  <td>{{ rev.descripcion }}</td>
+                  <td>{{ rev.aprobado_por }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="osReadOnly" class="modal-footer-a4 no-print">
+            <div style="flex:1"></div>
+            <button v-if="osModificadaActual" type="button" class="btn btn-primary" @click="aceptarOrdenServicio">Aceptar cambios</button>
+            <button v-if="!osModificadaActual" type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">Cerrar</button>
+          </div>
+          <div v-else class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="crearOrdenServicio">Confirmar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalCrearOrdenServicio">Cancelar</button>
           </div>
         </div>
       </div>
@@ -2342,9 +2385,10 @@
   import api from '@/api.js';
   import { AREAS_TEMATICAS } from '@/constants/areas.js';
   import AttachmentCell from './AttachmentCell.vue';
+  import ISOHeader from '@/components/ISOHeader.vue';
 
   export default {
-    components: { AttachmentCell },
+    components: { AttachmentCell, ISOHeader },
     setup() {
 
       // Setup General
@@ -2628,6 +2672,8 @@
       const rangosLaboratorios = ref();
       const nombreSolicitante = ref();
       const añoLegajo = ref();
+      const versionLegajo = ref('01');
+      const configFormularioLegajo = ref({ nombre: '', codigo: '', version_actual: '', fecha_version_actual: '', revisiones: [] });
       const mostrarModalCrearLegajo = ref(false);
       const mostrarModalLegajo = ref(false);
       const mostrarModalPagoLegajo = ref(false);
@@ -2659,6 +2705,8 @@
       const osModificadaActual = ref(false);
       const osFilaActual = ref(null);
       const osCircuitoActual = ref(null);
+      const versionOS = ref('01');
+      const configFormularioOS = ref({ nombre: '', codigo: '', version_actual: '', fecha_version_actual: '', revisiones: [] });
       const mostrarModalOrdenServicio = ref(false);
       const mostrarModalPlazoOrdenServicio = ref(false);
       // Setup Ciclos de Informe
@@ -3255,33 +3303,26 @@
       };
 
       // Legajo - Abrir
-      const abrirLegajo = (fila) => {
+      const abrirLegajo = async (fila) => {
           numeroCircuitoGlobal.value = fila.nro_circuito;
           const nro_circuito = numeroCircuitoGlobal.value;
-          api.get(`/encurso/obtener_legajo/${nro_circuito}/`)
-              .then(response => {
-                  // Obtener los datos del legajo de la respuesta
-                  const { nro_legajo, fecha_legajo, rangos_laboratorios, nombre_solicitante } = response.data;
-
-                  // Asignar los datos del legajo a variables en el contexto del componente
-                  nroLegajo.value = nro_legajo;
-                  fechaLegajo.value = fecha_legajo;
-                  rangosLaboratorios.value = rangos_laboratorios;
-                  nombreSolicitante.value = nombre_solicitante;
-
-                 // Obtener el año actual de fechaLegajo
-                const year = new Date(fecha_legajo).getFullYear();
-
-                // Asignar el año a la propiedad `value` del ref `añoLegajo`
-                añoLegajo.value = year;
-
-                  // Mostrar el modal para mostrar los detalles del legajo
-                  mostrarModalLegajo.value = true;
-              })
-              .catch(error => {
-                  console.error('Error al obtener los datos del legajo:', error);
-                  // Manejar el error, mostrar un mensaje al usuario, etc.
-              });
+          try {
+              const [resLegajo, resConfig] = await Promise.all([
+                api.get(`/encurso/obtener_legajo/${nro_circuito}/`),
+                api.get('/encurso/config_formulario/legajo/'),
+              ]);
+              const { nro_legajo, fecha_legajo, rangos_laboratorios, nombre_solicitante, version_formulario } = resLegajo.data;
+              nroLegajo.value = nro_legajo;
+              fechaLegajo.value = fecha_legajo;
+              rangosLaboratorios.value = rangos_laboratorios;
+              nombreSolicitante.value = nombre_solicitante;
+              añoLegajo.value = new Date(fecha_legajo).getFullYear();
+              versionLegajo.value = version_formulario || '01';
+              configFormularioLegajo.value = resConfig.data;
+              mostrarModalLegajo.value = true;
+          } catch (error) {
+              console.error('Error al obtener los datos del legajo:', error);
+          }
       };
 
       const descargarLegajoPDF = () => {
@@ -3725,8 +3766,11 @@
       const abrirOrdenServicio = async (fila) => {
           const nro_circuito = fila.nro_circuito;
           try {
-              const response = await api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`);
-              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, nuevo_rango_lab, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones } = response.data;
+              const [response, resConfig] = await Promise.all([
+                api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`),
+                api.get('/encurso/config_formulario/orden_servicio/'),
+              ]);
+              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, nuevo_rango_lab, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones, version_formulario } = response.data;
               nroOS.value = nro_ordenServicio;
               fechaOS.value = fecha_ordenServicio;
               areaOS.value = formatAreaTematica(area_tematica);
@@ -3738,6 +3782,8 @@
               servicioOS.value = servicio_solicitado;
               muestrasOS.value = muestras;
               observacionesOS.value = observaciones;
+              versionOS.value = version_formulario || '01';
+              configFormularioOS.value = resConfig.data;
               osReadOnly.value = true;
               // Guardar si la OS está modificada: el área DEBE aceptar explícitamente
               osModificadaActual.value = !!(fila.os_modificada && (isAreaJefe.value || isAreaStandard.value));
@@ -4834,6 +4880,7 @@
 
         const imprimirDataServicio = () => { window.print(); };
         const imprimirLegajo = () => { window.print(); };
+        const imprimirOS = () => { window.print(); };
 
         const fechaLegajoFormateada = computed(() => {
           if (!fechaLegajo.value) return '';
@@ -4918,6 +4965,8 @@
         rangosLaboratorios,
         nombreSolicitante,
         añoLegajo,
+        versionLegajo,
+        configFormularioLegajo,
         mostrarModalCrearLegajo,
         mostrarModalLegajo,
         descargarLegajoPDF,
@@ -4965,6 +5014,8 @@
         servicioOS,
         muestrasOS,
         observacionesOS,
+        versionOS,
+        configFormularioOS,
         crearOrdenServicio,
         mostrarModalCrearOrdenServicio,
         osReadOnly,
@@ -5113,6 +5164,7 @@
         cerrarModalArchivar,
         imprimirDataServicio,
         imprimirLegajo,
+        imprimirOS,
         fechaLegajoFormateada,
         mostrarModalArchivar,
         enviarArchivar,
@@ -5303,7 +5355,6 @@
     height: 9px;
     border-radius: 50%;
     background: #ffc107;
-    animation: pulse-confirmar 1.4s ease-in-out infinite;
   }
   .st-sd-dial {
     position: absolute;
@@ -5539,6 +5590,40 @@
   .ds-opciones-flotantes .opcion:hover {
     background-color: #026290;
     color: white;
+  }
+
+  .revision-history-wrapper {
+    padding: 0 1rem 0.5rem;
+  }
+
+  .revision-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+    margin-top: 12px;
+  }
+
+  .revision-history-table th,
+  .revision-history-table td {
+    border: 1px solid #aaa;
+    padding: 3px 6px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .revision-history-table th {
+    background-color: #e8f0f7 !important;
+    color: #333 !important;
+    font-weight: 600;
+  }
+
+  .revision-title {
+    text-align: center !important;
+    font-weight: 700;
+    background-color: #cfe0f0 !important;
+    color: #1a3a5c !important;
+    padding: 4px !important;
+    font-size: 0.75rem;
   }
 
 

@@ -40,9 +40,17 @@ DESCUENTO_CHOICES = [
 ESTADO_PRESUPUESTO_CHOICES = [
         ('en_espera', 'En Espera'),
         ('aceptado', 'Aceptado'),
+        ('descartado', 'Descartado'),
         ('rechazado', 'Rechazado'),
         ('modificado', 'Modificado'),
         ('actualizado', 'Actualizado'),
+    ]
+
+MOTIVO_DESCARTE_CHOICES = [
+        ('nuevo_presupuesto', 'Se generó un nuevo presupuesto'),
+        ('rechazo', 'Rechazado por el cliente'),
+        ('sin_respuesta', 'Sin respuesta del cliente'),
+        ('otro', 'Otro'),
     ]
 
 ESTADO_RECEPCION_CHOICES = [
@@ -69,6 +77,7 @@ class UserProfile(models.Model):
     area_tematica = models.CharField(choices=AREA_TEMATICA_CHOICES, max_length=50)
     rol = models.CharField(max_length=50)
     firma = models.ImageField(upload_to='firmas_usuarios/', null=True, blank=True)
+    leyenda = models.CharField(max_length=200, blank=True, default='')
 
     def __str__(self):
         return f"{self.user.username} - {self.get_area_tematica_display()} - {self.rol}"
@@ -111,8 +120,10 @@ class Presupuesto(models.Model):
     arancel_presupuesto = models.DecimalField(max_digits=10, decimal_places=2)
     observaciones = models.TextField(max_length=255, null=True, blank=True)
     motivo_cancelacion = models.TextField(max_length=500, null=True, blank=True)
+    motivo_descarte = models.CharField(max_length=50, choices=MOTIVO_DESCARTE_CHOICES, blank=True, default='')
     estado_presupuesto = models.CharField(choices=ESTADO_PRESUPUESTO_CHOICES)
     nro_solicitante = models.ForeignKey('Solicitante', on_delete=models.PROTECT)
+    version_formulario = models.CharField(max_length=10, blank=True, default='')
 
     def __str__(self):
         return f"Presupuesto #{self.nro_presupuesto} - Solicitante: {self.nro_solicitante.nombre_solicitante}, Área Temática: {self.get_area_tematica_display()}"
@@ -174,6 +185,7 @@ class Legajo(models.Model):
     nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='legajo')
     labs_adicionales_pendientes = models.IntegerField(default=0)
     monto_adicional_pendiente = models.BooleanField(default=False)
+    version_formulario = models.CharField(max_length=10, blank=True, default='')
 
     def __str__(self):
         return f"Legajo #{self.nro_legajo} - Circuito #{self.nro_circuito_id}"
@@ -197,6 +209,7 @@ class OrdenServicio(models.Model):
     modificada = models.BooleanField(default=False)
     nuevo_rango_lab = models.CharField(max_length=255, blank=True, default='')
     nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='orden_servicio')
+    version_formulario = models.CharField(max_length=10, blank=True, default='')
 
     def __str__(self):
         return f"OrdenServicio #{self.nro_ordenServicio} - Circuito #{self.nro_circuito_id}"
@@ -407,6 +420,41 @@ class EventoAuditoria(models.Model):
     def __str__(self):
         usuario = self.usuario.username if self.usuario else 'Sistema'
         return f"{self.fecha.strftime('%d/%m/%Y %H:%M')} - {usuario} - {self.accion}"
+
+
+class ConfigFormulario(models.Model):
+    TIPO_CHOICES = [
+        ('presupuesto', 'Presupuesto de Servicios Tecnológicos'),
+        ('legajo', 'Legajo'),
+        ('orden_servicio', 'Orden de Servicio'),
+    ]
+    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES, unique=True)
+    nombre = models.CharField(max_length=200)
+    codigo = models.CharField(max_length=50)
+    version_actual = models.CharField(max_length=10, default='01')
+
+    class Meta:
+        verbose_name = 'Configuración de Formulario'
+        verbose_name_plural = 'Configuraciones de Formularios'
+
+    def __str__(self):
+        return f"{self.nombre} ({self.codigo}) v{self.version_actual}"
+
+
+class RevisionFormulario(models.Model):
+    formulario = models.ForeignKey('ConfigFormulario', on_delete=models.CASCADE, related_name='revisiones')
+    version = models.CharField(max_length=10)
+    fecha = models.DateField()
+    descripcion = models.TextField()
+    aprobado_por = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ['version']
+        verbose_name = 'Revisión de Formulario'
+        verbose_name_plural = 'Revisiones de Formularios'
+
+    def __str__(self):
+        return f"{self.formulario.codigo} v{self.version} ({self.fecha})"
 
 
 # Clases singleton que podria borrar
