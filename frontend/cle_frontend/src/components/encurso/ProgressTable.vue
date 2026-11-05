@@ -1646,28 +1646,51 @@
                 </select>
               </div>
               
-              {{console.log('serviciosDisponibles dentro del modal', serviciosDisponibles)}}
-
+              <!-- Servicios de la orden de servicio (checkboxes) -->
               <div class="mb-3">
-                <label for="servicios_solicitudInterarea" class="form-label text-left">Seleccionar los Servicios para el Inter Area correspondiente:</label>
-                <select v-model="servicioSeleccionadoTemporal" @change="moverServicioSeleccionado" multiple class="form-control" id="servicios_solicitudInterarea" style="width: calc(100% - 20px); height: 150px; white-space: nowrap; overflow-x: auto; margin: 0 10px;">
-                  <option v-for="servicio in serviciosDisponibles.servicio_solicitado" :key="servicio.servicio" :value="servicio" :title="servicio.servicio">
-                    {{ servicio.cant }} {{ servicio.servicio }}(cod: {{ servicio.nro_servicio}})
-                  </option>
-                </select>
+                <label class="form-label fw-semibold" style="font-size:0.85rem">Servicios de la Orden de Servicio</label>
+                <div v-if="serviciosDisponibles.servicio_solicitado && serviciosDisponibles.servicio_solicitado.length" class="ia-os-list">
+                  <label v-for="sv in serviciosDisponibles.servicio_solicitado" :key="sv.nro_servicio" class="ia-os-item">
+                    <input type="checkbox" :checked="isServicioOSSeleccionado(sv)" @change="toggleServicioOS(sv, $event.target.checked)">
+                    <span class="ia-os-label">
+                      <strong>{{ sv.cant }}×</strong> {{ sv.servicio }}
+                      <small v-if="sv.norma" class="text-muted"> · {{ sv.norma }}</small>
+                    </span>
+                  </label>
+                </div>
+                <p v-else class="text-muted small mb-0">Sin servicios en la OS.</p>
               </div>
 
+              <!-- Servicio adicional del catálogo -->
               <div class="mb-3">
-                <label for="servicios_seleccionados" class="form-label text-left">Servicios Seleccionados:</label>
-                <div>
-                  <div v-for="(servicio, index) in serviciosSeleccionados" :key="index" style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-                    <span>{{ servicio.cant }} {{ servicio.servicio }}(cod: {{ servicio.nro_servicio}})</span>
-                    <button type="button" @click="eliminarServicioSeleccionado(index)" class="btn btn-danger btn-sm">X</button>
+                <label class="form-label fw-semibold" style="font-size:0.85rem">
+                  Servicio adicional <small class="text-muted fw-normal">(no incluido en la OS)</small>
+                </label>
+                <input v-model="busquedaArancel" type="text" class="form-control form-control-sm mb-1" placeholder="Buscar en catálogo de servicios...">
+                <div v-if="busquedaArancel.trim()" class="ia-arancel-resultados">
+                  <div v-for="a in arancelFiltrado" :key="a.nro_servicio" class="ia-arancel-item" @click="seleccionarArancel(a)">
+                    {{ a.servicio }}<small v-if="a.norma" class="text-muted"> · {{ a.norma }}</small>
                   </div>
+                  <div v-if="arancelFiltrado.length === 0" class="text-muted small p-2">Sin resultados</div>
+                </div>
+                <div v-if="arancelAdicional" class="d-flex align-items-center gap-2 mt-1 p-2 bg-light rounded">
+                  <span class="flex-grow-1 small">{{ arancelAdicional.servicio }}<small v-if="arancelAdicional.norma" class="text-muted"> · {{ arancelAdicional.norma }}</small></span>
+                  <input v-model.number="cantidadAdicional" type="number" min="1" class="form-control form-control-sm" style="width:70px" placeholder="Cant.">
+                  <button type="button" class="btn btn-sm btn-primary" @click="agregarArancel">Agregar</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" @click="arancelAdicional = null">✕</button>
                 </div>
               </div>
 
-              {{console.log('servicios seleccionados dentro del modal', serviciosSeleccionados)}}
+              <!-- Lista unificada de seleccionados -->
+              <div class="mb-3" v-if="serviciosSeleccionados.length">
+                <label class="form-label fw-semibold" style="font-size:0.85rem">Servicios a solicitar</label>
+                <div class="ia-seleccionados-list">
+                  <div v-for="(sv, i) in serviciosSeleccionados" :key="i" class="ia-seleccionado-item">
+                    <span class="flex-grow-1 small"><strong>{{ sv.cant }}×</strong> {{ sv.servicio }}<small v-if="sv.norma" class="text-muted"> · {{ sv.norma }}</small></span>
+                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" @click="quitarServicioSeleccionado(i)">✕</button>
+                  </div>
+                </div>
+              </div>
 
               <div class="mb-3">
                 <label for="num_labs" class="form-label text-left">Numeros de Laboratorio para Inter Area (opcional):</label>
@@ -2722,7 +2745,17 @@
       // Setup Inter Area
       const serviciosDisponibles = ref([]);
       const serviciosSeleccionados = ref([]);
-      const servicioSeleccionadoTemporal = ref([]);
+      const catalogoAranceles = ref([]);
+      const busquedaArancel = ref('');
+      const arancelAdicional = ref(null);
+      const cantidadAdicional = ref(1);
+      const arancelFiltrado = computed(() => {
+        const q = busquedaArancel.value.trim().toLowerCase();
+        if (!q) return [];
+        return catalogoAranceles.value.filter(a =>
+          a.servicio.toLowerCase().includes(q) || (a.norma && a.norma.toLowerCase().includes(q))
+        ).slice(0, 8);
+      });
 
       const inter_areaTematicaOptions = ref([
           { value: 'durabilidad', label: 'Durabilidad' },
@@ -4078,40 +4111,56 @@
         }
       };
 
-      // Función para agregar un servicio seleccionado
-      const agregarServicioSeleccionado = (servicio) => {
-        serviciosSeleccionados.value.push(servicio);
+      const isServicioOSSeleccionado = (servicio) =>
+        serviciosSeleccionados.value.some(s => s.nro_servicio === servicio.nro_servicio);
+
+      const toggleServicioOS = (servicio, checked) => {
+        if (checked) {
+          serviciosSeleccionados.value.push({ ...servicio });
+        } else {
+          const idx = serviciosSeleccionados.value.findIndex(s => s.nro_servicio === servicio.nro_servicio);
+          if (idx !== -1) serviciosSeleccionados.value.splice(idx, 1);
+        }
       };
 
-      // Función para eliminar un servicio seleccionado
-      const eliminarServicioSeleccionado = (index) => {
-        const servicio = serviciosSeleccionados.value[index];
-        serviciosDisponibles.value.servicio_solicitado.push(servicio);
-        serviciosSeleccionados.value.splice(index, 1);
+      const seleccionarArancel = (arancel) => {
+        arancelAdicional.value = arancel;
+        busquedaArancel.value = '';
+        cantidadAdicional.value = 1;
       };
 
-      const moverServicioSeleccionado = () => {
-        servicioSeleccionadoTemporal.value.forEach(servicio => {
-          serviciosSeleccionados.value.push({ ...servicio, cantidadSeleccionada: 1 });
-          const index = serviciosDisponibles.value.servicio_solicitado.indexOf(servicio);
-          if (index > -1) {
-            serviciosDisponibles.value.servicio_solicitado.splice(index, 1);
-          }
+      const agregarArancel = () => {
+        if (!arancelAdicional.value || cantidadAdicional.value < 1) return;
+        serviciosSeleccionados.value.push({
+          nro_servicio: arancelAdicional.value.nro_servicio,
+          servicio: arancelAdicional.value.servicio,
+          norma: arancelAdicional.value.norma || '',
+          cant: cantidadAdicional.value,
         });
-        servicioSeleccionadoTemporal.value = [];
+        arancelAdicional.value = null;
+        busquedaArancel.value = '';
+        cantidadAdicional.value = 1;
+      };
+
+      const quitarServicioSeleccionado = (index) => {
+        serviciosSeleccionados.value.splice(index, 1);
       };
 
       const abrirModalCrearSolicitudInterArea = async (fila) => {
         numeroCircuitoGlobal.value = fila.nro_circuito;
-
         try {
           await obtenerServicios(numeroCircuitoGlobal.value);
           nuevaSolicitudInterarea.value.nro_circuito = fila.nro_circuito;
           nuevaSolicitudInterarea.value.areaTematica_origen = fila.area_tematica;
           mostrarModalCrearSolicitudInterArea.value = true;
+          if (!catalogoAranceles.value.length) {
+            try {
+              const res = await api.get('/aranceles/todos/');
+              catalogoAranceles.value = Array.isArray(res.data) ? res.data : [];
+            } catch (_) {}
+          }
         } catch (error) {
           console.error('Error al obtener servicios:', error);
-          // Manejar el error según sea necesario
         }
       };
 
@@ -4119,7 +4168,9 @@
         mostrarModalCrearSolicitudInterArea.value = false;
         serviciosDisponibles.value = [];
         serviciosSeleccionados.value = [];
-        servicioSeleccionadoTemporal.value = [];
+        busquedaArancel.value = '';
+        arancelAdicional.value = null;
+        cantidadAdicional.value = 1;
         // Limpiar el formulario
         nuevaSolicitudInterarea.value = {
                 fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), // Obtener la fecha actual en formato "YYYY-MM-DD",
@@ -4157,7 +4208,6 @@
 
           nuevaSolicitudInterarea.value.areaTematica_origen = desformatearAreaTematica(nuevaSolicitudInterarea.value.areaTematica_origen);
           
-          console.log('nueva solicitud interarea envianda al backend',nuevaSolicitudInterarea)
 
           // Enviar datos al backend usando api
           api.post('/encurso/crear_solicitud_interarea/', nuevaSolicitudInterarea.value)
@@ -4165,10 +4215,8 @@
               console.log(response.data);
               cerrarModalCrearSolicitudInterArea();
 
-              // Limpiar los array
               serviciosDisponibles.value = [];
               serviciosSeleccionados.value = [];
-              servicioSeleccionadoTemporal.value = [];
               // Limpiar el formulario y mostrar la alerta de éxito
               nuevaSolicitudInterarea.value = {
                 fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), 
@@ -4195,10 +4243,8 @@
               console.error('Error al crear la solicitud inter area:', error);
               cerrarModalCrearSolicitudInterArea();
 
-              // Limpiar los array
               serviciosDisponibles.value = [];
               serviciosSeleccionados.value = [];
-              servicioSeleccionadoTemporal.value = [];
               // Limpiar el formulario y mostrar la alerta de error
               nuevaSolicitudInterarea.value = {
                 fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), 
@@ -5061,13 +5107,19 @@
         // Inter Area
         serviciosDisponibles,
         serviciosSeleccionados,
-        servicioSeleccionadoTemporal,
+        catalogoAranceles,
+        busquedaArancel,
+        arancelAdicional,
+        cantidadAdicional,
+        arancelFiltrado,
+        isServicioOSSeleccionado,
+        toggleServicioOS,
+        seleccionarArancel,
+        agregarArancel,
+        quitarServicioSeleccionado,
         inter_areaTematicaOptions,
         nuevaSolicitudInterarea,
         obtenerServicios,
-        agregarServicioSeleccionado,
-        eliminarServicioSeleccionado,
-        moverServicioSeleccionado,
         abrirModalCrearSolicitudInterArea,
         cerrarModalCrearSolicitudInterArea,
         mostrarModalCrearSolicitudInterArea,
@@ -5266,6 +5318,63 @@
     0%   { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.45); }
     60%  { box-shadow: 0 0 0 7px rgba(220, 53, 69, 0); }
     100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+  }
+
+  /* Inter-area modal — OS checkboxes */
+  .ia-os-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 6px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: #fafafa;
+  }
+  .ia-os-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 2px 0;
+    font-size: 0.83rem;
+    margin: 0;
+  }
+  .ia-os-item input[type="checkbox"] { flex-shrink: 0; cursor: pointer; }
+  .ia-os-label { line-height: 1.3; }
+
+  /* Inter-area modal — arancel search */
+  .ia-arancel-resultados {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    background: white;
+  }
+  .ia-arancel-item {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .ia-arancel-item:last-child { border-bottom: none; }
+  .ia-arancel-item:hover { background: #e8f4fd; }
+
+  /* Inter-area modal — selected list */
+  .ia-seleccionados-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ia-seleccionado-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    background: #e8f4fd;
+    border-radius: 6px;
+    font-size: 0.82rem;
   }
 
   /* Alertas de plazo */
