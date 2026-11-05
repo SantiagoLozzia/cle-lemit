@@ -131,7 +131,13 @@
       <div class="modal-detalle">
         <div class="modal-detalle-header">
           <span class="fw-bold fs-6">Detalle — N° Servicio {{ detalle.nro_dataServicio }}</span>
-          <button class="btn-close" @click="cerrarModal"></button>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-warning" :disabled="desarchivando" @click="desarchivar(detalle)">
+              <span v-if="desarchivando" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="bi bi-arrow-counterclockwise me-1"></i>Desarchivar
+            </button>
+            <button class="btn-close" @click="cerrarModal"></button>
+          </div>
         </div>
         <div class="modal-detalle-body">
 
@@ -371,11 +377,28 @@ export default {
     const mostrarModal = ref(false);
     const detalle = ref({});
 
+    const desarchivando = ref(false);
+
     const abrirDetalle = (item) => {
       detalle.value = item;
       mostrarModal.value = true;
     };
     const cerrarModal = () => { mostrarModal.value = false; };
+
+    const desarchivar = async (item) => {
+      const nroCircuito = item.nro_circuito;
+      if (!confirm(`¿Desarchivar el circuito N° ${nroCircuito}?\nVolverá a aparecer en "En Curso".`)) return;
+      desarchivando.value = true;
+      try {
+        await api.post(`/encurso/desarchivar_circuito/${nroCircuito}/`);
+        archivados.value = archivados.value.filter(a => a.nro_circuito !== nroCircuito);
+        cerrarModal();
+      } catch (err) {
+        alert('No se pudo desarchivar: ' + (err.response?.data?.error || err.message));
+      } finally {
+        desarchivando.value = false;
+      }
+    };
 
     // Carga de datos
     const fetchArchivados = async () => {
@@ -479,6 +502,7 @@ export default {
       sortKey, sortDir, setSort, sortedArchivados,
       mostrarModal, detalle, abrirDetalle, cerrarModal,
       formatDate, formatAreaTematica, formatMonto, labelPago, badgePago, badgeMotivo,
+      desarchivando, desarchivar,
       COLS, colVisible, colsOcultas, mostrarColSelector, colSelectorRef,
       toggleColSelector, mostrarTodasCols,
       exportarExcel,

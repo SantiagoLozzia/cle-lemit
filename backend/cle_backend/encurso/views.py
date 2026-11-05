@@ -1700,6 +1700,30 @@ class ArchivarCircuito(APIView):
         return JsonResponse({'message': 'Archivado correctamente.'})
 
 
+class DesarchivarCircuito(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, nro_circuito):
+        circuito = get_object_or_404(Circuito, nro_circuito=nro_circuito)
+        if not circuito.finalizado:
+            return Response({'error': 'El circuito no está archivado.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        data_servicio = get_object_or_404(DataServicio, nro_circuito=nro_circuito)
+        data_servicio.finalizado = False
+        data_servicio.save()
+
+        circuito.finalizado = False
+        circuito.motivo_archivo = ''
+        circuito.nota_archivo = None
+        circuito.fecha_archivo = None
+        circuito.save()
+
+        _log(request, 'desarchivar_circuito',
+             f'Circuito #{nro_circuito} desarchivado y devuelto a En Curso',
+             nro_circuito=int(nro_circuito))
+        return JsonResponse({'message': 'Desarchivado correctamente.'})
+
+
 class ObtenerArchivados(APIView):
     permission_classes = [IsAuthenticated]
 

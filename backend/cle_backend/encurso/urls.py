@@ -61,8 +61,9 @@ urlpatterns = [
     path('crear_solicitud_interarea/', CrearSolicitudInterarea.as_view(), name='crear-solicitud-interarea'),
     path('obtener_solicitud_interarea/<int:nro_circuito>/', obtener_solicitudInterarea, name='obtener-solicitud-interarea'),
     path('guardar_adjuntoinformeinterarea/', GuardarAdjuntoInformeInterarea.as_view(), name='guardar-adjuntoinformeinterarea'),
-    # Archivar
+    # Archivar / Desarchivar
     path('archivar_circuito/<int:nro_circuito>/', ArchivarCircuito.as_view(), name='archivar-circuito'),
+    path('desarchivar_circuito/<int:nro_circuito>/', DesarchivarCircuito.as_view(), name='desarchivar-circuito'),
     # Auditoría
     path('auditoria/', ObtenerEventosAuditoria.as_view(), name='auditoria'),
     path('historial_circuito/<int:nro_circuito>/', HistorialCircuito.as_view(), name='historial-circuito'),
