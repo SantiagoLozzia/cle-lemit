@@ -22,8 +22,42 @@
               Acceder
             </button>
             <p v-if="errorMessage" class="text-danger text-center mt-3">{{ errorMessage }}</p>
+            <p class="text-center mt-2 mb-0">
+              <a href="#" class="forgot-link" @click.prevent="abrirModalOlvide">¿Olvidaste tu contraseña?</a>
+            </p>
           </form>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Olvidé mi contraseña -->
+  <div class="modal-overlay" v-if="mostrarModalOlvide" @click.self="cerrarModalOlvide">
+    <div class="modal-box">
+      <div class="modal-header-custom">
+        <h5>Recuperar contraseña</h5>
+        <button class="btn-close" @click="cerrarModalOlvide"></button>
+      </div>
+      <div class="modal-body-custom">
+        <p class="small text-muted mb-3">Ingresá tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+        <input
+          v-model="emailOlvide"
+          type="email"
+          class="form-control form-control-sm mb-2"
+          placeholder="tu@email.com"
+          :disabled="enviandoOlvide || olvideMsgOk"
+        >
+        <div v-if="olvideMsgOk" class="alert alert-success py-1 small mb-2">
+          Si ese email existe en el sistema, te llegará un correo con el enlace.
+        </div>
+        <div v-if="olvideMsgError" class="alert alert-danger py-1 small mb-2">{{ olvideMsgError }}</div>
+        <button
+          class="btn btn-primary btn-sm w-100"
+          :disabled="enviandoOlvide || olvideMsgOk || !emailOlvide.trim()"
+          @click="enviarOlvide"
+        >
+          {{ enviandoOlvide ? 'Enviando...' : 'Enviar enlace' }}
+        </button>
       </div>
     </div>
   </div>
@@ -32,7 +66,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/api.js'; // Importa la instancia de Axios
+import api from '@/api.js';
 
 const router = useRouter();
 
@@ -40,6 +74,35 @@ const username = ref('');
 const password = ref('');
 const errorMessage = ref('');
 const isLoading = ref(false);
+
+// Modal olvidé contraseña
+const mostrarModalOlvide = ref(false);
+const emailOlvide        = ref('');
+const enviandoOlvide     = ref(false);
+const olvideMsgOk        = ref(false);
+const olvideMsgError     = ref('');
+
+const abrirModalOlvide = () => {
+  emailOlvide.value    = '';
+  olvideMsgOk.value    = false;
+  olvideMsgError.value = '';
+  mostrarModalOlvide.value = true;
+};
+
+const cerrarModalOlvide = () => { mostrarModalOlvide.value = false; };
+
+const enviarOlvide = async () => {
+  olvideMsgError.value = '';
+  enviandoOlvide.value = true;
+  try {
+    await api.post('/auth/forgot_password/', { email: emailOlvide.value.trim() });
+    olvideMsgOk.value = true;
+  } catch (_) {
+    olvideMsgError.value = 'No se pudo enviar el correo. Intentá de nuevo.';
+  } finally {
+    enviandoOlvide.value = false;
+  }
+};
 
 async function login() {
   isLoading.value = true;
@@ -159,4 +222,42 @@ async function login() {
 .text-danger {
   font-weight: bold;
 }
+
+.forgot-link {
+  font-size: 0.85rem;
+  color: #026290;
+  text-decoration: none;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.modal-header-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header-custom h5 { margin: 0; font-size: 1rem; }
+
+.modal-body-custom { padding: 20px; }
 </style>

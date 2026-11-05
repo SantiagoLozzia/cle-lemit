@@ -6,7 +6,8 @@ import PresupuestosView from '@/views/PresupuestosView.vue';
 import EnCursoView from '@/views/EnCursoView.vue';
 import ArchivoView from '@/views/ArchivoView.vue';
 import SolicitantesView from '@/views/SolicitantesView.vue';
-import LoginView from '@/views/LoginView.vue'; 
+import LoginView from '@/views/LoginView.vue';
+import ResetPasswordView from '@/views/ResetPasswordView.vue';
 
 // Componentes para las subrutas de Presupuestos
 import EnEsperaView from '@/views/SubmenuPresupuestos/EnEsperaView.vue';
@@ -23,6 +24,7 @@ function isAuthenticated() {
 // Define las rutas
 const routes = [
   { path: '/userlogin', component: LoginView },
+  { path: '/reset-password', component: ResetPasswordView },
   { path: '/', component: EnCursoView, meta: { requiresAuth: true } },
   { path: '/encurso', component: EnCursoView, meta: { requiresAuth: true } },
   { path: '/aranceles', component: ArancelesView, meta: { requiresAuth: true } },
