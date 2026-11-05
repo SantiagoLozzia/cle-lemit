@@ -262,11 +262,11 @@
                 <template v-else>
                   <div v-if="isAdministracion">
                     <span @click="abrirModalPlazoPago(fila)" style="cursor: pointer;">
-                      {{ fila.plazo_pago }}
+                      <span class="plazo-badge" :class="plazoCriticidad(fila.plazo_pago)">{{ fila.plazo_pago }}</span>
                     </span>
                   </div>
                   <div v-else>
-                    {{ fila.plazo_pago }}
+                    <span class="plazo-badge" :class="plazoCriticidad(fila.plazo_pago)">{{ fila.plazo_pago }}</span>
                   </div>
                 </template>
             </td>
@@ -312,12 +312,12 @@
               <template v-else>
                 <div v-if="isServiciosTecnologicos">
                   <span v-if="fila.legajo_completo" @click="abrirModalPlazoMuestras(fila)" style="cursor: pointer;">
-                    {{ fila.plazo_muestras }}
+                    <span class="plazo-badge" :class="plazoCriticidad(fila.plazo_muestras)">{{ fila.plazo_muestras }}</span>
                   </span>
                 </div>
                 <div v-else>
                   <span v-if="fila.legajo_completo">
-                    {{ fila.plazo_muestras }}
+                    <span class="plazo-badge" :class="plazoCriticidad(fila.plazo_muestras)">{{ fila.plazo_muestras }}</span>
                   </span>
                 </div>
               </template>
@@ -2450,6 +2450,14 @@
         if (restantes <= 3) return 'row-urgente';
         if (restantes <= 7) return 'row-alerta';
         return '';
+      };
+
+      const plazoCriticidad = (dias) => {
+        const d = Number(dias);
+        if (dias === null || dias === undefined || isNaN(d)) return null;
+        if (d <= 3) return 'plazo-urgente';
+        if (d <= 7) return 'plazo-alerta';
+        return null;
       };
 
       const filteredFilas = computed(() => filas.value.filter(f => {
@@ -4894,6 +4902,7 @@
         sortKey, sortDir, sortedFilas, setSort,
         filterArea, filterDesde, filterHasta, filterTipoFecha, uniqueAreas, clearFilters,
         getRowClass,
+        plazoCriticidad,
         diasRestantesOS,
         validarNumeroEntero,
         formatDate,
@@ -5227,6 +5236,36 @@
 
   .table tbody tr:hover {
     background-color: #daeaf3;
+  }
+
+  /* Badge circular para plazos de pago y muestras */
+  .plazo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0 4px;
+  }
+
+  .plazo-badge.plazo-alerta {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .plazo-badge.plazo-urgente {
+    background: #f8d7da;
+    color: #842029;
+    animation: plazo-pulso 1.6s ease-out infinite;
+  }
+
+  @keyframes plazo-pulso {
+    0%   { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.45); }
+    60%  { box-shadow: 0 0 0 7px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
   }
 
   /* Alertas de plazo */
