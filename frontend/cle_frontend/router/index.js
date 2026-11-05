@@ -8,6 +8,7 @@ import ArchivoView from '@/views/ArchivoView.vue';
 import SolicitantesView from '@/views/SolicitantesView.vue';
 import LoginView from '@/views/LoginView.vue';
 import ResetPasswordView from '@/views/ResetPasswordView.vue';
+import PerfilView from '@/views/PerfilView.vue';
 
 // Componentes para las subrutas de Presupuestos
 import EnEsperaView from '@/views/SubmenuPresupuestos/EnEsperaView.vue';
@@ -25,6 +26,7 @@ function isAuthenticated() {
 const routes = [
   { path: '/userlogin', component: LoginView },
   { path: '/reset-password', component: ResetPasswordView },
+  { path: '/perfil', component: PerfilView, meta: { requiresAuth: true } },
   { path: '/', component: EnCursoView, meta: { requiresAuth: true } },
   { path: '/encurso', component: EnCursoView, meta: { requiresAuth: true } },
   { path: '/aranceles', component: ArancelesView, meta: { requiresAuth: true } },

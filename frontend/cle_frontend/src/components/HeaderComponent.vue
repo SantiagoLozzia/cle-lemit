@@ -9,7 +9,7 @@
         <i class="bi bi-chevron-down chev" :class="{ rotated: menuAbierto }"></i>
       </div>
       <div class="dropdown-menu-custom" v-if="menuAbierto">
-        <button class="dd-item" @click="abrirModalPerfil">
+        <button class="dd-item" @click="irAlPerfil">
           <i class="bi bi-person-fill"></i> Mi Perfil
         </button>
         <button class="dd-item" @click="abrirModalFirma">
@@ -68,74 +68,18 @@
     </div>
   </div>
 
-  <!-- Modal Mi Perfil -->
-  <div class="modal" :class="{ 'show': mostrarModalPerfil }" @click.self="cerrarModalPerfil">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Mi Perfil</h5>
-          <button type="button" class="btn-close" @click="cerrarModalPerfil"></button>
-        </div>
-        <div class="modal-body">
-
-          <!-- Datos personales -->
-          <p class="fw-semibold mb-2" style="font-size:0.85rem">Datos personales</p>
-          <div class="row g-2 mb-2">
-            <div class="col-6">
-              <label class="form-label small mb-1">Nombre</label>
-              <input v-model="perfilNombre" class="form-control form-control-sm" placeholder="Nombre">
-            </div>
-            <div class="col-6">
-              <label class="form-label small mb-1">Apellido</label>
-              <input v-model="perfilApellido" class="form-control form-control-sm" placeholder="Apellido">
-            </div>
-          </div>
-          <div class="mb-2">
-            <label class="form-label small mb-1">Email</label>
-            <input v-model="perfilEmail" type="email" class="form-control form-control-sm" placeholder="email@ejemplo.com">
-          </div>
-          <div v-if="perfilOk" class="alert alert-success py-1 small mb-2">Datos actualizados.</div>
-          <div v-if="perfilError" class="alert alert-danger py-1 small mb-2">{{ perfilError }}</div>
-          <button class="btn btn-primary btn-sm w-100 mb-1" :disabled="guardandoPerfil" @click="guardarPerfil">
-            {{ guardandoPerfil ? 'Guardando...' : 'Guardar datos' }}
-          </button>
-
-          <hr class="my-3">
-
-          <!-- Cambiar contraseña -->
-          <p class="fw-semibold mb-2" style="font-size:0.85rem">Cambiar contraseña</p>
-          <div class="mb-2">
-            <label class="form-label small mb-1">Contraseña actual</label>
-            <input v-model="pwActual" type="password" class="form-control form-control-sm" placeholder="Contraseña actual">
-          </div>
-          <div class="mb-2">
-            <label class="form-label small mb-1">Nueva contraseña</label>
-            <input v-model="pwNueva" type="password" class="form-control form-control-sm" placeholder="Mínimo 8 caracteres">
-          </div>
-          <div class="mb-2">
-            <label class="form-label small mb-1">Confirmar contraseña</label>
-            <input v-model="pwConfirmar" type="password" class="form-control form-control-sm" placeholder="Repetir nueva contraseña">
-          </div>
-          <div v-if="pwOk" class="alert alert-success py-1 small mb-2">Contraseña actualizada.</div>
-          <div v-if="pwError" class="alert alert-danger py-1 small mb-2">{{ pwError }}</div>
-          <button class="btn btn-outline-primary btn-sm w-100" :disabled="guardandoPw" @click="cambiarPassword">
-            {{ guardandoPw ? 'Guardando...' : 'Cambiar contraseña' }}
-          </button>
-
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '@/api.js';
 import logo from '@/assets/logo_L.png';
 
 export default {
   inheritAttrs: false,
   setup() {
+    const router      = useRouter();
     const logoPath    = ref(logo);
     const userLoaded  = ref(false);
     const firstName   = ref('');
@@ -150,23 +94,6 @@ export default {
     const guardandoLeyenda  = ref(false);
     const leyendaGuardada   = ref(false);
     const errorLeyenda      = ref('');
-
-    // Perfil
-    const mostrarModalPerfil = ref(false);
-    const perfilNombre       = ref('');
-    const perfilApellido     = ref('');
-    const perfilEmail        = ref('');
-    const guardandoPerfil    = ref(false);
-    const perfilOk           = ref(false);
-    const perfilError        = ref('');
-
-    // Cambio de contraseña
-    const pwActual    = ref('');
-    const pwNueva     = ref('');
-    const pwConfirmar = ref('');
-    const guardandoPw = ref(false);
-    const pwOk        = ref(false);
-    const pwError     = ref('');
 
     const fullName = computed(() =>
       firstName.value || lastName.value
@@ -254,80 +181,9 @@ export default {
     };
 
     // --- Perfil ---
-    const abrirModalPerfil = async () => {
+    const irAlPerfil = () => {
       menuAbierto.value = false;
-      perfilOk.value    = false;
-      perfilError.value = '';
-      pwOk.value        = false;
-      pwError.value     = '';
-      pwActual.value    = '';
-      pwNueva.value     = '';
-      pwConfirmar.value = '';
-      try {
-        const res = await api.get('/auth/perfil/');
-        perfilNombre.value   = res.data.first_name || '';
-        perfilApellido.value = res.data.last_name  || '';
-        perfilEmail.value    = res.data.email       || '';
-      } catch (_) {
-        perfilNombre.value   = sessionStorage.getItem('first_name') || '';
-        perfilApellido.value = sessionStorage.getItem('last_name')  || '';
-        perfilEmail.value    = '';
-      }
-      mostrarModalPerfil.value = true;
-    };
-
-    const cerrarModalPerfil = () => { mostrarModalPerfil.value = false; };
-
-    const guardarPerfil = async () => {
-      guardandoPerfil.value = true;
-      perfilOk.value        = false;
-      perfilError.value     = '';
-      try {
-        const res = await api.put('/auth/perfil/', {
-          first_name: perfilNombre.value.trim(),
-          last_name:  perfilApellido.value.trim(),
-          email:      perfilEmail.value.trim(),
-        });
-        sessionStorage.setItem('first_name', res.data.first_name);
-        sessionStorage.setItem('last_name',  res.data.last_name);
-        firstName.value = res.data.first_name;
-        lastName.value  = res.data.last_name;
-        perfilOk.value  = true;
-        setTimeout(() => { perfilOk.value = false; }, 2500);
-      } catch (err) {
-        perfilError.value = err.response?.data?.error || 'Error al guardar.';
-      } finally {
-        guardandoPerfil.value = false;
-      }
-    };
-
-    const cambiarPassword = async () => {
-      pwOk.value    = false;
-      pwError.value = '';
-      if (!pwActual.value || !pwNueva.value || !pwConfirmar.value) {
-        pwError.value = 'Completá todos los campos.';
-        return;
-      }
-      if (pwNueva.value !== pwConfirmar.value) {
-        pwError.value = 'Las contraseñas no coinciden.';
-        return;
-      }
-      guardandoPw.value = true;
-      try {
-        await api.post('/auth/change_password/', {
-          current_password: pwActual.value,
-          new_password:     pwNueva.value,
-        });
-        pwOk.value        = true;
-        pwActual.value    = '';
-        pwNueva.value     = '';
-        pwConfirmar.value = '';
-        setTimeout(() => { pwOk.value = false; }, 2500);
-      } catch (err) {
-        pwError.value = err.response?.data?.error || 'Error al cambiar contraseña.';
-      } finally {
-        guardandoPw.value = false;
-      }
+      router.push('/perfil');
     };
 
     const logout = () => {
@@ -356,10 +212,7 @@ export default {
       mostrarModalFirma, firmaUrl,
       abrirModalFirma, cerrarModalFirma, subirFirma, eliminarFirma,
       leyendaTexto, guardandoLeyenda, leyendaGuardada, errorLeyenda, guardarLeyenda,
-      mostrarModalPerfil, perfilNombre, perfilApellido, perfilEmail,
-      guardandoPerfil, perfilOk, perfilError,
-      abrirModalPerfil, cerrarModalPerfil, guardarPerfil,
-      pwActual, pwNueva, pwConfirmar, guardandoPw, pwOk, pwError, cambiarPassword,
+      irAlPerfil,
       logout,
     };
   }
