@@ -2448,7 +2448,7 @@
         const restantes = diasRestantesOS(fila);
         if (restantes === null) return '';
         if (restantes <= 3) return 'row-urgente';
-        if (restantes <= 7) return 'row-alerta';
+        if (restantes <= 5) return 'row-alerta';
         return '';
       };
 
@@ -2456,7 +2456,7 @@
         const d = Number(dias);
         if (dias === null || dias === undefined || isNaN(d)) return null;
         if (d <= 3) return 'plazo-urgente';
-        if (d <= 7) return 'plazo-alerta';
+        if (d <= 5) return 'plazo-alerta';
         return null;
       };
 
