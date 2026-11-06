@@ -2476,8 +2476,9 @@
       };
 
       const plazoCriticidad = (dias) => {
+        if (dias === null || dias === undefined || dias === '') return null;
         const d = Number(dias);
-        if (dias === null || dias === undefined || isNaN(d)) return null;
+        if (isNaN(d)) return null;
         if (d <= 3) return 'plazo-urgente';
         if (d <= 5) return 'plazo-alerta';
         return null;
@@ -4847,7 +4848,7 @@
           const alertas = [];
           for (const fila of filas.value) {
             // Plazo de pago vencido → Administración
-            if (isAdministracion.value && Number(fila.plazo_pago) <= 0 && !pagoEsCompleto(fila.pago)) {
+            if (isAdministracion.value && fila.plazo_pago !== '' && fila.plazo_pago !== null && Number(fila.plazo_pago) <= 0 && !pagoEsCompleto(fila.pago)) {
               alertas.push({
                 key: `pago_${fila.nro_circuito}`,
                 nro_circuito: fila.nro_circuito,
@@ -4856,7 +4857,7 @@
               });
             }
             // Plazo de muestras vencido → ST
-            if (isServiciosTecnologicos.value && Number(fila.plazo_muestras) <= 0 && fila.estado_recepcion !== 'total') {
+            if (isServiciosTecnologicos.value && fila.plazo_muestras !== '' && fila.plazo_muestras !== null && Number(fila.plazo_muestras) <= 0 && fila.estado_recepcion !== 'total') {
               alertas.push({
                 key: `muestras_${fila.nro_circuito}`,
                 nro_circuito: fila.nro_circuito,
