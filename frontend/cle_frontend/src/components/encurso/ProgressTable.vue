@@ -2340,7 +2340,7 @@
               Sin eventos registrados para este circuito.
             </div>
             <ul v-else class="historial-timeline list-unstyled mb-0 px-3 py-3">
-              <li v-for="(ev, i) in historialEventos" :key="ev.id" class="historial-item">
+              <li v-for="ev in historialEventos" :key="ev.id" class="historial-item">
                 <div class="historial-dot"></div>
                 <div class="historial-contenido">
                   <div class="historial-accion">{{ labelAccion(ev.accion) }}</div>
@@ -4157,7 +4157,7 @@
             try {
               const res = await api.get('/aranceles/todos/');
               catalogoAranceles.value = Array.isArray(res.data) ? res.data : [];
-            } catch (_) {}
+            } catch (_) { /* sin acción */ }
           }
         } catch (error) {
           console.error('Error al obtener servicios:', error);

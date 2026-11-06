@@ -121,14 +121,14 @@ export default {
       try {
         const res = await api.get('/auth/firma_usuario/');
         firmaUrl.value = res.data.firma_url || null;
-      } catch (_) {}
+      } catch (_) { /* sin acción */ }
     };
 
     const cargarLeyenda = async () => {
       try {
         const res = await api.get('/auth/leyenda_usuario/');
         leyendaTexto.value = res.data.leyenda || '';
-      } catch (_) {}
+      } catch (_) { /* sin acción */ }
     };
 
     const abrirModalFirma = async () => {
@@ -163,7 +163,7 @@ export default {
         await api.delete('/auth/firma_usuario/');
         firmaUrl.value = null;
         window.dispatchEvent(new CustomEvent('firma-usuario-actualizada', { detail: { firma_url: null } }));
-      } catch (_) {}
+      } catch (_) { /* sin acción */ }
     };
 
     const guardarLeyenda = async () => {
