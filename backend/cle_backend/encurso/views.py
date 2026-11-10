@@ -599,9 +599,9 @@ def generar_pdf_legajo(request, nro_circuito):
         return response
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=404)
-    except Exception:
+    except Exception as e:
         logger.exception("Error en generar_pdf_legajo")
-        return JsonResponse({'error': 'Error interno del servidor.'}, status=500)
+        return JsonResponse({'error': f'DEBUG: {type(e).__name__}: {e}'}, status=500)
 
 
 # Remito
