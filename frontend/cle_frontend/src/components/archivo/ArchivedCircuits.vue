@@ -101,7 +101,7 @@
             <td v-if="colVisible.nro_legajo">{{ item.nro_legajo || '—' }}</td>
             <td v-if="colVisible.fecha_legajo" class="text-nowrap">{{ formatDate(item.fecha_legajo) || '—' }}</td>
             <td v-if="colVisible.legajo_pdf">
-              <i v-if="item.nro_legajo" class="bi bi-file-earmark-pdf action-icon" style="color:#026290; cursor:pointer;" title="Ver legajo" @click="verLegajoPDF(item)"></i>
+              <i v-if="item.nro_legajo" class="bi bi-file-earmark-check-fill action-icon" style="color:#026290; cursor:pointer;" title="Ver legajo" @click="abrirLegajo(item)"></i>
               <span v-else class="text-muted">—</span>
             </td>
             <td v-if="colVisible.nombre_solicitante" class="text-start empresa-cell" :title="item.nombre_solicitante">{{ item.nombre_solicitante }}</td>
@@ -278,6 +278,66 @@
     </div>
 
   </div>
+
+  <!-- Modal Legajo (igual a En Curso) -->
+  <div class="modal" :class="{ 'show': mostrarModalLegajo }" id="modalAbrirLegajoArchivo">
+    <div class="modal-dialog-a4">
+      <div class="modal-content">
+        <div class="modal-header" style="flex-direction: column; align-items: stretch; gap: 6px;">
+          <ISOHeader :config="configFormularioLegajo" :versionDoc="versionLegajo" />
+          <div class="d-flex justify-content-end gap-2 no-print">
+            <button type="button" class="btn btn-sm btn-outline-secondary" @click="descargarLegajoPDF" title="Descargar PDF">
+              <i class="bi bi-download"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" @click="imprimirLegajo" title="Imprimir">
+              <i class="bi bi-printer"></i>
+            </button>
+            <button type="button" class="btn-close" @click="cerrarModalLegajo" aria-label="Close"></button>
+          </div>
+        </div>
+        <div class="modal-body lg-body">
+          <div class="lg-fecha-row">
+            <span class="lg-fecha-label">Fecha</span>
+            <span class="lg-fecha-val">{{ fechaLegajoFormateada }}</span>
+          </div>
+          <div class="lg-title-area">
+            <div class="lg-number">Legajo N° {{ nroLegajo }}/{{ añoLegajo }}</div>
+            <div class="lg-divider"></div>
+          </div>
+          <div class="lg-fields">
+            <div class="lg-field">
+              <span class="lg-label">Solicitante</span>
+              <span class="lg-value">{{ nombreSolicitante }}</span>
+            </div>
+            <div class="lg-field">
+              <span class="lg-label">Rango N° Laboratorios</span>
+              <span class="lg-value">{{ rangosLaboratorios }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="configFormularioLegajo.revisiones && configFormularioLegajo.revisiones.length" class="revision-history-wrapper">
+          <table class="revision-history-table">
+            <thead>
+              <tr><th colspan="4" class="revision-title">Historial de Revisiones</th></tr>
+              <tr><th>Versión</th><th>Fecha</th><th>Descripción</th><th>Aprobado por</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="rev in configFormularioLegajo.revisiones" :key="rev.version">
+                <td class="text-center">{{ rev.version }}</td>
+                <td class="text-center">{{ rev.fecha }}</td>
+                <td>{{ rev.descripcion }}</td>
+                <td>{{ rev.aprobado_por }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer-a4">
+          <div class="footer-image"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </template>
 
 <script>
@@ -286,9 +346,10 @@ import * as XLSX from 'xlsx';
 import api from '@/api.js';
 import { AREAS_TEMATICAS } from '@/constants/areas.js';
 import PageHeader from '@/components/PageHeader.vue';
+import ISOHeader from '@/components/ISOHeader.vue';
 
 export default {
-  components: { PageHeader },
+  components: { PageHeader, ISOHeader },
   setup() {
     const archivados  = ref([]);
     const uniqueAreas = AREAS_TEMATICAS;
@@ -500,15 +561,63 @@ export default {
       XLSX.writeFile(wb, `archivo_circuitos_${fecha}.xlsx`);
     };
 
-    const verLegajoPDF = async (item) => {
+    // Modal legajo (mismo diseño que En Curso)
+    const mostrarModalLegajo   = ref(false);
+    const nroLegajo            = ref(null);
+    const fechaLegajo          = ref(null);
+    const rangosLaboratorios   = ref(null);
+    const nombreSolicitante    = ref(null);
+    const añoLegajo            = ref(null);
+    const versionLegajo        = ref('01');
+    const configFormularioLegajo = ref({ nombre: '', codigo: '', version_actual: '', fecha_version_actual: '', revisiones: [] });
+    const circuitoLegajoActual = ref(null);
+
+    const fechaLegajoFormateada = computed(() => {
+      if (!fechaLegajo.value) return '';
+      const [y, m, d] = fechaLegajo.value.split('-');
+      return `${d}/${m}/${y}`;
+    });
+
+    const abrirLegajo = async (item) => {
       if (!item.nro_circuito) return;
+      circuitoLegajoActual.value = item.nro_circuito;
       try {
-        const response = await api.get(`/encurso/generar_pdf_legajo/${item.nro_circuito}/`, { responseType: 'blob' });
-        const url = URL.createObjectURL(response.data);
-        window.open(url, '_blank');
-        setTimeout(() => URL.revokeObjectURL(url), 15000);
-      } catch (_) { /* sin acción */ }
+        const [resLegajo, resConfig] = await Promise.all([
+          api.get(`/encurso/obtener_legajo/${item.nro_circuito}/`),
+          api.get('/encurso/config_formulario/legajo/'),
+        ]);
+        const { nro_legajo, fecha_legajo, rangos_laboratorios, nombre_solicitante: nombre, version_formulario } = resLegajo.data;
+        nroLegajo.value          = nro_legajo;
+        fechaLegajo.value        = fecha_legajo;
+        rangosLaboratorios.value = rangos_laboratorios;
+        nombreSolicitante.value  = nombre;
+        añoLegajo.value          = new Date(fecha_legajo).getFullYear();
+        versionLegajo.value      = version_formulario || '01';
+        configFormularioLegajo.value = resConfig.data;
+        mostrarModalLegajo.value = true;
+      } catch (err) {
+        console.error('Error al obtener legajo:', err);
+      }
     };
+
+    const cerrarModalLegajo = () => { mostrarModalLegajo.value = false; };
+
+    const descargarLegajoPDF = () => {
+      if (!circuitoLegajoActual.value) return;
+      api({ method: 'get', url: `encurso/generar_pdf_legajo/${circuitoLegajoActual.value}/`, responseType: 'blob' })
+        .then(response => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', 'legajo.pdf');
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        })
+        .catch(err => console.error('Error al descargar PDF:', err));
+    };
+
+    const imprimirLegajo = () => { window.print(); };
 
     onMounted(() => {
       fetchArchivados();
@@ -526,7 +635,10 @@ export default {
       sortKey, sortDir, setSort, sortedArchivados,
       mostrarModal, detalle, abrirDetalle, cerrarModal,
       formatDate, formatAreaTematica, formatMonto, labelPago, badgePago, badgeMotivo,
-      desarchivando, desarchivar, verLegajoPDF,
+      desarchivando, desarchivar,
+      mostrarModalLegajo, nroLegajo, fechaLegajo, rangosLaboratorios,
+      nombreSolicitante, añoLegajo, versionLegajo, configFormularioLegajo,
+      fechaLegajoFormateada, abrirLegajo, cerrarModalLegajo, descargarLegajoPDF, imprimirLegajo,
       COLS, colVisible, colsOcultas, mostrarColSelector, colSelectorRef,
       toggleColSelector, mostrarTodasCols,
       exportarExcel,
@@ -654,4 +766,37 @@ export default {
 }
 .col-sel-item:hover { background: #f0f4f8; }
 .col-sel-item input[type="checkbox"] { cursor: pointer; }
+
+/* ── Modal legajo ── */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 1050; overflow-y: auto; }
+.modal.show { display: flex; align-items: flex-start; justify-content: center; padding: 24px 0; }
+
+.lg-body { display: flex; flex-direction: column; padding: 28px 36px 36px; }
+.lg-fecha-row { display: flex; flex-direction: column; align-items: flex-end; margin-bottom: 52px; }
+.lg-fecha-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: #026290; }
+.lg-fecha-val { font-size: 0.95rem; font-weight: 600; color: #333; }
+.lg-title-area { margin-bottom: 52px; }
+.lg-number { font-size: 2.6rem; font-weight: 800; color: #026290; line-height: 1.1; letter-spacing: -0.01em; }
+.lg-divider { width: 64px; height: 4px; background: #026290; margin-top: 12px; border-radius: 2px; }
+.lg-fields { display: flex; gap: 16px; }
+.lg-field { flex: 1; background: #f0f5fb; border-left: 4px solid #026290; padding: 16px 20px; border-radius: 0 6px 6px 0; }
+.lg-label { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: #026290; margin-bottom: 6px; }
+.lg-value { font-size: 1.15rem; font-weight: 700; color: #1a1a1a; }
+
+.revision-history-wrapper { padding: 0 1rem 0.5rem; }
+.revision-history-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.revision-history-table th, .revision-history-table td { border: 1px solid #aaa; padding: 3px 6px; }
+.revision-title { text-align: center !important; font-weight: 700; background-color: #cfe0f0 !important; }
+
+@media print {
+  #modalAbrirLegajoArchivo .no-print { display: none !important; visibility: hidden; }
+  #modalAbrirLegajoArchivo.show .modal-dialog-a4 { box-shadow: none; margin: 0; max-width: 100%; width: 100%; height: 100vh; display: flex; flex-direction: column; }
+  #modalAbrirLegajoArchivo.show .modal-footer-a4 { position: fixed; bottom: 0; left: 0; width: 100%; }
+  #modalAbrirLegajoArchivo.show .footer-image { print-color-adjust: exact; -webkit-print-color-adjust: exact; visibility: visible !important; }
+  .lg-field { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .lg-number { color: #026290 !important; }
+  .lg-divider { background: #026290 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .lg-label { color: #026290 !important; }
+}
 </style>
