@@ -81,27 +81,32 @@
       <table class="table archivo-table table-hover">
         <thead>
           <tr>
-            <th v-if="colVisible.nro_dataServicio" class="sortable" @click="setSort('nro_dataServicio')">N° Servicio <span class="sort-icon">{{ sortKey === 'nro_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
-            <th v-if="colVisible.fecha_dataServicio" class="sortable" @click="setSort('fecha_dataServicio')">Fecha <span class="sort-icon">{{ sortKey === 'fecha_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="colVisible.nro_legajo" class="sortable" @click="setSort('nro_legajo')">N° Legajo <span class="sort-icon">{{ sortKey === 'nro_legajo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="colVisible.fecha_legajo" class="sortable" @click="setSort('fecha_legajo')">Fecha Legajo <span class="sort-icon">{{ sortKey === 'fecha_legajo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="colVisible.legajo_pdf">Legajo</th>
             <th v-if="colVisible.nombre_solicitante">Empresa</th>
             <th v-if="colVisible.area_tematica">Área Temática</th>
             <th v-if="colVisible.nro_presupuesto" class="sortable" @click="setSort('nro_presupuesto')">Presupuesto <span class="sort-icon">{{ sortKey === 'nro_presupuesto' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
-            <th v-if="colVisible.nro_legajo" class="sortable" @click="setSort('nro_legajo')">Legajo <span class="sort-icon">{{ sortKey === 'nro_legajo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th v-if="colVisible.arancel_presupuesto">Total</th>
             <th v-if="colVisible.pago">Pago</th>
             <th v-if="colVisible.motivo_archivo">Motivo</th>
             <th v-if="colVisible.fecha_archivo" class="sortable" @click="setSort('fecha_archivo')">Finalización <span class="sort-icon">{{ sortKey === 'fecha_archivo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="colVisible.nro_dataServicio" class="sortable" @click="setSort('nro_dataServicio')">N° Servicio <span class="sort-icon">{{ sortKey === 'nro_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="colVisible.informe_firmado">Informe de Servicio</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in sortedArchivados" :key="index" class="archivo-row">
-            <td v-if="colVisible.nro_dataServicio">{{ item.nro_dataServicio }}</td>
-            <td v-if="colVisible.fecha_dataServicio">{{ formatDate(item.fecha_dataServicio) }}</td>
+            <td v-if="colVisible.nro_legajo">{{ item.nro_legajo || '—' }}</td>
+            <td v-if="colVisible.fecha_legajo" class="text-nowrap">{{ formatDate(item.fecha_legajo) || '—' }}</td>
+            <td v-if="colVisible.legajo_pdf">
+              <i v-if="item.nro_legajo" class="bi bi-file-earmark-pdf action-icon" style="color:#026290; cursor:pointer;" title="Ver legajo" @click="verLegajoPDF(item)"></i>
+              <span v-else class="text-muted">—</span>
+            </td>
             <td v-if="colVisible.nombre_solicitante" class="text-start empresa-cell" :title="item.nombre_solicitante">{{ item.nombre_solicitante }}</td>
             <td v-if="colVisible.area_tematica">{{ formatAreaTematica(item.area_tematica) }}</td>
             <td v-if="colVisible.nro_presupuesto">{{ item.nro_presupuesto }}</td>
-            <td v-if="colVisible.nro_legajo">{{ item.nro_legajo || '—' }}</td>
             <td v-if="colVisible.arancel_presupuesto">{{ formatMonto(item.arancel_presupuesto) }}</td>
             <td v-if="colVisible.pago">
               <span :class="badgePago(item.pago)">{{ labelPago(item.pago) }}</span>
@@ -113,6 +118,13 @@
               <span v-else class="text-muted">—</span>
             </td>
             <td v-if="colVisible.fecha_archivo" class="text-nowrap">{{ formatDate(item.fecha_archivo) || '—' }}</td>
+            <td v-if="colVisible.nro_dataServicio">{{ item.nro_dataServicio }}</td>
+            <td v-if="colVisible.informe_firmado">
+              <a v-if="item.informe_firmado" :href="item.informe_firmado" target="_blank" title="Ver informe firmado">
+                <i class="bi bi-file-earmark-check-fill" style="color:#198754; font-size:1.1rem;"></i>
+              </a>
+              <span v-else class="text-muted">—</span>
+            </td>
             <td>
               <button class="btn btn-sm btn-outline-primary py-0" @click="abrirDetalle(item)">
                 <i class="bi bi-eye"></i>
@@ -120,7 +132,7 @@
             </td>
           </tr>
           <tr v-if="sortedArchivados.length === 0">
-            <td colspan="11" class="text-center text-muted py-5" style="font-size:1.1rem">No hay registros archivados</td>
+            <td colspan="13" class="text-center text-muted py-5" style="font-size:1.1rem">No hay registros archivados</td>
           </tr>
         </tbody>
       </table>
@@ -283,16 +295,18 @@ export default {
 
     // Definición de columnas
     const COLS = [
-      { key: 'nro_dataServicio',   label: 'N° Servicio' },
-      { key: 'fecha_dataServicio', label: 'Fecha servicio' },
-      { key: 'nombre_solicitante', label: 'Empresa' },
-      { key: 'area_tematica',      label: 'Área Temática' },
-      { key: 'nro_presupuesto',    label: 'N° Presupuesto' },
-      { key: 'nro_legajo',         label: 'N° Legajo' },
-      { key: 'arancel_presupuesto',label: 'Total' },
-      { key: 'pago',               label: 'Estado de pago' },
-      { key: 'motivo_archivo',     label: 'Motivo de archivo' },
-      { key: 'fecha_archivo',      label: 'Finalización' },
+      { key: 'nro_legajo',          label: 'N° Legajo' },
+      { key: 'fecha_legajo',        label: 'Fecha Legajo' },
+      { key: 'legajo_pdf',          label: 'Legajo' },
+      { key: 'nombre_solicitante',  label: 'Empresa' },
+      { key: 'area_tematica',       label: 'Área Temática' },
+      { key: 'nro_presupuesto',     label: 'N° Presupuesto' },
+      { key: 'arancel_presupuesto', label: 'Total' },
+      { key: 'pago',                label: 'Estado de pago' },
+      { key: 'motivo_archivo',      label: 'Motivo de archivo' },
+      { key: 'fecha_archivo',       label: 'Finalización' },
+      { key: 'nro_dataServicio',    label: 'N° Servicio' },
+      { key: 'informe_firmado',     label: 'Informe de Servicio' },
     ];
 
     const colVisible = reactive(Object.fromEntries(COLS.map(c => [c.key, true])));
@@ -334,7 +348,7 @@ export default {
     };
 
     // Ordenamiento
-    const sortKey = ref('nro_dataServicio');
+    const sortKey = ref('nro_legajo');
     const sortDir = ref('desc');
     const setSort = (key) => {
       if (sortKey.value === key) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
@@ -452,16 +466,16 @@ export default {
 
     // Mapa: key del modelo → función que devuelve el valor para Excel
     const EXCEL_COLS = [
-      { key: 'nro_dataServicio',    label: 'N° Servicio',       fn: i => i.nro_dataServicio },
-      { key: 'fecha_dataServicio',  label: 'Fecha servicio',    fn: i => formatDate(i.fecha_dataServicio) },
+      { key: 'nro_legajo',          label: 'N° Legajo',         fn: i => i.nro_legajo || '' },
+      { key: 'fecha_legajo',        label: 'Fecha Legajo',      fn: i => formatDate(i.fecha_legajo) },
       { key: 'nombre_solicitante',  label: 'Empresa',           fn: i => i.nombre_solicitante },
       { key: 'area_tematica',       label: 'Área Temática',     fn: i => formatAreaTematica(i.area_tematica) },
       { key: 'nro_presupuesto',     label: 'N° Presupuesto',    fn: i => i.nro_presupuesto },
-      { key: 'nro_legajo',          label: 'N° Legajo',         fn: i => i.nro_legajo || '' },
       { key: 'arancel_presupuesto', label: 'Total ($)',          fn: i => i.arancel_presupuesto != null ? parseFloat(i.arancel_presupuesto) : '' },
       { key: 'pago',                label: 'Estado de pago',    fn: i => labelPago(i.pago) },
       { key: 'motivo_archivo',      label: 'Motivo de archivo', fn: i => i.motivo_archivo_display || i.motivo_archivo || '' },
       { key: 'fecha_archivo',       label: 'Finalización',      fn: i => formatDate(i.fecha_archivo) },
+      { key: 'nro_dataServicio',    label: 'N° Servicio',       fn: i => i.nro_dataServicio },
     ];
 
     const exportarExcel = () => {
@@ -486,6 +500,16 @@ export default {
       XLSX.writeFile(wb, `archivo_circuitos_${fecha}.xlsx`);
     };
 
+    const verLegajoPDF = async (item) => {
+      if (!item.nro_circuito) return;
+      try {
+        const response = await api.get(`/encurso/generar_pdf_legajo/${item.nro_circuito}/`, { responseType: 'blob' });
+        const url = URL.createObjectURL(response.data);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 15000);
+      } catch (_) { /* sin acción */ }
+    };
+
     onMounted(() => {
       fetchArchivados();
       document.addEventListener('click', handleClickFueraColSelector);
@@ -502,7 +526,7 @@ export default {
       sortKey, sortDir, setSort, sortedArchivados,
       mostrarModal, detalle, abrirDetalle, cerrarModal,
       formatDate, formatAreaTematica, formatMonto, labelPago, badgePago, badgeMotivo,
-      desarchivando, desarchivar,
+      desarchivando, desarchivar, verLegajoPDF,
       COLS, colVisible, colsOcultas, mostrarColSelector, colSelectorRef,
       toggleColSelector, mostrarTodasCols,
       exportarExcel,

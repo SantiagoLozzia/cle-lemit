@@ -2228,6 +2228,13 @@ class ObtenerArchivados(APIView):
 
             legajo = Legajo.objects.filter(nro_circuito=circuito).first()
 
+            ciclo_firmado = CicloInforme.objects.filter(
+                nro_circuito=circuito, firma_direccion=True
+            ).order_by('-numero').first()
+            informe_firmado_url = None
+            if ciclo_firmado and ciclo_firmado.adjunto_firmado_direccion:
+                informe_firmado_url = request.build_absolute_uri(ciclo_firmado.adjunto_firmado_direccion.url)
+
             detalles = DetallePresupuesto.objects.filter(
                 nro_presupuesto=presupuesto
             ).select_related('nro_servicio')
@@ -2259,7 +2266,9 @@ class ObtenerArchivados(APIView):
                 'nombre_solicitante': solicitante.nombre_solicitante,
                 'cuit_solicitante': solicitante.cuit,
                 'nro_legajo': legajo.nro_legajo if legajo else None,
+                'fecha_legajo': str(legajo.fecha_legajo) if legajo else None,
                 'pago': legajo.pago if legajo else None,
+                'informe_firmado': informe_firmado_url,
                 'motivo_archivo': motivo_key,
                 'motivo_archivo_display': motivo_display,
                 'nota_archivo': circuito.nota_archivo if circuito else None,
