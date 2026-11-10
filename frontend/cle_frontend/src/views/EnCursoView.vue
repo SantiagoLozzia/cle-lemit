@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <PageHeader title="En Curso" icon="bi bi-arrow-repeat" />
     <div class="button-container">
       <!-- Mostrar el componente NewCircuit solo si canSeeButton es verdadero -->
       <NewCircuit v-if="canSeeButton" :data="circuitData" />
@@ -14,11 +15,13 @@
 import { ref, onMounted } from 'vue';
 import NewCircuit from '../components/encurso/NewCircuit';
 import ProgressTable from '../components/encurso/ProgressTable';
+import PageHeader from '../components/PageHeader.vue';
 
 export default {
   components: {
     NewCircuit,
-    ProgressTable
+    ProgressTable,
+    PageHeader,
   },
   setup() {
     const circuitData = ref([]);

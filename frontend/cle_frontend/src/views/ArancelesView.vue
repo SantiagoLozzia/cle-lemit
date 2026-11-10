@@ -1,5 +1,6 @@
 <template>
   <div class="aranceles-view">
+    <PageHeader title="Libro de Aranceles" :subtitle="arancelesData.length + ' servicios'" icon="bi bi-clipboard-data" />
     <div class="actions-bar">
       <UpdateModule />
       <NewService @arancel-creado="fetchAranceles" />
@@ -14,9 +15,10 @@ import api from '@/api.js';
 import UpdateModule     from '../components/aranceles/UpdateModule.vue';
 import ArancelesTable   from '../components/aranceles/ArancelesTable.vue';
 import NewService       from '../components/aranceles/NewService.vue';
+import PageHeader       from '../components/PageHeader.vue';
 
 export default {
-  components: { UpdateModule, NewService, ArancelesTable },
+  components: { UpdateModule, NewService, ArancelesTable, PageHeader },
 
   setup() {
     const moduloData    = ref([]);

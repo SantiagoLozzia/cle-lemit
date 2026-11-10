@@ -1,29 +1,14 @@
 <template>
   <div class="container">
-    <div class="button-container">
-      <NewBudget :data="budgetData" />
-    </div>
-    <div class="table-container">
-    <EnEsperaTable :data="enesperaData" />
-    </div>
+    <EnEsperaTable />
   </div>
 </template>
 
 <script>
-  import NewBudget from '../../components/presupuestos/NewBudget.vue';
   import EnEsperaTable from '../../components/presupuestos/EnEsperaTable.vue';
 
   export default {
-    data() {
-      return {
-        budgetData: [],
-        enesperaData: []
-      };
-    },
-    components: {
-      NewBudget,
-      EnEsperaTable,
-    }
+    components: { EnEsperaTable },
   };
 </script>
 

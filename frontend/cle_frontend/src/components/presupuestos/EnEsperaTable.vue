@@ -1,6 +1,9 @@
 <template>
   <div>
     <PageHeader title="Presupuestos nuevos" :subtitle="sortedPresupuestos.length + ' presupuestos'" icon="bi bi-hourglass-split" />
+    <div class="mb-2">
+      <NewBudget @presupuesto-creado="fetchPresupuestos" />
+    </div>
     <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
       <select v-model="filterArea" class="form-select form-select-sm w-auto">
         <option value="">Todas las áreas</option>
@@ -218,9 +221,10 @@ import api from '@/api.js';
 import { AREAS_TEMATICAS } from '@/constants/areas.js';
 import PageHeader from '@/components/PageHeader.vue';
 import ISOHeader from '@/components/ISOHeader.vue';
+import NewBudget from '@/components/presupuestos/NewBudget.vue';
 
 export default {
-  components: { PageHeader, ISOHeader },
+  components: { PageHeader, ISOHeader, NewBudget },
   setup() {
       const presupuestos = ref([]);
 

@@ -1,10 +1,5 @@
 <template>
   <div class="aranceles-container">
-    <PageHeader
-      title="Libro de Aranceles"
-      :subtitle="sortedData.length + ' servicios'"
-      icon="bi bi-clipboard-data"
-    />
     <div class="table-container">
       <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
         <select v-model="filterArea" class="form-select form-select-sm w-auto">
@@ -116,7 +111,6 @@
 import { ref, computed } from 'vue';
 import api from '@/api.js';
 import { AREAS_TEMATICAS } from '@/constants/areas.js';
-import PageHeader from '@/components/PageHeader.vue';
 
 const areaChoices = [
   { value: 'durabilidad',           label: 'Durabilidad' },
@@ -133,7 +127,7 @@ const areaChoices = [
 ];
 
 export default {
-  components: { PageHeader },
+  components: {},
   props: {
     data: { type: Array, required: true }
   },
