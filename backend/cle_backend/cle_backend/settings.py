@@ -103,7 +103,7 @@ ROOT_URLCONF = 'cle_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'aranceles' / 'templates'],
+        'DIRS': [BASE_DIR / 'templates', BASE_DIR / 'aranceles' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
