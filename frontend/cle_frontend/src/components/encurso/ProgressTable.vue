@@ -53,16 +53,21 @@
 
       <!-- Alertas plazo vencido -->
       <div v-for="alerta in alertasPlazos" :key="alerta.key"
-           class="alert alert-warning d-flex align-items-center justify-content-between mb-2 py-2"
-           style="border-left: 4px solid #e65100;">
+           class="alert alert-danger d-flex align-items-center justify-content-between mb-2 py-2"
+           style="border-left: 4px solid #7b0000;">
         <div class="small">
           <i class="bi bi-clock-history me-2"></i>
           <strong>Plazo vencido — Circuito #{{ alerta.nro_circuito }}:</strong>
           {{ alerta.mensaje }}
         </div>
-        <button class="btn btn-sm btn-outline-danger ms-3 text-nowrap" @click="abrirModalArchivarConMotivo(alerta)">
-          <i class="bi bi-archive me-1"></i>Archivar
-        </button>
+        <div class="d-flex gap-2 ms-3">
+          <button class="btn btn-sm btn-outline-light text-nowrap" @click="extenderPlazoPorAlerta(alerta)">
+            <i class="bi bi-calendar-plus me-1"></i>Extender plazo
+          </button>
+          <button class="btn btn-sm btn-light text-nowrap" @click="abrirModalArchivarConMotivo(alerta)">
+            <i class="bi bi-archive me-1"></i>Archivar
+          </button>
+        </div>
       </div>
 
       <div class="table-scroll-wrapper">
@@ -410,8 +415,8 @@
               <template v-if="fila.nro_solicitudInterarea !== ''">
                 <AttachmentCell
                   :files="fila.informes_interarea"
-                  :can-upload="!isAdminOrTecnologicoOrDireccion"
-                  :can-delete="!isAdminOrTecnologicoOrDireccion"
+                  :can-upload="(isAreaJefe || isAreaStandard) && fila.inter_areaTematica === userAreaTematicaFormatted"
+                  :can-delete="(isAreaJefe || isAreaStandard) && fila.inter_areaTematica === userAreaTematicaFormatted"
                   :input-id="'interarea-' + index"
                   @upload="cargarAdjuntoInformeInterarea($event, fila)"
                   @delete="eliminarAdjuntoInformeInterarea"
@@ -1270,14 +1275,14 @@
         <div class="modal-content">
           <!-- Modal Header -->
           <div class="modal-header">
-            <h4 class="modal-title">Remito</h4>
+            <h4 class="modal-title">Remito/s</h4>
             <button type="button" class="btn-close" @click="cerrarModalRemito"></button>
           </div>
 
           <!-- Modal Body -->
           <div class="modal-body">
             <div class="form-group">
-              <label for="nrosRemitos">Ingrese nuevo Numero de Remito:</label>
+              <label for="nrosRemitos">Número/s de remito/s asociado/s:</label>
               <input type="text" v-model="remitoNuevo" required>
             </div>
           </div>
@@ -3165,6 +3170,7 @@
       const formatAreaTematica = (areaTematica) => {
         return areaTematica.replace(/_/g, ' ').replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
       };
+      const userAreaTematicaFormatted = userAreaTematica ? formatAreaTematica(userAreaTematica) : '';
 
       // Función para desformatear el campo area_tematica
       const desformatearAreaTematica = (areaTematica) => {
@@ -4854,6 +4860,7 @@
                 nro_circuito: fila.nro_circuito,
                 mensaje: 'El plazo de pago venció y el pago no está completo.',
                 motivo: 'falta_pago',
+                tipo: 'pago',
               });
             }
             // Plazo de muestras vencido → ST
@@ -4863,6 +4870,7 @@
                 nro_circuito: fila.nro_circuito,
                 mensaje: 'El plazo de recepción de muestras venció.',
                 motivo: 'vencimiento_muestras',
+                tipo: 'muestras',
               });
             }
           }
@@ -4881,6 +4889,13 @@
           motivoArchivar.value = alerta.motivo;
           notaArchivar.value = '';
           mostrarModalArchivar.value = true;
+        };
+
+        const extenderPlazoPorAlerta = (alerta) => {
+          const fila = filas.value.find(f => f.nro_circuito === alerta.nro_circuito);
+          if (!fila) return;
+          if (alerta.tipo === 'pago') abrirModalPlazoPago(fila);
+          else if (alerta.tipo === 'muestras') abrirModalPlazoMuestras(fila);
         };
 
         const cerrarModalArchivar = () => {
@@ -4970,6 +4985,7 @@
         isAreaStandard,
         isTecnologicoOrDireccionOrArea,
         userAreaTematica,
+        userAreaTematicaFormatted,
         // Solicitud de Servicio
         abrirDataServicio,
         nroDataServicio,
@@ -5235,6 +5251,7 @@
         motivosArchivo,
         alertasPlazos,
         abrirModalArchivarConMotivo,
+        extenderPlazoPorAlerta,
         mostrarModalHistorial,
         historialCircuitoId,
         historialEventos,

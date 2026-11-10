@@ -1055,6 +1055,8 @@ class GuardarAdjuntoInformeInterarea(APIView):
         try:
             # Buscar instancias de SolicitudInterarea y Circuito
             solicitud_interarea = SolicitudInterarea.objects.get(pk=nro_solicitudInterarea)
+            if not user_can_manage_ciclo_ia(request.user, solicitud_interarea):
+                return Response({'error': 'Solo el inter-área puede subir este informe.'}, status=status.HTTP_403_FORBIDDEN)
             circuito = Circuito.objects.get(pk=nro_circuito)
 
             # Crear instancia de InformeInterarea
@@ -1112,6 +1114,8 @@ class EliminarInformeInterarea(APIView):
 
     def delete(self, request, pk):
         informe = get_object_or_404(InformeInterarea, pk=pk)
+        if not user_can_manage_ciclo_ia(request.user, informe.nro_solicitudInterarea):
+            return Response({'error': 'No tiene permisos para eliminar este informe.'}, status=status.HTTP_403_FORBIDDEN)
         informe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
