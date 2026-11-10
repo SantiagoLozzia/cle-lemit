@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import tempfile
+from datetime import date as date_type
 
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -577,9 +578,10 @@ def generar_pdf_legajo(request, nro_circuito):
         legajo_data = json.loads(legajo_response.content)  # Convertir el contenido JSON en dict
         
         # Preparar el contexto para la plantilla del PDF
+        fecha_str = legajo_data.get('fecha_legajo')
         context = {
             'nro_legajo': legajo_data['nro_legajo'],
-            'fecha_legajo': legajo_data['fecha_legajo'],
+            'fecha_legajo': date_type.fromisoformat(fecha_str) if fecha_str else None,
             'rangos_laboratorios': legajo_data['rangos_laboratorios'],
             'nombre_solicitante': legajo_data['nombre_solicitante'],
         }
