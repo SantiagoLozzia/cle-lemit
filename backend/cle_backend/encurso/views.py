@@ -1762,11 +1762,6 @@ class SubirInformeAreaCicloIA(APIView):
             ciclo_ia.nota_rechazo_st = None
             ciclo_ia.rechazo_st_destino = None
         ciclo_ia.save()
-        # Si el área principal había rechazado, limpiar el rechazo al re-subir
-        if solicitud.comentario_rechazo_ap:
-            solicitud.comentario_rechazo_ap = None
-            solicitud.confirmado_area_principal = False
-            solicitud.save(update_fields=['comentario_rechazo_ap', 'confirmado_area_principal'])
         _log(request, 'subir_informe_area_ia',
              f'Informe de área inter-area #{ciclo_ia.numero} subido — solicitudIA #{solicitud.pk}, circuito #{solicitud.nro_circuito_id}',
              nro_circuito=solicitud.nro_circuito_id)
