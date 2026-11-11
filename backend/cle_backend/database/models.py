@@ -225,6 +225,9 @@ class SolicitudInterarea(models.Model):
     observaciones = models.TextField(max_length=255, null=True, blank=True)
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
     completo = models.BooleanField(default=False)
+    genera_informe_parcial = models.BooleanField(default=False)
+    confirmado_area_principal = models.BooleanField(default=False)
+    comentario_rechazo_ap = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"SolicitudInterarea #{self.nro_solicitudInterarea} - Circuito #{self.nro_circuito_id}"

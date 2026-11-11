@@ -1011,34 +1011,62 @@ class CrearSolicitudInterarea(APIView):
 
 def obtener_solicitudInterarea(request, nro_circuito):
     try:
-        # Buscar el circuito por su número
         circuito = Circuito.objects.get(nro_circuito=nro_circuito)
-        
-        # Buscar la solicitud interarea asociada a este circuito
-        solicitud_interarea = SolicitudInterarea.objects.get(nro_circuito=circuito)
-        
-        # Serializar la solicitud interarea
-        solicitud_serializer = SolicitudInterareaSerializer(solicitud_interarea)
-        data = solicitud_serializer.data
-        
-        # Obtener los detalles de interarea para esta solicitud
-        detalles_interarea = DetalleInterarea.objects.filter(nro_solicitudInterarea=solicitud_interarea)
-        
-        # Serializar los detalles de interarea para obtener los servicios solicitados
-        detalles_serializer = DetalleInterareaSerializer(detalles_interarea, many=True)
-        data['servicio_solicitado'] = detalles_serializer.data
-
-        # Incluir ciclos inter-area
-        ciclos_ia = CicloInterarea.objects.filter(nro_solicitudInterarea=solicitud_interarea)
-        data['ciclos'] = CicloInterareaSerializer(ciclos_ia, many=True).data
-
-        return JsonResponse(data, safe=False)
-    
+        solicitudes = SolicitudInterarea.objects.filter(nro_circuito=circuito)
+        result = []
+        for solicitud in solicitudes:
+            data = SolicitudInterareaSerializer(solicitud).data
+            data['servicio_solicitado'] = DetalleInterareaSerializer(
+                DetalleInterarea.objects.filter(nro_solicitudInterarea=solicitud), many=True
+            ).data
+            data['ciclos'] = CicloInterareaSerializer(
+                CicloInterarea.objects.filter(nro_solicitudInterarea=solicitud), many=True
+            ).data
+            result.append(data)
+        return JsonResponse(result, safe=False)
     except Circuito.DoesNotExist:
         return JsonResponse({'error': 'Circuito no encontrado'}, status=404)
-    
-    except SolicitudInterarea.DoesNotExist:
-        return JsonResponse({'error': 'Solicitud Interarea no encontrada'}, status=404)
+
+class ConfirmarInterareaPrincipal(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def post(self, request, nro_solicitud):
+        solicitud = get_object_or_404(SolicitudInterarea, pk=nro_solicitud)
+        try:
+            if request.user.userprofile.area_tematica != solicitud.areaTematica_origen:
+                return Response({'error': 'Solo el área principal puede confirmar.'}, status=status.HTTP_403_FORBIDDEN)
+        except AttributeError:
+            return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        solicitud.confirmado_area_principal = True
+        solicitud.comentario_rechazo_ap = None
+        solicitud.save()
+        _log(request, 'confirmar_interarea_principal',
+             f'Área principal confirmó inter-área #{nro_solicitud}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(SolicitudInterareaSerializer(solicitud).data)
+
+
+class RechazarInterareaPrincipal(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def post(self, request, nro_solicitud):
+        solicitud = get_object_or_404(SolicitudInterarea, pk=nro_solicitud)
+        try:
+            if request.user.userprofile.area_tematica != solicitud.areaTematica_origen:
+                return Response({'error': 'Solo el área principal puede rechazar.'}, status=status.HTTP_403_FORBIDDEN)
+        except AttributeError:
+            return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        comentario = request.data.get('comentario', '').strip()
+        if not comentario:
+            return Response({'error': 'Se requiere un comentario para rechazar.'}, status=status.HTTP_400_BAD_REQUEST)
+        solicitud.confirmado_area_principal = False
+        solicitud.comentario_rechazo_ap = comentario
+        solicitud.save()
+        _log(request, 'rechazar_interarea_principal',
+             f'Área principal rechazó inter-área #{nro_solicitud}: {comentario}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(SolicitudInterareaSerializer(solicitud).data)
+
 
 class GuardarAdjuntoInformeInterarea(APIView):
     permission_classes = [IsAuthenticated, IsAreaUser]
@@ -1734,6 +1762,11 @@ class SubirInformeAreaCicloIA(APIView):
             ciclo_ia.nota_rechazo_st = None
             ciclo_ia.rechazo_st_destino = None
         ciclo_ia.save()
+        # Si el área principal había rechazado, limpiar el rechazo al re-subir
+        if solicitud.comentario_rechazo_ap:
+            solicitud.comentario_rechazo_ap = None
+            solicitud.confirmado_area_principal = False
+            solicitud.save(update_fields=['comentario_rechazo_ap', 'confirmado_area_principal'])
         _log(request, 'subir_informe_area_ia',
              f'Informe de área inter-area #{ciclo_ia.numero} subido — solicitudIA #{solicitud.pk}, circuito #{solicitud.nro_circuito_id}',
              nro_circuito=solicitud.nro_circuito_id)

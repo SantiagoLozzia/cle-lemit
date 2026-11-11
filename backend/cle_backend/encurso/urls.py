@@ -61,6 +61,8 @@ urlpatterns = [
     path('crear_solicitud_interarea/', CrearSolicitudInterarea.as_view(), name='crear-solicitud-interarea'),
     path('obtener_solicitud_interarea/<int:nro_circuito>/', obtener_solicitudInterarea, name='obtener-solicitud-interarea'),
     path('guardar_adjuntoinformeinterarea/', GuardarAdjuntoInformeInterarea.as_view(), name='guardar-adjuntoinformeinterarea'),
+    path('ia/solicitud/<int:nro_solicitud>/confirmar_principal/', ConfirmarInterareaPrincipal.as_view(), name='confirmar-interarea-principal'),
+    path('ia/solicitud/<int:nro_solicitud>/rechazar_principal/', RechazarInterareaPrincipal.as_view(), name='rechazar-interarea-principal'),
     # CicloInterarea
     path('ia/ciclo/crear/<int:nro_solicitud>/', CrearCicloIA.as_view(), name='crear-ciclo-ia'),
     path('ia/ciclo/<int:ciclo_id>/subir_informe_area/', SubirInformeAreaCicloIA.as_view(), name='subir-informe-area-ciclo-ia'),

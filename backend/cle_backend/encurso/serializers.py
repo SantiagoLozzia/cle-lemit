@@ -53,11 +53,6 @@ class DetallePresupuestoSerializer(serializers.ModelSerializer):
                 model = DetallePresupuesto
                 fields = ['nro_servicio', 'servicio', 'cant']
 
-class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
-        class Meta:
-                model = SolicitudInterarea
-                fields = '__all__'
-
 class InformeInterAreaEnCursoSerializer(serializers.ModelSerializer):
         class Meta:
                 model = InformeInterarea
@@ -107,6 +102,13 @@ class CicloInterareaSerializer(serializers.ModelSerializer):
 
         class Meta:
                 model = CicloInterarea
+                fields = '__all__'
+
+class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
+        ciclos = CicloInterareaSerializer(many=True, read_only=True)
+
+        class Meta:
+                model = SolicitudInterarea
                 fields = '__all__'
 
 class CambiarRemitoSerializer(serializers.ModelSerializer):
