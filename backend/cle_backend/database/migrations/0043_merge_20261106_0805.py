@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0031_merge_20261102_1345'),
+        ('database', '0031_eventoauditoria'),
         ('database', '0042_ciclointerarea_registroensayocicloIA_correccionIA'),
     ]
 
