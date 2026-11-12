@@ -508,8 +508,8 @@
             <!-- Columna Tipo IA -->
             <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row" style="height:50px">
-                <template v-if="esInterAreaDeIA(ia)">
-                  <!-- Inter-área: puede cambiar el tipo -->
+                <template v-if="esInterAreaDeIA(ia) || esPrincipalDeIA(ia)">
+                  <!-- Inter-área o área principal: puede cambiar el tipo -->
                   <div class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupTipoIA(ia.id)" :title="'Tipo: ' + tipoIALabel(ia.tipo)"
                             style="font-size:0.6rem; min-width:68px; padding:1px 4px; white-space:nowrap;"
@@ -1902,25 +1902,34 @@
           </div>
           <div class="modal-body">
             <form class="was-validated">
-              <!-- Selector principal: genera informe parcial -->
+              <!-- Selector principal: tipo de inter-área -->
               <div class="mb-4">
-                <label class="form-label fw-bold fs-6">¿El inter-área genera informe parcial?</label>
+                <label class="form-label fw-bold fs-6">Tipo de inter-área</label>
                 <div class="d-flex gap-3">
                   <button type="button"
                     class="btn flex-fill py-3 ia-tipo-btn"
-                    :class="nuevaSolicitudInterarea.genera_informe_parcial === true ? 'btn-primary' : 'btn-outline-primary'"
-                    @click="nuevaSolicitudInterarea.genera_informe_parcial = true">
+                    :class="nuevaSolicitudInterarea.tipo === 'parcial' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="nuevaSolicitudInterarea.tipo = 'parcial'; nuevaSolicitudInterarea.genera_informe_parcial = true">
                     <i class="bi bi-file-earmark-text d-block mb-1" style="font-size:1.5rem"></i>
-                    <strong>Sí, genera informe parcial</strong>
+                    <strong>Parcial</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">El inter-área produce su propio informe que pasa por administración, ST, firma y dirección</small>
                   </button>
                   <button type="button"
                     class="btn flex-fill py-3 ia-tipo-btn"
-                    :class="nuevaSolicitudInterarea.genera_informe_parcial === false ? 'btn-secondary' : 'btn-outline-secondary'"
-                    @click="nuevaSolicitudInterarea.genera_informe_parcial = false">
+                    :class="nuevaSolicitudInterarea.tipo === 'resultado' ? 'btn-secondary' : 'btn-outline-secondary'"
+                    @click="nuevaSolicitudInterarea.tipo = 'resultado'; nuevaSolicitudInterarea.genera_informe_parcial = false">
                     <i class="bi bi-clipboard-check d-block mb-1" style="font-size:1.5rem"></i>
-                    <strong>No, solo resultados</strong>
+                    <strong>Resultado</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">El inter-área entrega resultados directamente al área principal sin informe propio</small>
+                  </button>
+                  <button type="button"
+                    class="btn flex-fill py-3 ia-tipo-btn"
+                    :class="nuevaSolicitudInterarea.tipo === 'complementario' ? '' : 'btn-outline-secondary'"
+                    :style="nuevaSolicitudInterarea.tipo === 'complementario' ? 'background:#8e44ad; color:#fff; border-color:#8e44ad;' : ''"
+                    @click="nuevaSolicitudInterarea.tipo = 'complementario'; nuevaSolicitudInterarea.genera_informe_parcial = false">
+                    <i class="bi bi-plus-circle d-block mb-1" style="font-size:1.5rem"></i>
+                    <strong>Complementario</strong>
+                    <small class="d-block text-muted" style="font-size:0.72rem">Informe complementario; no habilita nuevo parcial ni nueva inter-área</small>
                   </button>
                 </div>
               </div>
@@ -4581,14 +4590,15 @@
           inter_areaTematica: '',
           num_labs: '',
           genera_informe_parcial: null,
+          tipo: null,
           servicios_solicitudInterarea: [{ nro_servicio: '', servicio: '', cant: 0 }],
           nro_circuito: null,
         };
       };
 
       const crearSolicitudInterArea = () => {
-          if (nuevaSolicitudInterarea.value.genera_informe_parcial === null) {
-            alert('Por favor indicá si se genera informe parcial o no.');
+          if (!nuevaSolicitudInterarea.value.tipo) {
+            alert('Por favor seleccioná el tipo de inter-área.');
             return;
           }
 

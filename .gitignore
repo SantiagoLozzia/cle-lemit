@@ -91,3 +91,6 @@ __pycache__/
 
 # Datos de usuarios (PII) — usar users_data.example.json como plantilla
 users_data.json
+
+# Archivos sensibles de aranceles
+backend/cle_backend/aranceles/*.pdf
