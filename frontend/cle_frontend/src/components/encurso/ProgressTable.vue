@@ -4479,7 +4479,7 @@
       };
 
       // Siempre true — se mantiene por compatibilidad pero ya no oculta nada
-      const mostrarInformeAreaEnFila = (_fila) => true;
+      const mostrarInformeAreaEnFila = () => true;
 
       // Inter Area — confirmación inicial por área principal
       const confirmarInterareaPrincipal = async (ia) => {
