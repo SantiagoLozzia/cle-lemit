@@ -523,7 +523,6 @@
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
-              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-fecha-'+ia.id" class="ciclo-row"></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
               </div>
@@ -532,7 +531,6 @@
 
             <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
-              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-sol-'+ia.id" class="ciclo-row"></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 {{ fila.nombre_solicitante }}
               </template>
@@ -540,7 +538,6 @@
 
             <!-- Columna Informe Area (por ciclo) -->
             <td>
-              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-inf-'+ia.id" class="ciclo-row"></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
@@ -623,7 +620,6 @@
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
-              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-reg-'+ia.id" class="ciclo-row"></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
@@ -646,7 +642,6 @@
 
             <!-- Columna Estado/Tipo (por ciclo) -->
             <td class="add-border-right">
-              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-tipo-'+ia.id" class="ciclo-row"></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
