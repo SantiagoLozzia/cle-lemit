@@ -65,6 +65,7 @@ urlpatterns = [
     path('ia/solicitud/<int:nro_solicitud>/rechazar_principal/', RechazarInterareaPrincipal.as_view(), name='rechazar-interarea-principal'),
     path('ia/solicitud/<int:nro_solicitud>/confirmar_correc_informe/', ConfirmarCorreccionInformeAP.as_view(), name='confirmar-correc-informe-ap'),
     path('ia/solicitud/<int:nro_solicitud>/confirmar_correc_registros/', ConfirmarCorreccionRegistrosAP.as_view(), name='confirmar-correc-registros-ap'),
+    path('ia/solicitud/<int:nro_solicitud>/cambiar_tipo/', CambiarTipoIA.as_view(), name='cambiar-tipo-ia'),
     # CicloInterarea
     path('ia/ciclo/crear/<int:nro_solicitud>/', CrearCicloIA.as_view(), name='crear-ciclo-ia'),
     path('ia/ciclo/<int:ciclo_id>/subir_informe_area/', SubirInformeAreaCicloIA.as_view(), name='subir-informe-area-ciclo-ia'),

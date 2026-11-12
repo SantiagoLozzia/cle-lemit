@@ -1050,6 +1050,23 @@ class ConfirmarInterareaPrincipal(APIView):
         return Response(SolicitudInterareaSerializer(solicitud).data)
 
 
+class CambiarTipoIA(APIView):
+    """Inter-área puede cambiar el tipo de su solicitud: parcial, resultado, complementario."""
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def patch(self, request, nro_solicitud):
+        solicitud = get_object_or_404(SolicitudInterarea, pk=nro_solicitud)
+        tipo = request.data.get('tipo', '').strip()
+        if tipo not in ('parcial', 'resultado', 'complementario'):
+            return Response({'error': 'Tipo inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        solicitud.tipo = tipo
+        solicitud.save()
+        _log(request, 'cambiar_tipo_ia',
+             f'Tipo de inter-área #{nro_solicitud} cambiado a {tipo}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(SolicitudInterareaSerializer(solicitud).data)
+
+
 class RechazarInterareaPrincipal(APIView):
     """Área principal rechaza — requiere tipo ('informe'/'registros_ensayo'/'ambos') y comentario."""
     permission_classes = [IsAuthenticated, IsAreaJefe]

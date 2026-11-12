@@ -116,7 +116,7 @@
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Registros IA</th>
-            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Confirmación</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Tipo IA</th>
             <!-- Subcolumnas de Informe de Area -->
             <th class="align-middle text-center">Fecha</th>
             <th class="align-middle text-center">Solicitante</th>
@@ -406,9 +406,22 @@
                   <span v-else-if="ia.estado_correc_informe === 'confirmado'" class="ia-estado" title="Corrección de informe confirmada">
                     <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
                   </span>
-                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado ia-blink" title="Informe subido — pendiente revisión">
-                    <i class="bi bi-circle-fill" style="color:#2980b9"></i>
-                  </span>
+                  <div v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="st-sd-cell ia-estado" @click.stop>
+                    <button class="st-sd-trigger ia-blink" @click.stop="togglePopupConfirmIA(ia.id)" title="Ver / Confirmar / Rechazar" style="border-color:#2980b9;color:#2980b9;">
+                      <i class="bi bi-circle-fill" style="font-size:11px;"></i>
+                    </button>
+                    <div v-if="popupConfirmIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupConfirmIAId = null" title="Ver informe">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="confirmarInterareaPrincipal(ia); popupConfirmIAId = null" title="Confirmar">
+                        <i class="bi bi-check-lg"></i>
+                      </div>
+                      <div class="st-sd-opcion" style="--rotation: -30deg; border-color:#dc3545; color:#dc3545;" @click.stop="abrirModalRechazarIA(ia); popupConfirmIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
+                      </div>
+                    </div>
+                  </div>
                   <span v-else class="ia-estado" title="Esperando informe del inter-área">
                     <i class="bi bi-clock" style="color:#95a5a6"></i>
                   </span>
@@ -492,43 +505,33 @@
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
-            <!-- Columna Inter Area — Acciones área principal -->
+            <!-- Columna Tipo IA -->
             <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row" style="height:50px">
-                <template v-if="esPrincipalDeIA(ia)">
-                  <!-- Puede confirmar/rechazar cuando hay informe y no está confirmado -->
-                  <template v-if="!ia.confirmado_ap && !ia.tipo_rechazo_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea">
-                    <button class="btn btn-xs btn-success" style="font-size:0.65rem;padding:2px 5px;margin-right:2px" @click="confirmarInterareaPrincipal(ia)" title="Confirmar">✓</button>
-                    <button class="btn btn-xs btn-danger" style="font-size:0.65rem;padding:2px 5px" @click="abrirModalRechazarIA(ia)" title="Rechazar">✗</button>
-                  </template>
-                  <!-- Ya confirmado -->
-                  <span v-else-if="ia.confirmado_ap && !ia.tipo_rechazo_ap" title="Confirmado por área principal">
-                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
-                  </span>
-                  <!-- Tiene rechazo activo pero correcciones pendientes -->
-                  <span v-else-if="ia.tipo_rechazo_ap" class="ia-estado" :title="'Rechazado (' + ia.tipo_rechazo_ap + ')'">
-                    <i class="bi bi-x-circle-fill" style="color:#e74c3c"></i>
-                  </span>
-                  <!-- Esperando que inter-área suba informe -->
-                  <span v-else class="ia-estado" title="Esperando que el inter-área suba informe">
-                    <i class="bi bi-clock" style="color:#95a5a6"></i>
-                  </span>
+                <template v-if="esInterAreaDeIA(ia)">
+                  <!-- Inter-área: puede cambiar el tipo -->
+                  <div class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupTipoIA(ia.id)" :title="'Tipo: ' + tipoIALabel(ia.tipo)"
+                            style="font-size:0.6rem; min-width:68px; padding:1px 4px; white-space:nowrap;"
+                            :style="tipoIATriggerStyle(ia.tipo)">
+                      {{ tipoIALabel(ia.tipo) }}
+                    </button>
+                    <div v-if="popupTipoIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -150deg; font-size:0.65rem; font-weight:600;" @click.stop="cambiarTipoIA(ia, 'parcial')" title="Parcial">P</div>
+                      <div class="st-sd-opcion" style="--rotation: -90deg; font-size:0.65rem; font-weight:600; border-color:#27ae60; color:#27ae60;" @click.stop="cambiarTipoIA(ia, 'resultado')" title="Resultado">R</div>
+                      <div class="st-sd-opcion" style="--rotation: -30deg; font-size:0.65rem; font-weight:600; border-color:#8e44ad; color:#8e44ad;" @click.stop="cambiarTipoIA(ia, 'complementario')" title="Complementario">C</div>
+                    </div>
+                  </div>
                 </template>
-                <!-- Para el inter-área: ver estado desde su perspectiva -->
-                <template v-else-if="esInterAreaDeIA(ia)">
-                  <span v-if="ia.confirmado_ap" title="Área principal confirmó">
-                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
-                  </span>
-                  <span v-else-if="ia.tipo_rechazo_ap" class="ia-estado" :title="'Rechazado: ' + (ia.comentario_rechazo_ap || '')">
-                    <i class="bi bi-exclamation-circle-fill" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'ambos')"></i>
-                  </span>
-                  <span v-else title="Esperando revisión del área principal">
-                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                <template v-else>
+                  <!-- Resto: solo visualización -->
+                  <span class="ia-estado" :title="tipoIALabel(ia.tipo)">
+                    <span class="badge" :style="tipoIABadgeStyle(ia.tipo)" style="font-size:0.6rem;">{{ tipoIALabel(ia.tipo) }}</span>
                   </span>
                 </template>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-for="ciclo in fila.ciclos" :key="'ia-conf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <div v-for="ciclo in fila.ciclos" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
@@ -3575,6 +3578,8 @@
         popupPDFAdminIAId.value = null;
         popupAreaIAId.value = null;
         popupDirIAId.value = null;
+        popupConfirmIAId.value = null;
+        popupTipoIAId.value = null;
       };
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
@@ -4298,13 +4303,15 @@
           && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')
           && fila.ciclos.length > 0
           && fila.ciclos[fila.ciclos.length - 1].adjunto_informeArea
-          && fila.ciclos[fila.ciclos.length - 1].tipo === 'parcial';
+          && fila.ciclos[fila.ciclos.length - 1].tipo === 'parcial'
+          && !fila.solicitudes_interarea.some(ia => ia.tipo === 'complementario');
       };
 
       const mostrarBotonAgregarIA = (fila) => {
         return isAreaJefe.value && fila.ordenServicio_completo === true &&
           fila.area_tematica === userAreaTematicaFormatted &&
-          !fila.ciclos.some(c => c.tipo === 'complementario');
+          !fila.ciclos.some(c => c.tipo === 'complementario') &&
+          !fila.solicitudes_interarea.some(ia => ia.tipo === 'complementario');
       };
 
       const puedeCrearNuevoCiclo = (fila) => {
@@ -5041,6 +5048,8 @@
       const popupPDFAdminIAId = ref(null);
       const popupAreaIAId = ref(null);
       const popupDirIAId = ref(null);
+      const popupConfirmIAId = ref(null);
+      const popupTipoIAId = ref(null);
       const generandoPDFIAId = ref(null);
       const cicloIAParaFirmaArea = ref(null);
       const cicloIAParaFirmaDireccion = ref(null);
@@ -5049,6 +5058,32 @@
       const togglePopupPDFAdminIA = (iaId) => { popupPDFAdminIAId.value = popupPDFAdminIAId.value === iaId ? null : iaId; };
       const togglePopupAreaIA = (iaId) => { popupAreaIAId.value = popupAreaIAId.value === iaId ? null : iaId; };
       const togglePopupDirIA = (iaId) => { popupDirIAId.value = popupDirIAId.value === iaId ? null : iaId; };
+      const togglePopupConfirmIA = (iaId) => { popupConfirmIAId.value = popupConfirmIAId.value === iaId ? null : iaId; };
+      const togglePopupTipoIA = (iaId) => { popupTipoIAId.value = popupTipoIAId.value === iaId ? null : iaId; };
+
+      const tipoIALabel = (tipo) => ({ parcial: 'Parcial', resultado: 'Resultado', complementario: 'Complementario' }[tipo] || 'Parcial');
+      const tipoIABadgeStyle = (tipo) => ({
+        parcial: 'background:#2980b9; color:#fff;',
+        resultado: 'background:#27ae60; color:#fff;',
+        complementario: 'background:#8e44ad; color:#fff;',
+      }[tipo] || 'background:#2980b9; color:#fff;');
+      const tipoIATriggerStyle = (tipo) => ({
+        parcial: 'border-color:#2980b9; color:#2980b9;',
+        resultado: 'border-color:#27ae60; color:#27ae60;',
+        complementario: 'border-color:#8e44ad; color:#8e44ad;',
+      }[tipo] || 'border-color:#2980b9; color:#2980b9;');
+
+      const cambiarTipoIA = async (ia, tipo) => {
+        popupTipoIAId.value = null;
+        try {
+          await api.patch(`/encurso/ia/solicitud/${ia.id}/cambiar_tipo/`, { tipo });
+          fetchData();
+        } catch (e) {
+          console.error('Error al cambiar tipo IA:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
 
       const subirInformeServicioCicloIA = async (event, cicloIA) => {
         const archivo = event.target.files[0];
@@ -5740,8 +5775,12 @@
         confirmarRevisionCicloIA,
         generarPDFCicloIA,
         popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupDirIAId,
+        popupConfirmIAId, popupTipoIAId,
         generandoPDFIAId,
         togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupDirIA,
+        togglePopupConfirmIA, togglePopupTipoIA,
+        tipoIALabel, tipoIABadgeStyle, tipoIATriggerStyle,
+        cambiarTipoIA,
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
         confirmarFirmaResponsableAreaCiclo,
