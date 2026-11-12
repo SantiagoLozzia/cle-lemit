@@ -383,6 +383,7 @@
                 <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ ia.inter_areaTematica }}</span>
                 <i class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
               </div>
+              <div v-for="ciclo in fila.ciclos" :key="'ia-fecha-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-if="isAreaJefe && fila.ordenServicio_completo === true && fila.area_tematica === userAreaTematicaFormatted && !fila.ciclos.some(c => c.tipo === 'complementario')" class="ciclo-row">
                 <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)" title="Nueva solicitud inter-área"></i>
               </div>
@@ -436,6 +437,7 @@
                   </span>
                 </template>
               </div>
+              <div v-for="ciclo in fila.ciclos" :key="'ia-inf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Inter Area — Estado Registros IA -->
@@ -482,6 +484,7 @@
                   </span>
                 </template>
               </div>
+              <div v-for="ciclo in fila.ciclos" :key="'ia-reg-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Inter Area — Acciones área principal -->
@@ -519,10 +522,12 @@
                   </span>
                 </template>
               </div>
+              <div v-for="ciclo in fila.ciclos" :key="'ia-conf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
+              <div v-for="ia in fila.solicitudes_interarea" :key="'fecha-ia-sp-' + ia.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
               </div>
@@ -538,6 +543,7 @@
 
             <!-- Columna Informe Area (por ciclo) -->
             <td>
+              <div v-for="ia in fila.solicitudes_interarea" :key="'infarea-ia-sp-' + ia.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
@@ -620,6 +626,7 @@
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
+              <div v-for="ia in fila.solicitudes_interarea" :key="'reg-ia-sp-' + ia.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
@@ -642,6 +649,7 @@
 
             <!-- Columna Estado/Tipo (por ciclo) -->
             <td class="add-border-right">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'tipo-ia-sp-' + ia.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
@@ -659,6 +667,31 @@
 
             <!-- Columna Administracion - Informe Servicio (por ciclo) -->
             <td class="add-border-right">
+              <!-- IA pipeline — Admin -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'adm-ia-' + ia.id" class="ciclo-row">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia)">
+                  <template v-if="!ultimoCicloIA(ia).adjunto_informeServicio && !ultimoCicloIA(ia).corregir">
+                    <div v-if="isAdministracion">
+                      <label :for="'ia-inf-serv-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir informe inter-área (formato)">
+                        <i class="bi bi-paperclip action-icon"></i>
+                      </label>
+                      <input :id="'ia-inf-serv-' + ultimoCicloIA(ia).id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
+                             @change="subirInformeServicioCicloIA($event, ultimoCicloIA(ia))">
+                    </div>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
+                  <template v-else-if="ultimoCicloIA(ia).adjunto_informeServicio">
+                    <div style="position:relative; display:inline-flex; align-items:center;">
+                      <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:16px; cursor:pointer;"
+                         @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)" title="Ver Word IA"></i>
+                      <i class="bi bi-check-circle-fill"
+                         style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    </div>
+                  </template>
+                </template>
+                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
+              </div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeArea && ciclo.registros_ensayo && ciclo.registros_ensayo.length > 0">
                   <!-- Sin informe servicio, sin corrección pendiente -->
@@ -832,6 +865,34 @@
 
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
             <td class="add-border-right">
+              <!-- IA pipeline — ST -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'st-ia-' + ia.id" class="ciclo-row">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeServicio && !ultimoCicloIA(ia).revision_confirmada && !ultimoCicloIA(ia).corregir">
+                  <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupSTIA(ia.id)" title="Revisar informe IA">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupSTIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)" title="Ver">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="confirmarRevisionCicloIA(ia)" title="Confirmar OK">
+                        <i class="bi bi-check-lg"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).revision_confirmada">
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)">
+                    <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:16px;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                  </div>
+                </template>
+                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
+              </div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && (!ciclo.rechazo_area_destino || ciclo.rechazo_area_destino === 'st') && !ciclo.rechazo_st_destino">
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
@@ -902,6 +963,39 @@
 
             <!-- Columna PDF Admin (por ciclo) -->
             <td class="add-border-right">
+              <!-- IA pipeline — PDF Admin -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'pdf-ia-' + ia.id" class="ciclo-row">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).revision_confirmada && !ultimoCicloIA(ia).pdf_confirmado_admin && !ultimoCicloIA(ia).corregir">
+                  <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupPDFAdminIA(ia.id)" title="Generar PDF IA"
+                            style="border-color:#2b579a; color:#2b579a;">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupPDFAdminIAId === ia.id" class="st-sd-dial" @click.stop>
+                      <div class="st-sd-opcion" style="--rotation: -120deg"
+                           @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio); popupPDFAdminIAId = null" title="Ver Word">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion" style="--rotation: -60deg; border-color:#dc3545; color:#dc3545;"
+                           :class="generandoPDFIAId === ia.id ? 'st-sd-opcion--generando' : ''"
+                           @click.stop="generandoPDFIAId !== ia.id && generarPDFCicloIA(ia)" title="Convertir a PDF">
+                        <i v-if="generandoPDFIAId === ia.id" class="bi bi-hourglass-split" style="animation: spin 1.2s linear infinite;"></i>
+                        <i v-else class="bi bi-filetype-pdf"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).pdf_confirmado_admin">
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                  </div>
+                </template>
+                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
+              </div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
@@ -939,6 +1033,34 @@
 
             <!-- Columna Responsable Área - Firma (por ciclo) -->
             <td class="add-border-right">
+              <!-- IA pipeline — Firma Área -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'area-ia-' + ia.id" class="ciclo-row">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).pdf_confirmado_admin && !ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).corregir">
+                  <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupAreaIA(ia.id)" title="Opciones firma IA">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupAreaIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupAreaIAId = null" title="Ver PDF IA">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaAreaCicloIA(ultimoCicloIA(ia)); popupAreaIAId = null" title="Firmar">
+                        <i class="bi bi-pen"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area">
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                  </div>
+                </template>
+                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
+              </div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
@@ -981,6 +1103,34 @@
 
             <!-- Columna Dirección - Firma (por ciclo) -->
             <td class="add-border-right">
+              <!-- IA pipeline — Firma Dirección -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'dir-ia-' + ia.id" class="ciclo-row">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).firma_direccion">
+                  <div v-if="isDireccion" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupDirIA(ia.id)" title="Opciones firma dirección IA">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupDirIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupDirIAId = null" title="Ver PDF firmado área">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaDireccionCicloIA(ultimoCicloIA(ia)); popupDirIAId = null" title="Firmar">
+                        <i class="bi bi-pen"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_direccion">
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_direccion || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                  </div>
+                </template>
+                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
+              </div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.firma_responsable_area && !ciclo.firma_direccion">
                   <div v-if="isDireccion" class="st-sd-cell" @click.stop>
@@ -3405,6 +3555,10 @@
         popupDirId.value = null;
         popupFormatoId.value = null;
         popupFacturaId.value = null;
+        popupSTIAId.value = null;
+        popupPDFAdminIAId.value = null;
+        popupAreaIAId.value = null;
+        popupDirIAId.value = null;
       };
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
@@ -4860,6 +5014,82 @@
         }
       };
 
+      // IA pipeline state
+      const popupSTIAId = ref(null);
+      const popupPDFAdminIAId = ref(null);
+      const popupAreaIAId = ref(null);
+      const popupDirIAId = ref(null);
+      const generandoPDFIAId = ref(null);
+      const cicloIAParaFirmaArea = ref(null);
+      const cicloIAParaFirmaDireccion = ref(null);
+
+      const togglePopupSTIA = (iaId) => { popupSTIAId.value = popupSTIAId.value === iaId ? null : iaId; };
+      const togglePopupPDFAdminIA = (iaId) => { popupPDFAdminIAId.value = popupPDFAdminIAId.value === iaId ? null : iaId; };
+      const togglePopupAreaIA = (iaId) => { popupAreaIAId.value = popupAreaIAId.value === iaId ? null : iaId; };
+      const togglePopupDirIA = (iaId) => { popupDirIAId.value = popupDirIAId.value === iaId ? null : iaId; };
+
+      const subirInformeServicioCicloIA = async (event, cicloIA) => {
+        const archivo = event.target.files[0];
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        try {
+          await api.post(`/encurso/ia/ciclo/${cicloIA.id}/subir_informe_servicio/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      const confirmarRevisionCicloIA = async (ia) => {
+        const cicloIA = ultimoCicloIA(ia);
+        if (!cicloIA) return;
+        popupSTIAId.value = null;
+        try {
+          await api.post(`/encurso/ia/ciclo/${cicloIA.id}/confirmar_revision/`);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        }
+      };
+
+      const generarPDFCicloIA = async (ia) => {
+        const cicloIA = ultimoCicloIA(ia);
+        if (!cicloIA) return;
+        generandoPDFIAId.value = ia.id;
+        popupPDFAdminIAId.value = null;
+        try {
+          await api.post(`/encurso/ia/ciclo/${cicloIA.id}/generar_pdf/`);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (error) {
+          const msg = error?.response?.data?.error || 'Error al generar PDF.';
+          alert(msg);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 5000);
+        } finally {
+          generandoPDFIAId.value = null;
+        }
+      };
+
+      const abrirModalFirmaAreaCicloIA = (cicloIA) => {
+        cicloIAParaFirmaArea.value = cicloIA;
+        mostrarModalFirmaResponsableArea.value = true;
+        nextTick(() => limpiarFirma());
+      };
+
+      const abrirModalFirmaDireccionCicloIA = (cicloIA) => {
+        cicloIAParaFirmaDireccion.value = cicloIA;
+        mostrarModalFirmaDireccion.value = true;
+        nextTick(() => limpiarFirmaDir());
+      };
+
       const abrirModalFirmaResponsableAreaCiclo = (ciclo) => {
         cicloSeleccionado.value = ciclo;
         mostrarModalFirmaResponsableArea.value = true;
@@ -4871,16 +5101,22 @@
       };
 
       const confirmarFirmaResponsableAreaCiclo = async () => {
-        const ciclo = cicloSeleccionado.value;
-        if (!ciclo || (!firmaUsuarioUrl.value && !firmaHecha.value)) return;
+        const isIA = !!cicloIAParaFirmaArea.value;
+        const obj = isIA ? cicloIAParaFirmaArea.value : cicloSeleccionado.value;
+        if (!obj || (!firmaUsuarioUrl.value && !firmaHecha.value)) return;
         const payload = {};
         if (!firmaUsuarioUrl.value && firmaHecha.value) {
           payload.firma_imagen = signatureCanvas.value.toDataURL('image/png');
         }
         try {
-          await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${ciclo.id}/`, payload);
+          if (isIA) {
+            await api.post(`/encurso/ia/ciclo/${obj.id}/confirmar_firma_area/`, payload);
+          } else {
+            await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${obj.id}/`, payload);
+          }
           mostrarModalFirmaResponsableArea.value = false;
           firmaHecha.value = false;
+          cicloIAParaFirmaArea.value = null;
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
@@ -4903,16 +5139,22 @@
       };
 
       const confirmarFirmaDireccionCiclo = async () => {
-        const ciclo = cicloSeleccionado.value;
-        if (!ciclo || (!firmaUsuarioUrl.value && !firmaHechaDir.value)) return;
+        const isIA = !!cicloIAParaFirmaDireccion.value;
+        const obj = isIA ? cicloIAParaFirmaDireccion.value : cicloSeleccionado.value;
+        if (!obj || (!firmaUsuarioUrl.value && !firmaHechaDir.value)) return;
         const payload = {};
         if (!firmaUsuarioUrl.value && firmaHechaDir.value) {
           payload.firma_imagen = signatureCanvasDir.value.toDataURL('image/png');
         }
         try {
-          await api.put(`/encurso/confirmar_firma_direccion_ciclo/${ciclo.id}/`, payload);
+          if (isIA) {
+            await api.post(`/encurso/ia/ciclo/${obj.id}/confirmar_firma_direccion/`, payload);
+          } else {
+            await api.put(`/encurso/confirmar_firma_direccion_ciclo/${obj.id}/`, payload);
+          }
           mostrarModalFirmaDireccion.value = false;
           firmaHechaDir.value = false;
+          cicloIAParaFirmaDireccion.value = null;
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
@@ -5467,6 +5709,16 @@
         advertirCorreccionesCiclo,
         correccionesNuevas,
         abrirModalFirmaResponsableAreaCiclo,
+        abrirModalFirmaAreaCicloIA,
+        abrirModalFirmaDireccionCicloIA,
+        cicloIAParaFirmaArea,
+        cicloIAParaFirmaDireccion,
+        subirInformeServicioCicloIA,
+        confirmarRevisionCicloIA,
+        generarPDFCicloIA,
+        popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupDirIAId,
+        generandoPDFIAId,
+        togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupDirIA,
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
         confirmarFirmaResponsableAreaCiclo,
