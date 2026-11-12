@@ -383,7 +383,7 @@
                 <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ ia.inter_areaTematica }}</span>
                 <i class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
               </div>
-              <div v-if="isAreaJefe && fila.ordenServicio_completo === true && fila.area_tematica === userAreaTematicaFormatted" class="ciclo-row">
+              <div v-if="isAreaJefe && fila.ordenServicio_completo === true && fila.area_tematica === userAreaTematicaFormatted && !fila.ciclos.some(c => c.tipo === 'complementario')" class="ciclo-row">
                 <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)" title="Nueva solicitud inter-área"></i>
               </div>
             </td>
@@ -4475,12 +4475,9 @@
         return (isAreaJefe.value || isAreaStandard.value) && ia.inter_areaTematica === userAreaTematicaFormatted;
       };
 
-      // Oculta la sección "Informe de Area" para usuarios que sólo son inter-área en ese circuito
+      // Oculta Informe de Area en circuitos que tienen solicitudes inter-área activas
       const mostrarInformeAreaEnFila = (fila) => {
-        if (fila.solicitudes_interarea.length === 0) return true;
-        if (isAdminOrTecnologicoOrDireccion.value) return true;
-        if (fila.solicitudes_interarea.some(ia => esPrincipalDeIA(ia))) return true;
-        return false;
+        return fila.solicitudes_interarea.length === 0;
       };
 
       // Inter Area — confirmación inicial por área principal
