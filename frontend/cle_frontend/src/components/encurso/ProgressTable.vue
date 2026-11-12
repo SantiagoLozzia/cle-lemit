@@ -4303,7 +4303,7 @@
 
       const mostrarBotonAgregarIA = (fila) => {
         return isAreaJefe.value && fila.ordenServicio_completo === true &&
-          fila.area_tematica === userAreaTematicaFormatted.value &&
+          fila.area_tematica === userAreaTematicaFormatted &&
           !fila.ciclos.some(c => c.tipo === 'complementario');
       };
 
