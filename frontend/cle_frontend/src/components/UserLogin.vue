@@ -234,17 +234,17 @@ async function login() {
 }
 
 .brand-logo-upcn {
-  height: 60px;
+  display: block;
+  height: 70px;
   object-fit: contain;
-  margin-bottom: 16px;
-  filter: brightness(0) invert(1);
-  opacity: 0.9;
+  margin: 0 auto 20px;
 }
 
 .brand-logo {
+  display: block;
   height: 70px;
   object-fit: contain;
-  margin-bottom: 24px;
+  margin: 0 auto 24px;
   filter: brightness(0) invert(1);
   opacity: 0.9;
 }
