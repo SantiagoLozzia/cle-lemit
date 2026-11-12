@@ -438,6 +438,7 @@
                 </template>
               </div>
               <div v-for="ciclo in fila.ciclos" :key="'ia-inf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Inter Area — Estado Registros IA -->
@@ -485,6 +486,7 @@
                 </template>
               </div>
               <div v-for="ciclo in fila.ciclos" :key="'ia-reg-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Inter Area — Acciones área principal -->
@@ -523,6 +525,7 @@
                 </template>
               </div>
               <div v-for="ciclo in fila.ciclos" :key="'ia-conf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
@@ -532,6 +535,7 @@
                 <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Solicitante -->
@@ -622,6 +626,7 @@
                          @change="seleccionarArchivoParaNuevoCiclo($event, fila)">
                 </div>
               </template>
+              <div v-if="spacerBotonIAInformeArea(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
@@ -644,6 +649,7 @@
                 />
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
 
@@ -662,6 +668,7 @@
                 </span>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
 
@@ -861,6 +868,7 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
@@ -959,6 +967,7 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna PDF Admin (por ciclo) -->
@@ -1029,6 +1038,7 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Responsable Área - Firma (por ciclo) -->
@@ -1099,6 +1109,7 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Dirección - Firma (por ciclo) -->
@@ -1167,6 +1178,7 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <div v-if="spacerBotonIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
             <!-- Columna Archivo -->
@@ -4285,6 +4297,24 @@
           && fila.ciclos[fila.ciclos.length - 1].tipo === 'parcial';
       };
 
+      const mostrarBotonAgregarIA = (fila) => {
+        return isAreaJefe.value && fila.ordenServicio_completo === true &&
+          fila.area_tematica === userAreaTematicaFormatted.value &&
+          !fila.ciclos.some(c => c.tipo === 'complementario');
+      };
+
+      // Spacer para columnas ciclo/admin: compensa la fila extra del botón "+"
+      const spacerBotonIA = (fila) => {
+        return mostrarBotonAgregarIA(fila) && !mostrarClipParaNuevoParcial(fila);
+      };
+
+      // Igual que spacerBotonIA pero excluye el caso "primer clip" en columna Informe Area
+      const spacerBotonIAInformeArea = (fila) => {
+        return mostrarBotonAgregarIA(fila) && !mostrarClipParaNuevoParcial(fila) &&
+          !(fila.ciclos.length === 0 && fila.ordenServicio_completo === true &&
+            (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total'));
+      };
+
       const puedeCrearNuevoCiclo = (fila) => {
         if (!fila.ciclos || fila.ciclos.length === 0) return true;
         if (fila.ciclos.some(c => c.tipo === 'final')) return false;
@@ -5585,6 +5615,9 @@
         // Ciclos de Informe
         mostrarModalTipoCiclo,
         mostrarClipParaNuevoParcial,
+        mostrarBotonAgregarIA,
+        spacerBotonIA,
+        spacerBotonIAInformeArea,
         puedeCrearNuevoCiclo,
         crearCiclo,
         popupInformeAreaId,
