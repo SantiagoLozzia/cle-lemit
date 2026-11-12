@@ -1028,6 +1028,7 @@ def obtener_solicitudInterarea(request, nro_circuito):
         return JsonResponse({'error': 'Circuito no encontrado'}, status=404)
 
 class ConfirmarInterareaPrincipal(APIView):
+    """Confirmación inicial: área principal aprueba toda la solicitud → pasa a administración."""
     permission_classes = [IsAuthenticated, IsAreaJefe]
 
     def post(self, request, nro_solicitud):
@@ -1037,8 +1038,11 @@ class ConfirmarInterareaPrincipal(APIView):
                 return Response({'error': 'Solo el área principal puede confirmar.'}, status=status.HTTP_403_FORBIDDEN)
         except AttributeError:
             return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
-        solicitud.confirmado_area_principal = True
+        solicitud.confirmado_ap = True
         solicitud.comentario_rechazo_ap = None
+        solicitud.tipo_rechazo_ap = None
+        solicitud.estado_correc_informe = None
+        solicitud.estado_correc_registros = None
         solicitud.save()
         _log(request, 'confirmar_interarea_principal',
              f'Área principal confirmó inter-área #{nro_solicitud}',
@@ -1047,6 +1051,7 @@ class ConfirmarInterareaPrincipal(APIView):
 
 
 class RechazarInterareaPrincipal(APIView):
+    """Área principal rechaza — requiere tipo ('informe'/'registros_ensayo'/'ambos') y comentario."""
     permission_classes = [IsAuthenticated, IsAreaJefe]
 
     def post(self, request, nro_solicitud):
@@ -1057,13 +1062,78 @@ class RechazarInterareaPrincipal(APIView):
         except AttributeError:
             return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
         comentario = request.data.get('comentario', '').strip()
+        tipo = request.data.get('tipo', '').strip()
         if not comentario:
             return Response({'error': 'Se requiere un comentario para rechazar.'}, status=status.HTTP_400_BAD_REQUEST)
-        solicitud.confirmado_area_principal = False
+        if tipo not in ('informe', 'registros_ensayo', 'ambos'):
+            return Response({'error': 'Tipo de rechazo inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        solicitud.confirmado_ap = False
         solicitud.comentario_rechazo_ap = comentario
+        solicitud.tipo_rechazo_ap = tipo
+        if tipo in ('informe', 'ambos'):
+            solicitud.estado_correc_informe = 'rechazado'
+        if tipo in ('registros_ensayo', 'ambos'):
+            solicitud.estado_correc_registros = 'rechazado'
         solicitud.save()
         _log(request, 'rechazar_interarea_principal',
-             f'Área principal rechazó inter-área #{nro_solicitud}: {comentario}',
+             f'Área principal rechazó inter-área #{nro_solicitud} (tipo: {tipo}): {comentario}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(SolicitudInterareaSerializer(solicitud).data)
+
+
+class ConfirmarCorreccionInformeAP(APIView):
+    """Área principal confirma corrección del informe (post-rechazo)."""
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def post(self, request, nro_solicitud):
+        solicitud = get_object_or_404(SolicitudInterarea, pk=nro_solicitud)
+        try:
+            if request.user.userprofile.area_tematica != solicitud.areaTematica_origen:
+                return Response({'error': 'Solo el área principal puede confirmar.'}, status=status.HTTP_403_FORBIDDEN)
+        except AttributeError:
+            return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        if solicitud.estado_correc_informe != 'subido':
+            return Response({'error': 'No hay corrección de informe pendiente de revisión.'}, status=status.HTTP_400_BAD_REQUEST)
+        solicitud.estado_correc_informe = 'confirmado'
+        # Si ya se confirmó también la de registros (o no era parte del rechazo), limpiar todo
+        registros_ok = (solicitud.estado_correc_registros in (None, 'confirmado'))
+        if registros_ok:
+            solicitud.confirmado_ap = True
+            solicitud.tipo_rechazo_ap = None
+            solicitud.comentario_rechazo_ap = None
+            solicitud.estado_correc_informe = None
+            solicitud.estado_correc_registros = None
+        solicitud.save()
+        _log(request, 'confirmar_correc_informe_ap',
+             f'Área principal confirmó corrección de informe — inter-área #{nro_solicitud}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return Response(SolicitudInterareaSerializer(solicitud).data)
+
+
+class ConfirmarCorreccionRegistrosAP(APIView):
+    """Área principal confirma corrección de registros de ensayo (post-rechazo)."""
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def post(self, request, nro_solicitud):
+        solicitud = get_object_or_404(SolicitudInterarea, pk=nro_solicitud)
+        try:
+            if request.user.userprofile.area_tematica != solicitud.areaTematica_origen:
+                return Response({'error': 'Solo el área principal puede confirmar.'}, status=status.HTTP_403_FORBIDDEN)
+        except AttributeError:
+            return Response({'error': 'Sin permisos.'}, status=status.HTTP_403_FORBIDDEN)
+        if solicitud.estado_correc_registros != 'subido':
+            return Response({'error': 'No hay corrección de registros pendiente de revisión.'}, status=status.HTTP_400_BAD_REQUEST)
+        solicitud.estado_correc_registros = 'confirmado'
+        informe_ok = (solicitud.estado_correc_informe in (None, 'confirmado'))
+        if informe_ok:
+            solicitud.confirmado_ap = True
+            solicitud.tipo_rechazo_ap = None
+            solicitud.comentario_rechazo_ap = None
+            solicitud.estado_correc_informe = None
+            solicitud.estado_correc_registros = None
+        solicitud.save()
+        _log(request, 'confirmar_correc_registros_ap',
+             f'Área principal confirmó corrección de registros — inter-área #{nro_solicitud}',
              nro_circuito=solicitud.nro_circuito_id)
         return Response(SolicitudInterareaSerializer(solicitud).data)
 
@@ -1762,6 +1832,10 @@ class SubirInformeAreaCicloIA(APIView):
             ciclo_ia.nota_rechazo_st = None
             ciclo_ia.rechazo_st_destino = None
         ciclo_ia.save()
+        # Si hay corrección de informe pendiente, marcar como subido para que área principal revise
+        if solicitud.estado_correc_informe == 'rechazado':
+            solicitud.estado_correc_informe = 'subido'
+            solicitud.save(update_fields=['estado_correc_informe'])
         _log(request, 'subir_informe_area_ia',
              f'Informe de área inter-area #{ciclo_ia.numero} subido — solicitudIA #{solicitud.pk}, circuito #{solicitud.nro_circuito_id}',
              nro_circuito=solicitud.nro_circuito_id)
@@ -1780,6 +1854,10 @@ class SubirRegistroEnsayoCicloIA(APIView):
         if not archivo:
             return Response({'error': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         registro = RegistroEnsayoCicloIA.objects.create(ciclo_ia=ciclo_ia, archivo=archivo)
+        # Si hay corrección de registros pendiente, marcar como subido para que área principal revise
+        if solicitud.estado_correc_registros == 'rechazado':
+            solicitud.estado_correc_registros = 'subido'
+            solicitud.save(update_fields=['estado_correc_registros'])
         _log(request, 'subir_registro_ensayo_ia',
              f'Registro de ensayo inter-area subido — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
              nro_circuito=solicitud.nro_circuito_id)

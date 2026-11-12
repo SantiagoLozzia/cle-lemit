@@ -113,10 +113,10 @@
             <th class="align-middle text-center">ST-05 Orden</th>
             <th class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Inter Area -->
-            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha</th>
-            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Solicitud</th>
-            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Inter-Area</th>
-            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Informe</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Registros IA</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Confirmación</th>
             <!-- Subcolumnas de Informe de Area -->
             <th class="align-middle text-center">Fecha</th>
             <th class="align-middle text-center">Solicitante</th>
@@ -376,52 +376,149 @@
               </template>
             </td>
 
-            <!-- Columna Inter Area -->
+            <!-- Columna Inter Area — Fecha / Área -->
+            <td v-if="isTecnologicoOrDireccionOrArea">
+              <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row ia-row">
+                <span class="no-wrap-column" style="font-size:0.78rem">{{ ia.fecha }}</span>
+                <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ ia.inter_areaTematica }}</span>
+                <i class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
+              </div>
+              <div v-if="isAreaJefe && fila.ordenServicio_completo === true && fila.area_tematica === userAreaTematicaFormatted" class="ciclo-row">
+                <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)" title="Nueva solicitud inter-área"></i>
+              </div>
+            </td>
 
+            <!-- Columna Inter Area — Estado Informe IA -->
             <td v-if="isTecnologicoOrDireccionOrArea">
-              <template v-if="(fila.nro_solicitudInterarea !== '')">
-                <span class="no-wrap-column">
-                  <div style="display: flex; flex-direction: column;">
-                    {{ fila.fecha_solicitudInterarea }}
-                  </div>
-                </span>
-              </template>
-              <template v-else>
-              <!-- vacio -->
-              </template>
+              <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row">
+                <!-- Estado informe según rol -->
+                <template v-if="esPrincipalDeIA(ia)">
+                  <!-- Área principal: ve estado de confirmación -->
+                  <span v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" title="Informe rechazado — esperando corrección del inter-área">
+                    <i class="bi bi-sticky-fill ia-papelito" style="color:#f39c12"></i>
+                  </span>
+                  <span v-else-if="ia.estado_correc_informe === 'subido'" class="ia-estado ia-blink" title="Corrección subida — confirmar">
+                    <i class="bi bi-circle-fill" style="color:#e67e22"></i>
+                    <button class="btn btn-xs btn-success ms-1" style="font-size:0.65rem;padding:1px 4px" @click="confirmarCorreccionInformeAP(ia)">OK</button>
+                  </span>
+                  <span v-else-if="ia.estado_correc_informe === 'confirmado'" class="ia-estado" title="Corrección de informe confirmada">
+                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
+                  </span>
+                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado ia-blink" title="Informe subido — pendiente revisión">
+                    <i class="bi bi-circle-fill" style="color:#2980b9"></i>
+                  </span>
+                  <span v-else class="ia-estado" title="Esperando informe del inter-área">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+                <template v-else-if="esInterAreaDeIA(ia)">
+                  <!-- Inter-área: ve qué hacer -->
+                  <span v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" :title="'Informe rechazado: ' + (ia.comentario_rechazo_ap || '')">
+                    <i class="bi bi-sticky-fill ia-papelito" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'informe')"></i>
+                  </span>
+                  <span v-else-if="ia.estado_correc_informe === 'subido'" class="ia-estado" title="Corrección enviada — esperando revisión del área principal">
+                    <i class="bi bi-clock" style="color:#e67e22"></i>
+                  </span>
+                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe subido">
+                    <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
+                  </span>
+                  <span v-else class="ia-estado" title="Pendiente de subir informe">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+                <template v-else>
+                  <!-- Resto: ve estado genérico -->
+                  <span v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe inter-área cargado">
+                    <i class="bi bi-file-earmark-text" style="color:#2980b9"></i>
+                  </span>
+                  <span v-else class="ia-estado" title="Esperando informe">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+              </div>
             </td>
+
+            <!-- Columna Inter Area — Estado Registros IA -->
             <td v-if="isTecnologicoOrDireccionOrArea">
-              <template v-if="(fila.ordenServicio_completo === '') || (fila.ordenServicio_completo === false)">
-                  <!-- vacio -->
-              </template>
-              <template v-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea === '')">
-                  <div v-if="isAdminOrTecnologicoOrDireccion">
-                    -
-                  </div>
-                  <div v-else style="display: flex; flex-direction: column;">
-                    <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)"></i>
-                  </div>
-              </template>
-              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.nro_solicitudInterarea !== '')">
-                <span>
-                  <i class="bi bi-clipboard2"   style="cursor: pointer;" @click="abrirSolicitudInterArea(fila)"></i>
-                </span>
-              </template>
+              <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row">
+                <template v-if="esPrincipalDeIA(ia)">
+                  <span v-if="ia.estado_correc_registros === 'rechazado'" class="ia-estado" title="Registros rechazados — esperando corrección">
+                    <i class="bi bi-sticky-fill ia-papelito" style="color:#f39c12"></i>
+                  </span>
+                  <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado ia-blink" title="Corrección subida — confirmar">
+                    <i class="bi bi-circle-fill" style="color:#e67e22"></i>
+                    <button class="btn btn-xs btn-success ms-1" style="font-size:0.65rem;padding:1px 4px" @click="confirmarCorreccionRegistrosAP(ia)">OK</button>
+                  </span>
+                  <span v-else-if="ia.estado_correc_registros === 'confirmado'" class="ia-estado" title="Corrección de registros confirmada">
+                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
+                  </span>
+                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
+                    <i class="bi bi-circle-fill" style="color:#2980b9"></i>
+                  </span>
+                  <span v-else class="ia-estado" title="Esperando registros del inter-área">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+                <template v-else-if="esInterAreaDeIA(ia)">
+                  <span v-if="ia.estado_correc_registros === 'rechazado'" class="ia-estado" :title="'Registros rechazados: ' + (ia.comentario_rechazo_ap || '')">
+                    <i class="bi bi-sticky-fill ia-papelito" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'registros')"></i>
+                  </span>
+                  <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado" title="Corrección enviada">
+                    <i class="bi bi-clock" style="color:#e67e22"></i>
+                  </span>
+                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros subidos">
+                    <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
+                  </span>
+                  <span v-else class="ia-estado" title="Pendiente de subir registros">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+                <template v-else>
+                  <span v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros cargados">
+                    <i class="bi bi-file-earmark-text" style="color:#2980b9"></i>
+                  </span>
+                  <span v-else class="ia-estado" title="Esperando registros">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+              </div>
             </td>
-            <td v-if="isTecnologicoOrDireccionOrArea" style="white-space: nowrap;">
-              {{ fila.inter_areaTematica }}
-            </td>
+
+            <!-- Columna Inter Area — Acciones área principal -->
             <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
-              <template v-if="fila.nro_solicitudInterarea !== ''">
-                <AttachmentCell
-                  :files="fila.informes_interarea"
-                  :can-upload="(isAreaJefe || isAreaStandard) && fila.inter_areaTematica === userAreaTematicaFormatted"
-                  :can-delete="(isAreaJefe || isAreaStandard) && fila.inter_areaTematica === userAreaTematicaFormatted"
-                  :input-id="'interarea-' + index"
-                  @upload="cargarAdjuntoInformeInterarea($event, fila)"
-                  @delete="eliminarAdjuntoInformeInterarea"
-                />
-              </template>
+              <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row">
+                <template v-if="esPrincipalDeIA(ia)">
+                  <!-- Puede confirmar/rechazar cuando hay informe y no está confirmado -->
+                  <template v-if="!ia.confirmado_ap && !ia.tipo_rechazo_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea">
+                    <button class="btn btn-xs btn-success" style="font-size:0.65rem;padding:2px 5px;margin-right:2px" @click="confirmarInterareaPrincipal(ia)" title="Confirmar">✓</button>
+                    <button class="btn btn-xs btn-danger" style="font-size:0.65rem;padding:2px 5px" @click="abrirModalRechazarIA(ia)" title="Rechazar">✗</button>
+                  </template>
+                  <!-- Ya confirmado -->
+                  <span v-else-if="ia.confirmado_ap && !ia.tipo_rechazo_ap" title="Confirmado por área principal">
+                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
+                  </span>
+                  <!-- Tiene rechazo activo pero correcciones pendientes -->
+                  <span v-else-if="ia.tipo_rechazo_ap" class="ia-estado" :title="'Rechazado (' + ia.tipo_rechazo_ap + ')'">
+                    <i class="bi bi-x-circle-fill" style="color:#e74c3c"></i>
+                  </span>
+                  <!-- Esperando que inter-área suba informe -->
+                  <span v-else class="ia-estado" title="Esperando que el inter-área suba informe">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+                <!-- Para el inter-área: ver estado desde su perspectiva -->
+                <template v-else-if="esInterAreaDeIA(ia)">
+                  <span v-if="ia.confirmado_ap" title="Área principal confirmó">
+                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
+                  </span>
+                  <span v-else-if="ia.tipo_rechazo_ap" class="ia-estado" :title="'Rechazado: ' + (ia.comentario_rechazo_ap || '')">
+                    <i class="bi bi-exclamation-circle-fill" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'ambos')"></i>
+                  </span>
+                  <span v-else title="Esperando revisión del área principal">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
+                </template>
+              </div>
             </td>
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
@@ -1632,11 +1729,36 @@
           </div>
           <div class="modal-body">
             <form class="was-validated">
+              <!-- Selector principal: genera informe parcial -->
+              <div class="mb-4">
+                <label class="form-label fw-bold fs-6">¿El inter-área genera informe parcial?</label>
+                <div class="d-flex gap-3">
+                  <button type="button"
+                    class="btn flex-fill py-3 ia-tipo-btn"
+                    :class="nuevaSolicitudInterarea.genera_informe_parcial === true ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="nuevaSolicitudInterarea.genera_informe_parcial = true">
+                    <i class="bi bi-file-earmark-text d-block mb-1" style="font-size:1.5rem"></i>
+                    <strong>Sí, genera informe parcial</strong>
+                    <small class="d-block text-muted" style="font-size:0.72rem">El inter-área produce su propio informe que pasa por administración, ST, firma y dirección</small>
+                  </button>
+                  <button type="button"
+                    class="btn flex-fill py-3 ia-tipo-btn"
+                    :class="nuevaSolicitudInterarea.genera_informe_parcial === false ? 'btn-secondary' : 'btn-outline-secondary'"
+                    @click="nuevaSolicitudInterarea.genera_informe_parcial = false">
+                    <i class="bi bi-clipboard-check d-block mb-1" style="font-size:1.5rem"></i>
+                    <strong>No, solo resultados</strong>
+                    <small class="d-block text-muted" style="font-size:0.72rem">El inter-área entrega resultados directamente al área principal sin informe propio</small>
+                  </button>
+                </div>
+              </div>
+
+              <hr class="my-3">
+
               <div class="mb-3">
                   <label for="fecha_solicitudInterarea" class="form-label text-left">Fecha:</label>
                   <input v-model="nuevaSolicitudInterarea.fecha_solicitudInterarea" type="date" class="form-control" id="fecha_solicitudInterarea" name="fecha_solicitudInterarea" readonly required />
               </div>
-              
+
               <div class="mb-3">
                 <label for="areaTematica_origen" class="form-label text-left">Area Temática:</label>
                 <input v-model="nuevaSolicitudInterarea.areaTematica_origen" type="text" class="form-control" id="areaTematica_origen" name="areaTematica_origen" readonly required />
@@ -1786,6 +1908,75 @@
           <!-- Modal Footer -->
           <div class="modal-footer-a4">
             <div class="footer-image"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Rechazar Inter-Área -->
+    <div class="modal" :class="{ 'show': mostrarModalRechazarIA }" id="modalRechazarIA">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Rechazar solicitud inter-área</h5>
+            <button type="button" class="btn-close" @click="cerrarModalRechazarIA"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">¿Qué se rechaza?</label>
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="button"
+                  class="btn btn-lg flex-fill ia-tipo-btn"
+                  :class="tipoRechazoIA === 'informe' ? 'btn-warning' : 'btn-outline-warning'"
+                  @click="tipoRechazoIA = 'informe'">
+                  <i class="bi bi-file-earmark-text me-1"></i> Informe
+                </button>
+                <button type="button"
+                  class="btn btn-lg flex-fill ia-tipo-btn"
+                  :class="tipoRechazoIA === 'registros_ensayo' ? 'btn-warning' : 'btn-outline-warning'"
+                  @click="tipoRechazoIA = 'registros_ensayo'">
+                  <i class="bi bi-clipboard-data me-1"></i> Registros de ensayo
+                </button>
+                <button type="button"
+                  class="btn btn-lg flex-fill ia-tipo-btn"
+                  :class="tipoRechazoIA === 'ambos' ? 'btn-danger' : 'btn-outline-danger'"
+                  @click="tipoRechazoIA = 'ambos'">
+                  <i class="bi bi-exclamation-triangle me-1"></i> Ambos
+                </button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Comentario / motivo del rechazo</label>
+              <textarea v-model="comentarioRechazoIA" class="form-control" rows="4" placeholder="Describí qué debe corregir el inter-área..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" @click="rechazarInterareaPrincipal" :disabled="!comentarioRechazoIA.trim()">Rechazar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazarIA">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ver Comentario de Rechazo IA -->
+    <div class="modal" :class="{ 'show': mostrarModalComentarioRechazo }" id="modalComentarioRechazoIA">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Rechazo del área principal</h5>
+            <button type="button" class="btn-close" @click="cerrarModalComentarioRechazo"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-1"><strong>Tipo:</strong>
+              <span v-if="tipoRechazoVer === 'informe'">Informe</span>
+              <span v-else-if="tipoRechazoVer === 'registros_ensayo'">Registros de ensayo</span>
+              <span v-else-if="tipoRechazoVer === 'ambos'">Informe y Registros de ensayo</span>
+            </p>
+            <p class="mb-0"><strong>Comentario:</strong></p>
+            <p class="mt-1 p-2 bg-light rounded">{{ comentarioRechazoVer || '—' }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cerrarModalComentarioRechazo">Cerrar</button>
           </div>
         </div>
       </div>
@@ -2777,10 +2968,11 @@
           { value: 'direccion', label: 'Dirección' },
       ]);
       const nuevaSolicitudInterarea = ref({
-        fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), // Obtener la fecha actual en formato "YYYY-MM-DD",
+        fecha_solicitudInterarea: new Date().toISOString().substring(0, 10),
         areaTematica_origen: '',
         inter_areaTematica: '',
         num_labs: '',
+        genera_informe_parcial: null, // null = no seleccionado aún
         servicios_solicitudInterarea: [
           {
             nro_servicio: '',
@@ -2800,7 +2992,7 @@
       const servicioSolicitudInterArea = ref();
       
       const mostrarModalCrearSolicitudInterArea = ref(null);
-      const mostrarModalSolicitudInterArea = ref(false);
+      // mostrarModalSolicitudInterArea se declara más abajo junto a la función abrirSolicitudInterArea
 
       // Setup Formato Administracion
       const mostrarModalPDFpreliminar = ref(false);
@@ -3041,7 +3233,37 @@
                 const legajoCorrespondiente = data.legajos.find(legajo => legajo.nro_circuito === solicitud.nro_circuito);
                 const recepcionCorrespondiente = data.recepciones.find(recepciones => recepciones.nro_circuito === solicitud.nro_circuito);
                 const ordenCorrespondiente = data.ordenes_servicio.find(ordenes_servicio => ordenes_servicio.nro_circuito === solicitud.nro_circuito);
-                const solicitudInterAreaCorrespondiente = data.solicitudes_inter_area.find(solicitudes_inter_area => solicitudes_inter_area.nro_circuito === solicitud.nro_circuito);
+                const solicitudesInterAreaFiltered = (data.solicitudes_inter_area || [])
+                  .filter(s => s.nro_circuito === solicitud.nro_circuito)
+                  .map(s => ({
+                    id: s.nro_solicitudInterarea,
+                    fecha: s.fecha_solicitudInterarea ? formatDate(s.fecha_solicitudInterarea) : '',
+                    inter_areaTematica: formatAreaTematica(s.inter_areaTematica),
+                    inter_areaTematica_raw: s.inter_areaTematica,
+                    areaTematica_origen: s.areaTematica_origen,
+                    muestras: s.muestras_solicitudIa,
+                    num_labs: s.num_labs,
+                    observaciones: s.observaciones,
+                    genera_informe_parcial: s.genera_informe_parcial,
+                    confirmado_ap: s.confirmado_ap,
+                    tipo_rechazo_ap: s.tipo_rechazo_ap,
+                    comentario_rechazo_ap: s.comentario_rechazo_ap,
+                    estado_correc_informe: s.estado_correc_informe,
+                    estado_correc_registros: s.estado_correc_registros,
+                    ciclos: (s.ciclos || []).map(c => ({
+                      id: c.id,
+                      numero: c.numero,
+                      adjunto_informeArea: c.adjunto_informeArea,
+                      fecha_informeArea: c.fecha_informeArea,
+                      registros_ensayo: c.registros_ensayo || [],
+                      adjunto_informeServicio: c.adjunto_informeServicio,
+                      firma_responsable_area: c.firma_responsable_area,
+                      firma_direccion: c.firma_direccion,
+                      nota_rechazo_st: c.nota_rechazo_st,
+                      rechazo_st_destino: c.rechazo_st_destino,
+                    })),
+                    servicio_solicitado: s.servicio_solicitado || [],
+                  }));
                 // Arrays multi-adjunto
                 const adjuntos_solicitud = (data.adjuntos_solicitud || [])
                   .filter(a => a.data_servicio === solicitud.nro_dataServicio)
@@ -3081,10 +3303,6 @@
                     nota_rechazo_st: c.nota_rechazo_st || null,
                     rechazo_st_destino: c.rechazo_st_destino || null,
                   }));
-
-                const informes_interarea = (data.informes_inter_area || [])
-                  .filter(ii => ii.nro_circuito === solicitud.nro_circuito)
-                  .map(ii => ({ id: ii.nro_informeInterarea, archivo: ii.adjunto_informeInterarea }));
 
                 const ultimoCiclo = ciclos.length > 0 ? ciclos[ciclos.length - 1] : null;
 
@@ -3126,24 +3344,16 @@
                   ciclos,
                   firma_direccion: ultimoCiclo ? ultimoCiclo.firma_direccion : false,
                   nombre_solicitante: solicitud.nombre_solicitante,
-                  // Solicitud Inter Area
-                  nro_solicitudInterarea: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
-                  fecha_solicitudInterarea: solicitudInterAreaCorrespondiente ? formatDate(solicitudInterAreaCorrespondiente.fecha_solicitudInterarea) : '',
-                  inter_areaTematica: solicitudInterAreaCorrespondiente ? formatAreaTematica(solicitudInterAreaCorrespondiente.inter_areaTematica) : '',
-                  muestras_solicitudIa: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.muestras_solicitudIa : '',
-                  num_labs: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.num_labs : '',
-                  observaciones: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.observaciones : '',
-                  // Informe Inter Area
-                  nro_solicitudInterarea_ia: solicitudInterAreaCorrespondiente ? solicitudInterAreaCorrespondiente.nro_solicitudInterarea : '',
-                  informes_interarea,
+                  // Solicitudes Inter Area (múltiples)
+                  solicitudes_interarea: solicitudesInterAreaFiltered,
                 };
 
                 // Filtrar las filas según el área temática del usuario, excepto si es servicios_tecnologicos, administracion, o direccion
-                if (userAreaTematica === 'Servicios Tecnologicos' || 
-                    userAreaTematica === 'Administracion' || 
-                    userAreaTematica === 'Direccion' || 
+                if (userAreaTematica === 'Servicios Tecnologicos' ||
+                    userAreaTematica === 'Administracion' ||
+                    userAreaTematica === 'Direccion' ||
                     (fila.area_tematica === userAreaTematica && fila.nro_ordenServicio) ||
-                    (fila.inter_areaTematica === userAreaTematica)) { 
+                    solicitudesInterAreaFiltered.some(ia => ia.inter_areaTematica === userAreaTematica)) {
                   acc.push(fila);
                 }
                 return acc;
@@ -4178,33 +4388,24 @@
         busquedaArancel.value = '';
         arancelAdicional.value = null;
         cantidadAdicional.value = 1;
-        // Limpiar el formulario
         nuevaSolicitudInterarea.value = {
-                fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), // Obtener la fecha actual en formato "YYYY-MM-DD",
-                areaTematica_origen: '',
-                inter_areaTematica: '',
-                num_labs: '',
-                servicios_solicitudInterarea: [
-                  {
-                    nro_servicio: '',
-                    servicio: '',
-                    cant: 0,
-                  }
-                ],
-                nro_circuito: null,
-              };
+          fecha_solicitudInterarea: new Date().toISOString().substring(0, 10),
+          areaTematica_origen: '',
+          inter_areaTematica: '',
+          num_labs: '',
+          genera_informe_parcial: null,
+          servicios_solicitudInterarea: [{ nro_servicio: '', servicio: '', cant: 0 }],
+          nro_circuito: null,
+        };
       };
 
       const crearSolicitudInterArea = () => {
-          // // Validar campos obligatorios
-          // if (!nuevoPresupuesto.value.contacto || !nuevoPresupuesto.value.email || !nuevoPresupuesto.value.area_tematica || nuevoPresupuesto.value.subtotal === null || nuevoPresupuesto.value.descuento === null) {
-          //   return;
-          // }
+          if (nuevaSolicitudInterarea.value.genera_informe_parcial === null) {
+            alert('Por favor indicá si se genera informe parcial o no.');
+            return;
+          }
 
-          // Limpiar los servicios seleccionados antes de sincronizarlos
-            nuevaSolicitudInterarea.value.servicios_solicitudInterarea = [];
-
-          /// Sincronizar los servicios seleccionados con el objeto nuevaSolicitudInterarea
+          nuevaSolicitudInterarea.value.servicios_solicitudInterarea = [];
           serviciosSeleccionados.value.forEach(servicio => {
             nuevaSolicitudInterarea.value.servicios_solicitudInterarea.push({
               nro_servicio: servicio.nro_servicio,
@@ -4214,125 +4415,155 @@
           });
 
           nuevaSolicitudInterarea.value.areaTematica_origen = desformatearAreaTematica(nuevaSolicitudInterarea.value.areaTematica_origen);
-          
 
-          // Enviar datos al backend usando api
           api.post('/encurso/crear_solicitud_interarea/', nuevaSolicitudInterarea.value)
-            .then(response => {
-              console.log(response.data);
+            .then(() => {
               cerrarModalCrearSolicitudInterArea();
-
-              serviciosDisponibles.value = [];
-              serviciosSeleccionados.value = [];
-              // Limpiar el formulario y mostrar la alerta de éxito
-              nuevaSolicitudInterarea.value = {
-                fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), 
-                areaTematica_origen: '',
-                inter_areaTematica: '',
-                num_labs: '',
-                servicios_solicitudInterarea: [
-                  {
-                    nro_servicio: '',
-                    servicio: '',
-                    cant: 0,
-                  }
-                ],
-                nro_circuito: null,
-              };
-
+              fetchData();
               showSuccessAlert.value = true;
-
-              setTimeout(() => {
-                showSuccessAlert.value = false;
-              }, 3000);
+              setTimeout(() => { showSuccessAlert.value = false; }, 3000);
             })
             .catch(error => {
-              console.error('Error al crear la solicitud inter area:', error);
+              console.error('Error al crear la solicitud inter area:', error.response?.data);
               cerrarModalCrearSolicitudInterArea();
-
-              serviciosDisponibles.value = [];
-              serviciosSeleccionados.value = [];
-              // Limpiar el formulario y mostrar la alerta de error
-              nuevaSolicitudInterarea.value = {
-                fecha_solicitudInterarea: new Date().toISOString().substring(0, 10), 
-                areaTematica_origen: '',
-                inter_areaTematica: '',
-                num_labs: '',
-                servicios_solicitudInterarea: [
-                  {
-                    nro_servicio: '',
-                    servicio: '',
-                    cant: 0,
-                  }
-                ],
-                nro_circuito: null,
-              };
-              // Imprimir detalles del error
-              console.error('Error details:', error.response.data);
-
               showErrorAlert.value = true;
-
-              setTimeout(() => {
-                showErrorAlert.value = false;
-              }, 5000);
+              setTimeout(() => { showErrorAlert.value = false; }, 5000);
             });
       };
 
 
-      // Inter Area - Abrir Solicitud Inter Area
-      const abrirSolicitudInterArea = (fila) => {
-          const nro_circuito = fila.nro_circuito;
-          api.get(`/encurso/obtener_solicitud_interarea/${nro_circuito}/`)
-              .then(response => {
-                  // Obtener los datos de la solicitud inter area de la respuesta
-                  const { nro_solicitudInterarea, fecha_solicitudInterarea, areaTematica_origen, inter_areaTematica, muestras_solicitudIa, num_labs, observaciones, servicio_solicitado  } = response.data;
+      // Inter Area - Abrir detalle de una solicitud inter-área
+      const solicitudIASeleccionada = ref(null);
+      const mostrarModalSolicitudInterArea = ref(false);
 
-                  // Asignar los datos a variables en el contexto del componente
-                  nroSolicitudInterArea.value = nro_solicitudInterarea;
-                  fechaSolicitudInterArea.value = fecha_solicitudInterarea;
-                  areaTematicaOrigen.value = formatAreaTematica(areaTematica_origen);
-                  interAreaSolicitudInterArea.value = formatAreaTematica(inter_areaTematica);
-                  muestrasSolicitudInterArea.value = muestras_solicitudIa;
-                  numLabsSolicitudInterArea.value = num_labs;
-                  observacionesSolicitudInterArea.value = observaciones;
-                  servicioSolicitudInterArea.value = servicio_solicitado;
+      const abrirSolicitudInterArea = (ia) => {
+        // ia es el objeto de la solicitud ya mapeado en fetchData
+        nroSolicitudInterArea.value = ia.id;
+        fechaSolicitudInterArea.value = ia.fecha;
+        areaTematicaOrigen.value = formatAreaTematica(ia.areaTematica_origen);
+        interAreaSolicitudInterArea.value = ia.inter_areaTematica;
+        muestrasSolicitudInterArea.value = ia.muestras;
+        numLabsSolicitudInterArea.value = ia.num_labs;
+        observacionesSolicitudInterArea.value = ia.observaciones;
+        servicioSolicitudInterArea.value = ia.servicio_solicitado || [];
+        solicitudIASeleccionada.value = ia;
+        mostrarModalSolicitudInterArea.value = true;
+      };
 
-                  console.log('abrirSolicitudInterArea', response)
-                  // Mostrar el modal para mostrar los detalles de la solicitud inter area
-                  mostrarModalSolicitudInterArea.value = true;
-              })
-              .catch(error => {
-                  console.error('Error al obtener los datos de la solicitud inter area:', error);
-                  // Manejar el error, mostrar un mensaje al usuario, etc.
-              });
-        };
+      const cerrarModalSolicitudInterArea = () => {
+        mostrarModalSolicitudInterArea.value = false;
+        solicitudIASeleccionada.value = null;
+      };
 
-        const cerrarModalSolicitudInterArea = () => {
-          mostrarModalSolicitudInterArea.value = false;
-        };
+      // Inter Area — helpers de estado
+      const ultimoCicloIA = (ia) => {
+        if (!ia.ciclos || ia.ciclos.length === 0) return null;
+        return ia.ciclos[ia.ciclos.length - 1];
+      };
 
-        const cargarAdjuntoInformeInterarea = (event, fila) => {
-          const archivoSeleccionado = event.target.files[0]; // Obtener el archivo seleccionado
-          const formData = new FormData();
+      const esPrincipalDeIA = (ia) => {
+        return isAreaJefe.value && formatAreaTematica(ia.areaTematica_origen) === userAreaTematicaFormatted;
+      };
 
-          formData.append('archivo', archivoSeleccionado);
-          formData.append('nro_solicitudInterarea', fila.nro_solicitudInterarea); 
-          formData.append('nro_circuito', fila.nro_circuito); 
+      const esInterAreaDeIA = (ia) => {
+        return (isAreaJefe.value || isAreaStandard.value) && ia.inter_areaTematica === userAreaTematicaFormatted;
+      };
 
-          // Realizar una petición POST al servidor para guardar el archivo
-          api.post('/encurso/guardar_adjuntoinformeinterarea/', formData)
-              .then(response => {
-                  console.log('Archivo guardado exitosamente:', response.data);
-                  fetchData();
-                  showSuccessAlert.value = true;
-                  setTimeout(() => { showSuccessAlert.value = false; }, 3000);
-              })
-              .catch(error => {
-                  console.error('Error al guardar el archivo:', error);
-                  showErrorAlert.value = true;
-                  setTimeout(() => { showErrorAlert.value = false; }, 3000);
-              });
-        };
+      // Inter Area — confirmación inicial por área principal
+      const confirmarInterareaPrincipal = async (ia) => {
+        try {
+          await api.post(`/encurso/ia/solicitud/${ia.id}/confirmar_principal/`);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al confirmar inter-área:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      // Inter Area — confirmar correcciones post-rechazo (por separado)
+      const confirmarCorreccionInformeAP = async (ia) => {
+        try {
+          await api.post(`/encurso/ia/solicitud/${ia.id}/confirmar_correc_informe/`);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al confirmar corrección de informe:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      const confirmarCorreccionRegistrosAP = async (ia) => {
+        try {
+          await api.post(`/encurso/ia/solicitud/${ia.id}/confirmar_correc_registros/`);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al confirmar corrección de registros:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      // Inter Area — rechazo
+      const mostrarModalRechazarIA = ref(false);
+      const iaParaRechazar = ref(null);
+      const tipoRechazoIA = ref('informe');
+      const comentarioRechazoIA = ref('');
+
+      const abrirModalRechazarIA = (ia) => {
+        iaParaRechazar.value = ia;
+        tipoRechazoIA.value = 'informe';
+        comentarioRechazoIA.value = '';
+        mostrarModalRechazarIA.value = true;
+      };
+
+      const cerrarModalRechazarIA = () => {
+        mostrarModalRechazarIA.value = false;
+        iaParaRechazar.value = null;
+        comentarioRechazoIA.value = '';
+      };
+
+      const rechazarInterareaPrincipal = async () => {
+        if (!comentarioRechazoIA.value.trim()) {
+          alert('El comentario es obligatorio.');
+          return;
+        }
+        try {
+          await api.post(`/encurso/ia/solicitud/${iaParaRechazar.value.id}/rechazar_principal/`, {
+            tipo: tipoRechazoIA.value,
+            comentario: comentarioRechazoIA.value.trim(),
+          });
+          cerrarModalRechazarIA();
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al rechazar inter-área:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
+      // Inter Area — ver comentario de rechazo (tooltip expandido)
+      const mostrarModalComentarioRechazo = ref(false);
+      const comentarioRechazoVer = ref('');
+      const tipoRechazoVer = ref('');
+
+      const verComentarioRechazoIA = (ia) => {
+        comentarioRechazoVer.value = ia.comentario_rechazo_ap || '';
+        tipoRechazoVer.value = ia.tipo_rechazo_ap || '';
+        mostrarModalComentarioRechazo.value = true;
+      };
+
+      const cerrarModalComentarioRechazo = () => {
+        mostrarModalComentarioRechazo.value = false;
+      };
       
       // Administracion - Generar PDF desde Word (LibreOffice server-side)
       const generandoPDFId = ref(null);
@@ -5152,7 +5383,28 @@
         numLabsSolicitudInterArea,
         observacionesSolicitudInterArea,
         servicioSolicitudInterArea,
-        cargarAdjuntoInformeInterarea,
+        solicitudIASeleccionada,
+        // Helpers de estado inter-área
+        ultimoCicloIA,
+        esPrincipalDeIA,
+        esInterAreaDeIA,
+        // Acciones área principal
+        confirmarInterareaPrincipal,
+        confirmarCorreccionInformeAP,
+        confirmarCorreccionRegistrosAP,
+        // Rechazo
+        mostrarModalRechazarIA,
+        abrirModalRechazarIA,
+        cerrarModalRechazarIA,
+        rechazarInterareaPrincipal,
+        tipoRechazoIA,
+        comentarioRechazoIA,
+        // Ver comentario de rechazo
+        mostrarModalComentarioRechazo,
+        cerrarModalComentarioRechazo,
+        verComentarioRechazoIA,
+        comentarioRechazoVer,
+        tipoRechazoVer,
         eliminarAdjuntoInformeInterarea,
         // Administracion - Informe Servicio
         subirInformeServicioCiclo,
@@ -5790,6 +6042,56 @@
     color: #1a3a5c !important;
     padding: 4px !important;
     font-size: 0.75rem;
+  }
+
+  /* Inter-área: layout de fila por solicitud */
+  .ia-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    height: auto;
+    min-height: 38px;
+    padding: 2px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .ia-row:last-child {
+    border-bottom: none;
+  }
+
+  .ia-area-label {
+    color: #555;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+  }
+
+  .ia-estado {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1rem;
+  }
+
+  .ia-papelito {
+    font-size: 1rem;
+  }
+
+  /* Animación de titilado para estados que requieren revisión */
+  @keyframes ia-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .ia-blink i {
+    animation: ia-pulse 1.2s ease-in-out infinite;
+  }
+
+  /* Botones de tipo de rechazo */
+  .ia-tipo-btn {
+    text-align: center;
+    min-width: 90px;
   }
 
 

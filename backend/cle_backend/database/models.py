@@ -226,8 +226,23 @@ class SolicitudInterarea(models.Model):
     nro_circuito = models.ForeignKey('Circuito', on_delete=models.SET_NULL, null=True)
     completo = models.BooleanField(default=False)
     genera_informe_parcial = models.BooleanField(default=False)
-    confirmado_area_principal = models.BooleanField(default=False)
+    confirmado_ap = models.BooleanField(default=False)
     comentario_rechazo_ap = models.TextField(null=True, blank=True)
+    tipo_rechazo_ap = models.CharField(
+        max_length=20,
+        choices=[('informe', 'Informe'), ('registros_ensayo', 'Registros de ensayo'), ('ambos', 'Ambos')],
+        null=True, blank=True
+    )
+    estado_correc_informe = models.CharField(
+        max_length=15,
+        choices=[('rechazado', 'Rechazado'), ('subido', 'Subido'), ('confirmado', 'Confirmado')],
+        null=True, blank=True
+    )
+    estado_correc_registros = models.CharField(
+        max_length=15,
+        choices=[('rechazado', 'Rechazado'), ('subido', 'Subido'), ('confirmado', 'Confirmado')],
+        null=True, blank=True
+    )
 
     def __str__(self):
         return f"SolicitudInterarea #{self.nro_solicitudInterarea} - Circuito #{self.nro_circuito_id}"
