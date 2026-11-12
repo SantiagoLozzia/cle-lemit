@@ -523,22 +523,24 @@
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
-              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
-              </div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <template v-if="mostrarInformeAreaEnFila(fila)">
+                <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                  <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
+                </div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
-              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <template v-if="mostrarInformeAreaEnFila(fila) && fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 {{ fila.nombre_solicitante }}
               </template>
             </td>
 
             <!-- Columna Informe Area (por ciclo) -->
             <td>
-              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <template v-if="mostrarInformeAreaEnFila(fila) && fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
@@ -620,6 +622,7 @@
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
+              <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
                    :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
@@ -636,10 +639,12 @@
                 />
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Estado/Tipo (por ciclo) -->
             <td class="add-border-right">
+              <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
                       class="badge"
@@ -651,6 +656,7 @@
                 </span>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Administracion - Informe Servicio (por ciclo) -->
@@ -4469,6 +4475,14 @@
         return (isAreaJefe.value || isAreaStandard.value) && ia.inter_areaTematica === userAreaTematicaFormatted;
       };
 
+      // Oculta la sección "Informe de Area" para usuarios que sólo son inter-área en ese circuito
+      const mostrarInformeAreaEnFila = (fila) => {
+        if (fila.solicitudes_interarea.length === 0) return true;
+        if (isAdminOrTecnologicoOrDireccion.value) return true;
+        if (fila.solicitudes_interarea.some(ia => esPrincipalDeIA(ia))) return true;
+        return false;
+      };
+
       // Inter Area — confirmación inicial por área principal
       const confirmarInterareaPrincipal = async (ia) => {
         try {
@@ -5388,6 +5402,7 @@
         ultimoCicloIA,
         esPrincipalDeIA,
         esInterAreaDeIA,
+        mostrarInformeAreaEnFila,
         // Acciones área principal
         confirmarInterareaPrincipal,
         confirmarCorreccionInformeAP,
