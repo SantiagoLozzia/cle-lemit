@@ -523,24 +523,25 @@
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
-              <template v-if="mostrarInformeAreaEnFila(fila)">
-                <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                  <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
-                </div>
-                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
-              </template>
+              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-fecha-'+ia.id" class="ciclo-row"></div>
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
+              </div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
             <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
-              <template v-if="mostrarInformeAreaEnFila(fila) && fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-sol-'+ia.id" class="ciclo-row"></div>
+              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 {{ fila.nombre_solicitante }}
               </template>
             </td>
 
             <!-- Columna Informe Area (por ciclo) -->
             <td>
-              <template v-if="mostrarInformeAreaEnFila(fila) && fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-inf-'+ia.id" class="ciclo-row"></div>
+              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
@@ -622,6 +623,7 @@
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
+              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-reg-'+ia.id" class="ciclo-row"></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
@@ -644,6 +646,7 @@
 
             <!-- Columna Estado/Tipo (por ciclo) -->
             <td class="add-border-right">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'sep-tipo-'+ia.id" class="ciclo-row"></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
@@ -4475,10 +4478,8 @@
         return (isAreaJefe.value || isAreaStandard.value) && ia.inter_areaTematica === userAreaTematicaFormatted;
       };
 
-      // Oculta Informe de Area en circuitos que tienen solicitudes inter-área activas
-      const mostrarInformeAreaEnFila = (fila) => {
-        return fila.solicitudes_interarea.length === 0;
-      };
+      // Siempre true — se mantiene por compatibilidad pero ya no oculta nada
+      const mostrarInformeAreaEnFila = (_fila) => true;
 
       // Inter Area — confirmación inicial por área principal
       const confirmarInterareaPrincipal = async (ia) => {
