@@ -6,6 +6,7 @@
       <!-- Panel izquierdo: branding -->
       <div class="brand-panel">
         <div class="brand-content">
+          <img src="@/assets/upcn.png" alt="UPCN" class="brand-logo-upcn" />
           <img src="@/assets/logo_lemit.png" alt="LEMIT" class="brand-logo" />
           <h1 class="brand-title">CLE</h1>
           <p class="brand-subtitle">Circuito Legajo Electrónico</p>
@@ -230,6 +231,14 @@ async function login() {
 .brand-content {
   text-align: center;
   color: white;
+}
+
+.brand-logo-upcn {
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 16px;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
 }
 
 .brand-logo {
