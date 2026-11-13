@@ -214,17 +214,19 @@ async function login() {
   min-height: 520px;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
 }
 
 /* Panel izquierdo */
 .brand-panel {
   flex: 1;
-  background: linear-gradient(160deg, #014f73 0%, #026290 60%, #0282be 100%);
+  background: linear-gradient(160deg, rgba(1,79,115,0.88) 0%, rgba(2,98,144,0.88) 60%, rgba(2,130,190,0.88) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 48px 36px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .brand-content {
@@ -282,7 +284,9 @@ async function login() {
 /* Panel derecho */
 .form-panel {
   flex: 1;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
