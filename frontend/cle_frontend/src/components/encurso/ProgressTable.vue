@@ -377,7 +377,7 @@
             </td>
 
             <!-- Columna Inter Area — Fecha / Área -->
-            <td v-if="isTecnologicoOrDireccionOrArea">
+            <td v-if="isTecnologicoOrDireccionOrArea" style="text-align:center;">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row ia-row">
                 <span class="no-wrap-column" style="font-size:0.78rem">{{ ia.fecha }}</span>
                 <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ ia.inter_areaTematica }}</span>
@@ -459,45 +459,47 @@
             <!-- Columna Inter Area — Estado Registros IA -->
             <td v-if="isTecnologicoOrDireccionOrArea">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row" style="height:50px">
-                <template v-if="esPrincipalDeIA(ia)">
-                  <span v-if="ia.estado_correc_registros === 'rechazado'" class="ia-estado" title="Registros rechazados — esperando corrección">
-                    <i class="bi bi-sticky-fill ia-papelito" style="color:#f39c12"></i>
-                  </span>
-                  <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado ia-blink" title="Corrección subida — confirmar">
-                    <i class="bi bi-circle-fill" style="color:#e67e22"></i>
-                    <button class="btn btn-xs btn-success ms-1" style="font-size:0.65rem;padding:1px 4px" @click="confirmarCorreccionRegistrosAP(ia)">OK</button>
-                  </span>
-                  <span v-else-if="ia.estado_correc_registros === 'confirmado'" class="ia-estado" title="Corrección de registros confirmada">
-                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
-                  </span>
-                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
-                    <i class="bi bi-circle-fill" style="color:#2980b9"></i>
-                  </span>
-                  <span v-else class="ia-estado" title="Esperando registros del inter-área">
-                    <i class="bi bi-clock" style="color:#95a5a6"></i>
-                  </span>
-                </template>
-                <template v-else-if="esInterAreaDeIA(ia)">
-                  <span v-if="ia.estado_correc_registros === 'rechazado'" class="ia-estado" :title="'Registros rechazados: ' + (ia.comentario_rechazo_ap || '')">
-                    <i class="bi bi-sticky-fill ia-papelito" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'registros')"></i>
-                  </span>
-                  <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado" title="Corrección enviada">
-                    <i class="bi bi-clock" style="color:#e67e22"></i>
-                  </span>
-                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros subidos">
-                    <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
-                  </span>
-                  <span v-else class="ia-estado" title="Pendiente de subir registros">
-                    <i class="bi bi-clock" style="color:#95a5a6"></i>
-                  </span>
-                </template>
-                <template v-else>
-                  <span v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros cargados">
-                    <i class="bi bi-file-earmark-text" style="color:#2980b9"></i>
-                  </span>
-                  <span v-else class="ia-estado" title="Esperando registros">
-                    <i class="bi bi-clock" style="color:#95a5a6"></i>
-                  </span>
+                <template v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea">
+                  <template v-if="esPrincipalDeIA(ia)">
+                    <span v-if="ia.estado_correc_registros === 'rechazado'" class="ia-estado" title="Registros rechazados — esperando corrección">
+                      <i class="bi bi-sticky-fill ia-papelito" style="color:#f39c12"></i>
+                    </span>
+                    <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado ia-blink" title="Corrección subida — confirmar">
+                      <i class="bi bi-circle-fill" style="color:#e67e22"></i>
+                      <button class="btn btn-xs btn-success ms-1" style="font-size:0.65rem;padding:1px 4px" @click="confirmarCorreccionRegistrosAP(ia)">OK</button>
+                    </span>
+                    <span v-else-if="ia.estado_correc_registros === 'confirmado'" class="ia-estado" title="Corrección de registros confirmada">
+                      <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
+                    </span>
+                    <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
+                      <i class="bi bi-circle-fill" style="color:#2980b9"></i>
+                    </span>
+                    <span v-else class="ia-estado" title="Esperando registros del inter-área">
+                      <i class="bi bi-clock" style="color:#95a5a6"></i>
+                    </span>
+                  </template>
+                  <template v-else-if="esInterAreaDeIA(ia)">
+                    <span v-if="ia.estado_correc_registros === 'rechazado'" class="ia-estado" :title="'Registros rechazados: ' + (ia.comentario_rechazo_ap || '')">
+                      <i class="bi bi-sticky-fill ia-papelito" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'registros')"></i>
+                    </span>
+                    <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado" title="Corrección enviada">
+                      <i class="bi bi-clock" style="color:#e67e22"></i>
+                    </span>
+                    <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros subidos">
+                      <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
+                    </span>
+                    <span v-else class="ia-estado" title="Pendiente de subir registros">
+                      <i class="bi bi-clock" style="color:#95a5a6"></i>
+                    </span>
+                  </template>
+                  <template v-else>
+                    <span v-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros cargados">
+                      <i class="bi bi-file-earmark-text" style="color:#2980b9"></i>
+                    </span>
+                    <span v-else class="ia-estado" title="Esperando registros">
+                      <i class="bi bi-clock" style="color:#95a5a6"></i>
+                    </span>
+                  </template>
                 </template>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
@@ -6398,7 +6400,7 @@
   /* Inter-área: layout de fila por solicitud */
   .ia-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 1px;
     height: 50px;
     padding: 2px 0;
