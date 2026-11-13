@@ -508,27 +508,14 @@
             <!-- Columna Tipo IA -->
             <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row" style="height:50px">
-                <template v-if="esInterAreaDeIA(ia) || esPrincipalDeIA(ia)">
-                  <!-- Inter-área o área principal: puede cambiar el tipo -->
-                  <div class="st-sd-cell" @click.stop>
-                    <button class="st-sd-trigger" @click.stop="togglePopupTipoIA(ia.id)" :title="'Tipo: ' + tipoIALabel(ia.tipo)"
-                            style="font-size:0.6rem; min-width:68px; padding:1px 4px; white-space:nowrap;"
-                            :style="tipoIATriggerStyle(ia.tipo)">
-                      {{ tipoIALabel(ia.tipo) }}
-                    </button>
-                    <div v-if="popupTipoIAId === ia.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -150deg; font-size:0.65rem; font-weight:600;" @click.stop="cambiarTipoIA(ia, 'parcial')" title="Parcial">P</div>
-                      <div class="st-sd-opcion" style="--rotation: -90deg; font-size:0.65rem; font-weight:600; border-color:#27ae60; color:#27ae60;" @click.stop="cambiarTipoIA(ia, 'resultado')" title="Resultado">R</div>
-                      <div class="st-sd-opcion" style="--rotation: -30deg; font-size:0.65rem; font-weight:600; border-color:#8e44ad; color:#8e44ad;" @click.stop="cambiarTipoIA(ia, 'complementario')" title="Complementario">C</div>
-                    </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <!-- Resto: solo visualización -->
-                  <span class="ia-estado" :title="tipoIALabel(ia.tipo)">
-                    <span class="badge" :style="tipoIABadgeStyle(ia.tipo)" style="font-size:0.6rem;">{{ tipoIALabel(ia.tipo) }}</span>
-                  </span>
-                </template>
+                <span class="badge"
+                      :class="ia.tipo === 'resultado' ? 'bg-success' : ia.tipo === 'complementario' ? 'bg-secondary' : 'bg-primary'"
+                      style="font-size:10px;"
+                      :style="(esInterAreaDeIA(ia) || esPrincipalDeIA(ia)) ? 'cursor:pointer; text-decoration:underline dotted;' : ''"
+                      :title="(esInterAreaDeIA(ia) || esPrincipalDeIA(ia)) ? 'Cambiar tipo' : tipoIALabel(ia.tipo)"
+                      @click.stop="(esInterAreaDeIA(ia) || esPrincipalDeIA(ia)) && abrirModalTipoIA(ia)">
+                  {{ tipoIALabel(ia.tipo) }}
+                </span>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
@@ -1887,6 +1874,32 @@
                       @click="subirInformeAreaCiclo('final')">Final</button>
             </template>
             <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Tipo IA -->
+    <div class="modal" :class="{ 'show': mostrarModalTipoIA }" id="mostrarModalTipoIA">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Cambiar tipo de inter-área</h4>
+            <button type="button" class="btn-close" @click="cerrarModalTipoIA"></button>
+          </div>
+          <div class="modal-body">
+            <p>¿A qué tipo desea cambiar el inter-área?</p>
+            <small class="text-muted">
+              <strong>Parcial:</strong> hay más informes pendientes.<br>
+              <strong>Resultado:</strong> el inter-área entrega resultados directamente.<br>
+              <strong>Complementario:</strong> complementa al área principal; no habilita nuevas IAs ni ciclos.
+            </small>
+          </div>
+          <div class="modal-footer flex-wrap gap-1">
+            <button type="button" class="btn btn-primary" @click="confirmarCambioTipoIA('parcial')">Parcial</button>
+            <button type="button" class="btn btn-success" @click="confirmarCambioTipoIA('resultado')">Resultado</button>
+            <button type="button" class="btn btn-secondary" @click="confirmarCambioTipoIA('complementario')">Complementario</button>
+            <button type="button" class="btn btn-outline-secondary" @click="cerrarModalTipoIA">Cancelar</button>
           </div>
         </div>
       </div>
@@ -3588,7 +3601,6 @@
         popupAreaIAId.value = null;
         popupDirIAId.value = null;
         popupConfirmIAId.value = null;
-        popupTipoIAId.value = null;
       };
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
@@ -5059,7 +5071,6 @@
       const popupAreaIAId = ref(null);
       const popupDirIAId = ref(null);
       const popupConfirmIAId = ref(null);
-      const popupTipoIAId = ref(null);
       const generandoPDFIAId = ref(null);
       const cicloIAParaFirmaArea = ref(null);
       const cicloIAParaFirmaDireccion = ref(null);
@@ -5069,30 +5080,37 @@
       const togglePopupAreaIA = (iaId) => { popupAreaIAId.value = popupAreaIAId.value === iaId ? null : iaId; };
       const togglePopupDirIA = (iaId) => { popupDirIAId.value = popupDirIAId.value === iaId ? null : iaId; };
       const togglePopupConfirmIA = (iaId) => { popupConfirmIAId.value = popupConfirmIAId.value === iaId ? null : iaId; };
-      const togglePopupTipoIA = (iaId) => { popupTipoIAId.value = popupTipoIAId.value === iaId ? null : iaId; };
 
-      const tipoIALabel = (tipo) => ({ parcial: 'Parcial', resultado: 'Resultado', complementario: 'Complementario' }[tipo] || 'Parcial');
-      const tipoIABadgeStyle = (tipo) => ({
-        parcial: 'background:#2980b9; color:#fff;',
-        resultado: 'background:#27ae60; color:#fff;',
-        complementario: 'background:#8e44ad; color:#fff;',
-      }[tipo] || 'background:#2980b9; color:#fff;');
-      const tipoIATriggerStyle = (tipo) => ({
-        parcial: 'border-color:#2980b9; color:#2980b9;',
-        resultado: 'border-color:#27ae60; color:#27ae60;',
-        complementario: 'border-color:#8e44ad; color:#8e44ad;',
-      }[tipo] || 'border-color:#2980b9; color:#2980b9;');
+      const tipoIALabel = (tipo) => ({ parcial: 'Parcial', resultado: 'Resultado', complementario: 'Compl.' }[tipo] || 'Parcial');
 
-      const cambiarTipoIA = async (ia, tipo) => {
-        popupTipoIAId.value = null;
+      const mostrarModalTipoIA = ref(false);
+      const iaParaCambioTipo = ref(null);
+
+      const abrirModalTipoIA = (ia) => {
+        iaParaCambioTipo.value = ia;
+        mostrarModalTipoIA.value = true;
+      };
+
+      const confirmarCambioTipoIA = async (tipo) => {
+        mostrarModalTipoIA.value = false;
+        const ia = iaParaCambioTipo.value;
+        iaParaCambioTipo.value = null;
+        if (!ia) return;
         try {
           await api.patch(`/encurso/ia/solicitud/${ia.id}/cambiar_tipo/`, { tipo });
           fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
         } catch (e) {
           console.error('Error al cambiar tipo IA:', e);
           showErrorAlert.value = true;
           setTimeout(() => { showErrorAlert.value = false; }, 3000);
         }
+      };
+
+      const cerrarModalTipoIA = () => {
+        mostrarModalTipoIA.value = false;
+        iaParaCambioTipo.value = null;
       };
 
       const subirInformeServicioCicloIA = async (event, cicloIA) => {
@@ -5785,12 +5803,12 @@
         confirmarRevisionCicloIA,
         generarPDFCicloIA,
         popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupDirIAId,
-        popupConfirmIAId, popupTipoIAId,
+        popupConfirmIAId,
         generandoPDFIAId,
         togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupDirIA,
-        togglePopupConfirmIA, togglePopupTipoIA,
-        tipoIALabel, tipoIABadgeStyle, tipoIATriggerStyle,
-        cambiarTipoIA,
+        togglePopupConfirmIA,
+        tipoIALabel,
+        mostrarModalTipoIA, abrirModalTipoIA, confirmarCambioTipoIA, cerrarModalTipoIA,
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
         confirmarFirmaResponsableAreaCiclo,
