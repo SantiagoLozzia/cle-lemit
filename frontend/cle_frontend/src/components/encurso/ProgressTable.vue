@@ -6401,11 +6401,6 @@
     gap: 1px;
     height: 50px;
     padding: 2px 0;
-    border-bottom: 1px solid #eee;
-  }
-
-  .ia-row:last-child {
-    border-bottom: none;
   }
 
   .ia-sp {
@@ -6417,10 +6412,9 @@
   .ia-area-label {
     color: #555;
     font-size: 0.72rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 110px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.1;
   }
 
   .ia-estado {
