@@ -5896,13 +5896,37 @@
   /* Headers pegados al tope al hacer scroll vertical */
   .sticky-thead th {
     position: sticky;
-    top: 0;
     z-index: 2;
+    /* Quitar bordes internos de Bootstrap en el encabezado oscuro */
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
   }
 
-  /* Agrega un borde vertical a la derecha de las subcolumnas específicas */
+  /* Fila 1 del encabezado: pegada al tope */
+  .sticky-thead tr:first-child th {
+    top: 0;
+    height: 42px;
+    z-index: 3;
+    border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+  }
+
+  /* Fila 2 del encabezado: pegada justo debajo de la fila 1 */
+  .sticky-thead tr:nth-child(2) th {
+    top: 42px;
+    z-index: 2;
+    border-bottom: 2px solid #014f73 !important;
+  }
+
+  /* Separadores de sección dentro del encabezado: línea blanca sutil */
+  .sticky-thead th.add-border-right {
+    border-right: 1px solid rgba(255,255,255,0.3) !important;
+  }
+
+  /* Agrega un borde vertical a la derecha de las subcolumnas en el cuerpo */
   .add-border-right {
-    border-right: 1px solid gainsboro; /* Establece el borde derecho */
+    border-right: 1px solid #dee2e6;
   }
 
   .table tbody tr:nth-child(even) {
