@@ -3445,6 +3445,7 @@
                     comentario_rechazo_ap: s.comentario_rechazo_ap,
                     estado_correc_informe: s.estado_correc_informe,
                     estado_correc_registros: s.estado_correc_registros,
+                    tipo: s.tipo || 'parcial',
                     ciclos: (s.ciclos || []).map(c => ({
                       id: c.id,
                       numero: c.numero,
