@@ -1413,8 +1413,11 @@
               </div>
 
               <div class="mb-3">
-                <label for="rango_nums" class="form-label text-left">Rango Numeros de Laboratorios:</label>
-                <input v-model="nuevoLegajo.rangos_laboratorios" type="text" class="form-control" id="rango_nums" name="rango_nums" readonly required />
+                <label class="form-label text-left">N° de Laboratorio{{ nuevoLegajo.rangos_laboratorios && nuevoLegajo.rangos_laboratorios.includes('-') ? 's (rango)' : '' }}:</label>
+                <div class="rango-lab-display">
+                  <span class="rango-lab-num">{{ nuevoLegajo.rangos_laboratorios ? nuevoLegajo.rangos_laboratorios.split('/')[0] : '—' }}</span>
+                  <span class="rango-lab-anio">/ {{ nuevoLegajo.rangos_laboratorios ? nuevoLegajo.rangos_laboratorios.split('/')[1] : '' }}</span>
+                </div>
               </div>
             </form>
           </div>
@@ -6614,6 +6617,29 @@
     flex-wrap: wrap;
     gap: 6px;
     min-height: 42px;
+  }
+
+  .rango-lab-display {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 10px 14px;
+  }
+
+  .rango-lab-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #026290;
+    letter-spacing: 0.5px;
+  }
+
+  .rango-lab-anio {
+    font-size: 0.95rem;
+    color: #6c757d;
+    font-weight: 500;
   }
 
 

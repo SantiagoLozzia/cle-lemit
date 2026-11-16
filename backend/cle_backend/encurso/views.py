@@ -402,7 +402,10 @@ def obtener_rangoLab(request, nro_circuito):
     cantidad_numeros = dataservicio.cant_numLabs
     final_rango = inicio_rango + cantidad_numeros - 1
     anio = timezone.now().year
-    rangLab = f"{inicio_rango}-{final_rango}/{anio}"
+    if cantidad_numeros == 1:
+        rangLab = f"{inicio_rango}/{anio}"
+    else:
+        rangLab = f"{inicio_rango}-{final_rango}/{anio}"
 
     # Devolver la respuesta como JSON incluyendo el rangoLab y el último número
     response_data = {
