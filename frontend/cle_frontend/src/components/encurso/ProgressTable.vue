@@ -158,7 +158,7 @@
                   <i class="bi bi-file-earmark-check-fill"></i>
                 </button>
                 <div v-if="openDSPopup === fila.nro_dataServicio" class="opciones-flotantes ds-opciones-flotantes">
-                  <div class="opcion" :style="isServiciosTecnologicos ? '--rotation: -120deg' : '--rotation: -90deg'" @click="abrirDataServicio(fila.nro_dataServicio); closeDSPopup()">
+                  <div class="opcion" :style="isServiciosTecnologicos ? '--rotation: -120deg' : '--rotation: -90deg'" @click="abrirDataServicio(fila.nro_dataServicio, fila); closeDSPopup()">
                     <i class="bi bi-eye"></i>
                   </div>
                   <div v-if="isServiciosTecnologicos" class="opcion" style="--rotation: -60deg" @click="abrirEditarDataServicio(fila); closeDSPopup()">
@@ -1255,6 +1255,31 @@
                 <span class="ds-label">Observaciones</span>
                 <span class="ds-val">{{ observacionesDataServicio || '—' }}</span>
               </div>
+            </div>
+          </div>
+          <!-- Conceptos de Facturación (no-print, interactivo para todos los roles) -->
+          <div class="no-print px-3 pb-3">
+            <hr>
+            <h6 class="fw-bold mb-2" style="color:#026290;">Concepto de Facturación</h6>
+            <div class="d-flex flex-wrap gap-1 mb-2">
+              <span v-if="conceptosDS.length === 0" class="text-muted" style="font-size:13px;">Sin conceptos asignados.</span>
+              <span v-for="c in conceptosDS" :key="c.id"
+                    class="badge d-flex align-items-center gap-1"
+                    style="background:#026290; font-size:12px; padding:5px 10px; cursor:pointer;"
+                    @click="quitarConceptoDS(c)">
+                {{ c.nombre }} <i class="bi bi-x" style="font-size:11px;"></i>
+              </span>
+            </div>
+            <div class="d-flex gap-2">
+              <select v-model="conceptoSeleccionadoDS" class="form-select form-select-sm" style="max-width:280px;">
+                <option value="">Agregar concepto...</option>
+                <option v-for="c in conceptosCatalogoDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
+              </select>
+              <button class="btn btn-sm btn-outline-primary" :disabled="!conceptoSeleccionadoDS" @click="agregarConceptoDS">Agregar</button>
+              <button class="btn btn-sm btn-primary" @click="guardarConceptosDS" :disabled="guardandoConceptosDS">
+                <span v-if="guardandoConceptosDS" class="spinner-border spinner-border-sm me-1"></span>
+                Guardar
+              </button>
             </div>
           </div>
           <!-- Modal Footer -->
@@ -2507,6 +2532,16 @@
                 </span>
               </div>
             </div>
+            <div v-if="datosFacturacion.conceptos_facturacion && datosFacturacion.conceptos_facturacion.length > 0" class="mb-3">
+              <h6 class="text-muted fw-bold mb-2">Conceptos de Facturación</h6>
+              <div class="d-flex flex-wrap gap-1">
+                <span v-for="c in datosFacturacion.conceptos_facturacion" :key="c.id"
+                      class="badge" style="background:#026290; font-size:12px; padding:5px 10px;">
+                  {{ c.nombre }}
+                </span>
+              </div>
+            </div>
+            <hr v-if="datosFacturacion.conceptos_facturacion && datosFacturacion.conceptos_facturacion.length > 0">
             <h6 class="text-muted fw-bold mb-2">Facturas cargadas</h6>
             <div v-if="!datosFacturacion.facturas || datosFacturacion.facturas.length === 0"
                  class="text-muted" style="font-size:13px; margin-bottom:8px;">
@@ -2915,7 +2950,7 @@
 
       // Setup Data Servicio
       const mostrarModalDataServicio = ref(false);
-      const nroDataServicio = ref(); 
+      const nroDataServicio = ref();
       const fechaDataServicio = ref();
       const obraDataServicio = ref();
       const cantNumLabsDataServicio = ref();
@@ -2926,6 +2961,15 @@
       const solicitanteDataServicio = ref();
       const arancelDataServicio = ref();
       const observacionesDataServicio = ref();
+      // Conceptos de Facturación
+      const catalogoConceptos = ref([]);
+      const conceptosDS = ref([]);
+      const nroDataServicioAbierto = ref(null);
+      const conceptoSeleccionadoDS = ref('');
+      const guardandoConceptosDS = ref(false);
+      const conceptosCatalogoDisponibles = computed(() =>
+        catalogoConceptos.value.filter(c => !conceptosDS.value.some(x => x.id === c.id))
+      );
       // Popup Data Servicio
       const openDSPopup = ref(null);
       const toggleDSPopup = (nro) => {
@@ -3547,6 +3591,8 @@
                   nombre_solicitante: solicitud.nombre_solicitante,
                   // Solicitudes Inter Area (múltiples)
                   solicitudes_interarea: solicitudesInterAreaFiltered,
+                  // Conceptos de Facturación
+                  conceptos_facturacion: solicitud.conceptos_facturacion || [],
                 };
 
                 // Filtrar las filas según el área temática del usuario, excepto si es servicios_tecnologicos, administracion, o direccion
@@ -3611,9 +3657,14 @@
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
 
+      const fetchCatalogoConceptos = () => {
+        api.get('/aranceles/conceptos/').then(res => { catalogoConceptos.value = res.data; }).catch(() => {});
+      };
+
       onMounted(() => {
         fetchData();
         cargarFirmaUsuario();
+        fetchCatalogoConceptos();
         document.addEventListener('click', closeAllPopups);
         document.addEventListener('att-cell-open', closeAllPopups);
         document.addEventListener('encurso-refresh', fetchData);
@@ -3636,13 +3687,13 @@
       // SOLICITUD DE SERVICIO
 
       // DS - Data Servicio
-      const abrirDataServicio = (nro_dataServicio) => {
-          api.get(`/encurso/obtener_dataservicio/${nro_dataServicio}/`)
+      const abrirDataServicio = (nroDS, fila) => {
+          nroDataServicioAbierto.value = nroDS;
+          conceptosDS.value = fila && fila.conceptos_facturacion ? [...fila.conceptos_facturacion] : [];
+          conceptoSeleccionadoDS.value = '';
+          api.get(`/encurso/obtener_dataservicio/${nroDS}/`)
               .then(response => {
-                  // Obtener los datos del data servicio de la respuesta
                   const { nro_dataServicio, fecha_dataServicio, obra, cant_numLabs, plazo_estimado, muestras, nro_presupuesto, area_tematica, nombre_solicitante, arancel_presupuesto, observaciones } = response.data;
-
-                  // Asignar los datos a variables en el contexto del componente
                   nroDataServicio.value = nro_dataServicio;
                   fechaDataServicio.value = formatDate(fecha_dataServicio);
                   obraDataServicio.value = obra;
@@ -3651,17 +3702,39 @@
                   muestrasDataServicio.value = muestras;
                   nroPresupuestoDataServicio.value = nro_presupuesto;
                   areaDataServicio.value = formatAreaTematica(area_tematica);
-                  solicitanteDataServicio.value = nombre_solicitante ;
+                  solicitanteDataServicio.value = nombre_solicitante;
                   arancelDataServicio.value = formatArancel(arancel_presupuesto);
-                  observacionesDataServicio.value = observaciones ;
-
-                  // Mostrar el modal para mostrar los detalles del data servicio
+                  observacionesDataServicio.value = observaciones;
                   mostrarModalDataServicio.value = true;
               })
               .catch(error => {
                   console.error('Error al obtener los datos del legajo:', error);
-                  // Manejar el error, mostrar un mensaje al usuario, etc.
               });
+      };
+
+      const agregarConceptoDS = () => {
+        if (!conceptoSeleccionadoDS.value) return;
+        conceptosDS.value.push(conceptoSeleccionadoDS.value);
+        conceptoSeleccionadoDS.value = '';
+      };
+
+      const quitarConceptoDS = (c) => {
+        conceptosDS.value = conceptosDS.value.filter(x => x.id !== c.id);
+      };
+
+      const guardarConceptosDS = async () => {
+        if (!nroDataServicioAbierto.value) return;
+        guardandoConceptosDS.value = true;
+        try {
+          await api.patch(`/encurso/actualizar_conceptos_ds/${nroDataServicioAbierto.value}/`, {
+            conceptos_facturacion: conceptosDS.value.map(c => c.id),
+          });
+          fetchData();
+        } catch (err) {
+          console.error('Error guardando conceptos:', err);
+        } finally {
+          guardandoConceptosDS.value = false;
+        }
       };
       
       const cerrarModalDataServicio = () => {
@@ -5875,6 +5948,15 @@
         manualRefresh,
         silenciado,
         toggleSilencio,
+        // Conceptos de Facturación
+        catalogoConceptos,
+        conceptosDS,
+        conceptoSeleccionadoDS,
+        conceptosCatalogoDisponibles,
+        guardandoConceptosDS,
+        agregarConceptoDS,
+        quitarConceptoDS,
+        guardarConceptosDS,
       };
     },
   };

@@ -2,12 +2,17 @@ import json
 import logging
 
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_http_methods
 from rest_framework import generics
 from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from database.models import Servicio, Modulo
-from .serializers import ServicioSerializer
+from database.models import Servicio, Modulo, ConceptoFacturacion
+from .serializers import ServicioSerializer, ConceptoFacturacionSerializer
+from cle_backend.permissions import IsServiciosTecnologicos
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +39,41 @@ def obtener_modulo(request):
         return JsonResponse({'error': 'No se encontró ningún módulo'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+class ConceptoFacturacionListCreate(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        conceptos = ConceptoFacturacion.objects.all()
+        serializer = ConceptoFacturacionSerializer(conceptos, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if not IsServiciosTecnologicos().has_permission(request, self):
+            return Response({'error': 'Sin permiso.'}, status=403)
+        serializer = ConceptoFacturacionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+
+class ConceptoFacturacionDetail(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def patch(self, request, pk):
+        concepto = get_object_or_404(ConceptoFacturacion, pk=pk)
+        serializer = ConceptoFacturacionSerializer(concepto, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        concepto = get_object_or_404(ConceptoFacturacion, pk=pk)
+        concepto.delete()
+        return Response(status=204)
+
 
 @api_view(['POST'])
 def actualizar_modulo(request):

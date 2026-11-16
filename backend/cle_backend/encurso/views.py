@@ -91,6 +91,14 @@ class ObtenerTodoEnCurso(APIView):
                 for p in ds.presupuestos_adicionales.all()
             ]
 
+        # Mapa de conceptos de facturación por nro_dataServicio
+        conceptos_facturacion_map = {}
+        for ds in servicios_en_curso.prefetch_related('conceptos_facturacion'):
+            conceptos_facturacion_map[ds.nro_dataServicio] = [
+                {'id': c.id, 'nombre': c.nombre}
+                for c in ds.conceptos_facturacion.all()
+            ]
+
         # Agregar los campos 'area_tematica', 'nombre_solicitante' y 'presupuestos_adicionales' a los datos de DataServicio
         for data_servicio in servicios_en_curso_serializer.data:
             nro_presupuesto = data_servicio['nro_presupuesto']
@@ -101,6 +109,7 @@ class ObtenerTodoEnCurso(APIView):
             data_servicio['presupuestos_adicionales'] = adicionales
             total_arancel = float(arancel_principal) + sum(float(p['arancel_presupuesto']) for p in adicionales)
             data_servicio['total_arancel'] = total_arancel
+            data_servicio['conceptos_facturacion'] = conceptos_facturacion_map.get(data_servicio['nro_dataServicio'], [])
 
         # Obtener el numero de circuito de los DataServicio
         numeros_circuito = servicios_en_curso.values_list('nro_circuito', flat=True)
@@ -332,6 +341,11 @@ def datos_facturacion(request, nro_dataServicio):
 
         pendiente = total - total_facturado
 
+        conceptos_facturacion = [
+            {'id': c.id, 'nombre': c.nombre}
+            for c in data_servicio.conceptos_facturacion.all()
+        ]
+
         return JsonResponse({
             'empresa': {
                 'nro_solicitante': solicitante.nro_solicitante,
@@ -349,6 +363,7 @@ def datos_facturacion(request, nro_dataServicio):
             'facturas': facturas,
             'total_facturado': str(total_facturado),
             'pendiente': str(pendiente),
+            'conceptos_facturacion': conceptos_facturacion,
         }, status=200)
     except Exception:
         logger.exception("Error en datos_facturacion")
@@ -1289,6 +1304,18 @@ class EditarDataServicio(APIView):
                 logger.exception("Error al marcar OS como modificada en circuito %s", data_servicio.nro_circuito_id)
 
         return Response({'message': 'Data Servicio actualizado.'}, status=status.HTTP_200_OK)
+
+
+class ActualizarConceptosDS(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, nro_dataServicio):
+        data_servicio = get_object_or_404(DataServicio, nro_dataServicio=nro_dataServicio)
+        concepto_ids = request.data.get('conceptos_facturacion', [])
+        from database.models import ConceptoFacturacion
+        conceptos = ConceptoFacturacion.objects.filter(id__in=concepto_ids)
+        data_servicio.conceptos_facturacion.set(conceptos)
+        return Response({'conceptos_facturacion': [{'id': c.id, 'nombre': c.nombre} for c in data_servicio.conceptos_facturacion.all()]}, status=status.HTTP_200_OK)
 
 
 class ConfirmarLecturaOS(APIView):

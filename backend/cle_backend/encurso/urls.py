@@ -82,6 +82,7 @@ urlpatterns = [
     path('ia/ciclo/<int:ciclo_id>/rechazar_firma_area/', RechazarFirmaResponsableAreaCicloIA.as_view(), name='rechazar-firma-area-ciclo-ia'),
     path('ia/ciclo/<int:ciclo_id>/confirmar_firma_direccion/', ConfirmarFirmaDireccionCicloIA.as_view(), name='confirmar-firma-direccion-ciclo-ia'),
     path('ia/ciclo/<int:ciclo_id>/rechazar_firma_direccion/', RechazarFirmaDireccionCicloIA.as_view(), name='rechazar-firma-direccion-ciclo-ia'),
+    path('actualizar_conceptos_ds/<int:nro_dataServicio>/', ActualizarConceptosDS.as_view(), name='actualizar-conceptos-ds'),
     # Archivar / Desarchivar
     path('archivar_circuito/<int:nro_circuito>/', ArchivarCircuito.as_view(), name='archivar-circuito'),
     path('desarchivar_circuito/<int:nro_circuito>/', DesarchivarCircuito.as_view(), name='desarchivar-circuito'),

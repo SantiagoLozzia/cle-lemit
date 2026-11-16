@@ -156,16 +156,28 @@ class DetallePresupuesto(models.Model):
     def __str__(self):
         return f"Detalle #{self.nro_detalle} - Presupuesto #{self.nro_presupuesto.nro_presupuesto} - Servicio #{self.nro_servicio.nro_servicio}"
     
+class ConceptoFacturacion(models.Model):
+    nombre = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Concepto de Facturación'
+        verbose_name_plural = 'Conceptos de Facturación'
+
+    def __str__(self):
+        return self.nombre
+
 class DataServicio(models.Model):
     nro_dataServicio = models.AutoField(primary_key=True)
     fecha_dataServicio = models.DateField()
     obra = models.CharField(max_length=255, null=True, blank=True)
-    plazo_estimado = models.IntegerField() 
+    plazo_estimado = models.IntegerField()
     cant_numLabs = models.IntegerField()
     muestras = models.TextField()
     observaciones = models.TextField(max_length=255, null=True, blank=True)
     nro_presupuesto = models.ForeignKey('Presupuesto', on_delete=models.CASCADE)
     presupuestos_adicionales = models.ManyToManyField('Presupuesto', related_name='data_servicios_adicionales', blank=True)
+    conceptos_facturacion = models.ManyToManyField('ConceptoFacturacion', blank=True, related_name='data_servicios')
     email_factura = models.EmailField(max_length=100, null=True, blank=True)
     email_informe_tecnico = models.EmailField(max_length=100, null=True, blank=True)
     completo = models.BooleanField(default=False)

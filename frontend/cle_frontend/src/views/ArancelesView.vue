@@ -1,11 +1,81 @@
 <template>
   <div class="aranceles-view">
-    <PageHeader title="Libro de Aranceles" :subtitle="arancelesData.length + ' servicios'" icon="bi bi-clipboard-data" />
-    <div class="actions-bar">
-      <UpdateModule />
-      <NewService @arancel-creado="fetchAranceles" />
+    <PageHeader title="Aranceles" :subtitle="tabActivo === 'libro' ? arancelesData.length + ' servicios' : catalogoConceptos.length + ' conceptos'" icon="bi bi-clipboard-data" />
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-2">
+      <li class="nav-item">
+        <a class="nav-link" :class="{ active: tabActivo === 'libro' }" href="#" @click.prevent="tabActivo = 'libro'">Libro de Aranceles</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" :class="{ active: tabActivo === 'conceptos' }" href="#" @click.prevent="tabActivo = 'conceptos'">Concepto de Facturación</a>
+      </li>
+    </ul>
+
+    <!-- Tab: Libro de Aranceles -->
+    <template v-if="tabActivo === 'libro'">
+      <div class="actions-bar">
+        <UpdateModule />
+        <NewService @arancel-creado="fetchAranceles" />
+      </div>
+      <ArancelesTable :data="arancelesData" @arancel-editado="fetchAranceles" />
+    </template>
+
+    <!-- Tab: Concepto de Facturación -->
+    <template v-else>
+      <div class="actions-bar" v-if="isST">
+        <button class="btn btn-primary custom-shadow-btn" @click="abrirModalNuevoConcepto">
+          <i class="bi bi-plus-circle me-1" style="font-size:1rem"></i> Nuevo Concepto
+        </button>
+      </div>
+
+      <table class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th v-if="isST" style="width:120px">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="catalogoConceptos.length === 0">
+            <td :colspan="isST ? 2 : 1" class="text-center text-muted">Sin conceptos registrados.</td>
+          </tr>
+          <tr v-for="c in catalogoConceptos" :key="c.id">
+            <td class="text-start">{{ c.nombre }}</td>
+            <td v-if="isST">
+              <button class="btn btn-sm btn-outline-secondary me-1" @click="abrirModalEditarConcepto(c)">
+                <i class="bi bi-pencil" style="font-size:0.9rem"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" @click="eliminarConcepto(c)">
+                <i class="bi bi-trash" style="font-size:0.9rem"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </template>
+
+    <!-- Modal Nuevo / Editar Concepto -->
+    <div class="modal" :class="{ show: modalConceptoAbierto }" tabindex="-1" @click.self="modalConceptoAbierto = false">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ editandoConcepto ? 'Editar' : 'Nuevo' }} Concepto de Facturación</h5>
+            <button type="button" class="btn-close" @click="modalConceptoAbierto = false"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input v-model="formConcepto.nombre" type="text" class="form-control" placeholder="Ej: Informe técnico" maxlength="200" />
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="modalConceptoAbierto = false">Cancelar</button>
+            <button class="btn btn-primary" :disabled="!formConcepto.nombre.trim()" @click="guardarConcepto">
+              {{ editandoConcepto ? 'Guardar cambios' : 'Crear' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-    <ArancelesTable :data="arancelesData" @arancel-editado="fetchAranceles" />
   </div>
 </template>
 
@@ -25,7 +95,15 @@ export default {
     const servicioData  = ref([]);
     const arancelesData = ref([]);
 
-    /* --- 1) Carga inicial vía HTTP --- */
+    const tabActivo = ref('libro');
+    const userRole = sessionStorage.getItem('role') || '';
+    const isST = ref(userRole === 'servicios_tecnologicos');
+
+    const catalogoConceptos = ref([]);
+    const modalConceptoAbierto = ref(false);
+    const editandoConcepto = ref(null); // null = nuevo, objeto = editar
+    const formConcepto = ref({ nombre: '' });
+
     const fetchAranceles = async () => {
       try {
         const response = await api.get('/aranceles/todos/');
@@ -35,50 +113,84 @@ export default {
       }
     };
 
-    /* --- 2) WebSocket para cambios en tiempo real --- */
+    const fetchConceptos = async () => {
+      try {
+        const response = await api.get('/aranceles/conceptos/');
+        catalogoConceptos.value = response.data;
+      } catch (err) {
+        console.error('Error cargando conceptos:', err.message);
+      }
+    };
+
+    const abrirModalNuevoConcepto = () => {
+      editandoConcepto.value = null;
+      formConcepto.value = { nombre: '' };
+      modalConceptoAbierto.value = true;
+    };
+
+    const abrirModalEditarConcepto = (c) => {
+      editandoConcepto.value = c;
+      formConcepto.value = { nombre: c.nombre };
+      modalConceptoAbierto.value = true;
+    };
+
+    const guardarConcepto = async () => {
+      const nombre = formConcepto.value.nombre.trim();
+      if (!nombre) return;
+      try {
+        if (editandoConcepto.value) {
+          await api.patch(`/aranceles/conceptos/${editandoConcepto.value.id}/`, { nombre });
+        } else {
+          await api.post('/aranceles/conceptos/', { nombre });
+        }
+        await fetchConceptos();
+        modalConceptoAbierto.value = false;
+      } catch (err) {
+        console.error('Error guardando concepto:', err.message);
+      }
+    };
+
+    const eliminarConcepto = async (c) => {
+      if (!confirm(`¿Eliminar concepto "${c.nombre}"?`)) return;
+      try {
+        await api.delete(`/aranceles/conceptos/${c.id}/`);
+        await fetchConceptos();
+      } catch (err) {
+        console.error('Error eliminando concepto:', err.message);
+      }
+    };
+
+    /* WebSocket */
     const initSocket = () => {
       const token = sessionStorage.getItem('token');
       if (!token) return;
-
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(`${protocol}//${window.location.host}/ws/mi_canal/`, ['jwt', token]);
-
-      socket.onopen = () => {
-        console.log('✅ Conexión WebSocket establecida');
-      };
-
       socket.onmessage = (event) => {
-        console.log('📩 Mensaje recibido:', event.data); // Depurar mensaje crudo
         try {
           const data = JSON.parse(event.data);
-          console.log('📋 Datos parseados:', data);
           if (data.aranceles_action === 'add' && data.servicio) {
-            arancelesData.value.push(data.servicio); // Agregar nueva fila
-          } else {
-            console.log('⚠️ Formato de datos no esperado:', data);
+            arancelesData.value.push(data.servicio);
           }
         } catch (err) {
-          console.error('❌ Error parseando mensaje:', err);
+          console.error('Error parseando mensaje WebSocket:', err);
         }
       };
-
-      socket.onerror = (error) => {
-        console.error('❌ Error en WebSocket:', error);
-      };
-
-      socket.onclose = () => {
-        console.log('🔌 Conexión WebSocket cerrada');
-        setTimeout(initSocket, 5000); // Reintentar cada 5s
-      };
+      socket.onclose = () => setTimeout(initSocket, 5000);
     };
 
-    /* --- Montaje --- */
     onMounted(() => {
       fetchAranceles();
+      fetchConceptos();
       initSocket();
     });
 
-    return { moduloData, servicioData, arancelesData, fetchAranceles };
+    return {
+      moduloData, servicioData, arancelesData, fetchAranceles,
+      tabActivo, isST,
+      catalogoConceptos, modalConceptoAbierto, editandoConcepto, formConcepto,
+      abrirModalNuevoConcepto, abrirModalEditarConcepto, guardarConcepto, eliminarConcepto,
+    };
   }
 };
 </script>
