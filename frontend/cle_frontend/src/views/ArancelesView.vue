@@ -1,19 +1,19 @@
 <template>
   <div class="aranceles-view">
-    <PageHeader title="Aranceles" :subtitle="tabActivo === 'libro' ? arancelesData.length + ' servicios' : catalogoConceptos.length + ' conceptos'" icon="bi bi-clipboard-data" />
 
-    <!-- Tabs -->
-    <ul class="nav nav-tabs mb-2">
-      <li class="nav-item">
-        <a class="nav-link" :class="{ active: tabActivo === 'libro' }" href="#" @click.prevent="tabActivo = 'libro'">Libro de Aranceles</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" :class="{ active: tabActivo === 'conceptos' }" href="#" @click.prevent="tabActivo = 'conceptos'">Concepto de Facturación</a>
-      </li>
-    </ul>
+    <!-- Submenú estilo Presupuestos -->
+    <nav class="aranceles-submenu">
+      <div class="submenu-item" :class="{ active: tabActivo === 'libro' }" @click="tabActivo = 'libro'">
+        Libro de Aranceles
+      </div>
+      <div class="submenu-item" :class="{ active: tabActivo === 'conceptos' }" @click="tabActivo = 'conceptos'">
+        Concepto de Facturación
+      </div>
+    </nav>
 
     <!-- Tab: Libro de Aranceles -->
     <template v-if="tabActivo === 'libro'">
+      <PageHeader title="Libro de Aranceles" :subtitle="arancelesData.length + ' servicios'" icon="bi bi-clipboard-data" />
       <div class="actions-bar">
         <UpdateModule />
         <NewService @arancel-creado="fetchAranceles" />
@@ -23,6 +23,7 @@
 
     <!-- Tab: Concepto de Facturación -->
     <template v-else>
+      <PageHeader title="Concepto de Facturación" :subtitle="catalogoConceptos.length + ' conceptos'" icon="bi bi-tags" />
       <div class="actions-bar" v-if="isST">
         <button class="btn btn-primary custom-shadow-btn" @click="abrirModalNuevoConcepto">
           <i class="bi bi-plus-circle me-1" style="font-size:1rem"></i> Nuevo Concepto
@@ -101,7 +102,7 @@ export default {
 
     const catalogoConceptos = ref([]);
     const modalConceptoAbierto = ref(false);
-    const editandoConcepto = ref(null); // null = nuevo, objeto = editar
+    const editandoConcepto = ref(null);
     const formConcepto = ref({ nombre: '' });
 
     const fetchAranceles = async () => {
@@ -160,7 +161,6 @@ export default {
       }
     };
 
-    /* WebSocket */
     const initSocket = () => {
       const token = sessionStorage.getItem('token');
       if (!token) return;
@@ -203,12 +203,34 @@ export default {
   width: 100%;
 }
 
+.aranceles-submenu {
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+}
+
+.submenu-item {
+  color: #026290;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.submenu-item:hover {
+  color: #fff;
+  background-color: #026290;
+}
+
+.submenu-item.active {
+  color: #fff;
+  background-color: #026290;
+}
+
 .actions-bar {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  padding: 12px 0;
+  padding: 4px 0;
 }
 
 .actions-bar :deep(.btn) {
