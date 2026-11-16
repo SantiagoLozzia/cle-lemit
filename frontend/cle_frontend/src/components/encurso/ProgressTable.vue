@@ -2599,9 +2599,15 @@
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label class="form-label fw-semibold">Monto <span class="text-muted" style="font-weight:normal;">(opcional)</span></label>
-              <input v-model="subirFacturaData.monto" type="number" step="0.01" min="0"
-                     class="form-control" placeholder="Ej: 125000.00">
+              <label class="form-label fw-semibold">Monto</label>
+              <select v-model="subirFacturaModoMonto" class="form-select mb-2">
+                <option value="pendiente">Total pendiente — $ {{ formatMontoARS(subirFacturaData.montoPendiente) }}</option>
+                <option value="otro">Otro monto</option>
+              </select>
+              <input v-if="subirFacturaModoMonto === 'otro'"
+                     v-model="subirFacturaMontoManual"
+                     type="text" class="form-control"
+                     placeholder="Ej: 125.000">
             </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">Archivo</label>
@@ -3263,7 +3269,9 @@
       const datosFacturacion = ref({});
       const filaFacturacion = ref(null);
       const mostrarModalSubirFactura = ref(false);
-      const subirFacturaData = ref({ archivo: null, monto: null, nroLegajo: null, nroCircuito: null });
+      const subirFacturaData = ref({ archivo: null, monto: null, nroLegajo: null, nroCircuito: null, montoPendiente: null });
+      const subirFacturaModoMonto = ref('pendiente');
+      const subirFacturaMontoManual = ref('');
       const mostrarModalCorreccionST = ref(false);
       const textoCorreccionST = ref('');
       const cicloParaCorreccionST = ref(null);
@@ -4985,6 +4993,11 @@
         return fila.pendiente_factura !== undefined ? fila.pendiente_factura : null;
       };
 
+      const formatMontoARS = (val) => {
+        if (val === null || val === undefined || val === '') return '0';
+        return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(val));
+      };
+
       // Factura - speed dial
       const togglePopupFactura = (nroDataServicio) => {
         const opening = popupFacturaId.value !== nroDataServicio;
@@ -5006,13 +5019,23 @@
 
       const abrirSubirFactura = (fila) => {
         filaFacturacion.value = fila;
-        subirFacturaData.value = { archivo: null, monto: null, nroLegajo: fila.nro_legajo, nroCircuito: fila.nro_circuito };
+        const pendiente = datosFacturacion.value?.pendiente ?? fila.pendiente_factura ?? null;
+        subirFacturaData.value = { archivo: null, monto: null, nroLegajo: fila.nro_legajo, nroCircuito: fila.nro_circuito, montoPendiente: pendiente };
+        subirFacturaModoMonto.value = 'pendiente';
+        subirFacturaMontoManual.value = '';
         mostrarModalSubirFactura.value = true;
       };
 
       const confirmarSubirFactura = () => {
-        const { archivo, monto, nroLegajo, nroCircuito } = subirFacturaData.value;
+        const { archivo, nroLegajo, nroCircuito, montoPendiente } = subirFacturaData.value;
         if (!archivo) return;
+        let monto = null;
+        if (subirFacturaModoMonto.value === 'pendiente') {
+          monto = montoPendiente;
+        } else {
+          const raw = subirFacturaMontoManual.value.replace(/\./g, '').replace(',', '.');
+          monto = raw ? parseFloat(raw) : null;
+        }
         const formData = new FormData();
         formData.append('archivo', archivo);
         formData.append('nroLegajo', nroLegajo);
@@ -5855,6 +5878,9 @@
         popupPDFAdminId,
         togglePopupPDFAdmin,
         pendienteFactura,
+        formatMontoARS,
+        subirFacturaModoMonto,
+        subirFacturaMontoManual,
         popupFacturaId,
         togglePopupFactura,
         mostrarModalFacturacion,
