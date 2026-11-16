@@ -357,6 +357,7 @@ def datos_facturacion(request, nro_dataServicio):
                 'telefono': solicitante.telefono,
                 'email': solicitante.email,
             },
+            'nro_presupuesto': presupuesto.nro_presupuesto,
             'email_factura': data_servicio.email_factura,
             'email_informe_tecnico': data_servicio.email_informe_tecnico,
             'total_dataservicio': str(total),

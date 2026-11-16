@@ -2507,6 +2507,10 @@
             <h6 class="text-muted fw-bold mb-2">Contactos del servicio</h6>
             <div class="ds-grid mb-3">
               <div class="ds-field">
+                <span class="ds-label">N° Presupuesto</span>
+                <span class="ds-val fw-bold">#{{ datosFacturacion.nro_presupuesto }}</span>
+              </div>
+              <div class="ds-field">
                 <span class="ds-label">Email factura</span>
                 <span class="ds-val">{{ datosFacturacion.email_factura || '—' }}</span>
               </div>
