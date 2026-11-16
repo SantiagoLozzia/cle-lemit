@@ -2605,9 +2605,10 @@
                 <option value="otro">Otro monto</option>
               </select>
               <input v-if="subirFacturaModoMonto === 'otro'"
-                     v-model="subirFacturaMontoManual"
-                     type="text" class="form-control"
-                     placeholder="Ej: 125.000">
+                     :value="subirFacturaMontoManual"
+                     @input="onMontoManualInput"
+                     type="text" inputmode="numeric" class="form-control"
+                     placeholder="Ej: 125000">
             </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">Archivo</label>
@@ -4998,6 +4999,13 @@
         return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(val));
       };
 
+      const onMontoManualInput = (e) => {
+        const digits = e.target.value.replace(/\D/g, '');
+        const formatted = digits ? new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number(digits)) : '';
+        subirFacturaMontoManual.value = formatted;
+        e.target.value = formatted;
+      };
+
       // Factura - speed dial
       const togglePopupFactura = (nroDataServicio) => {
         const opening = popupFacturaId.value !== nroDataServicio;
@@ -5879,6 +5887,7 @@
         togglePopupPDFAdmin,
         pendienteFactura,
         formatMontoARS,
+        onMontoManualInput,
         subirFacturaModoMonto,
         subirFacturaMontoManual,
         popupFacturaId,
