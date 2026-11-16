@@ -1416,9 +1416,11 @@
                 <label for="rango_nums" class="form-label text-left">Rango Numeros de Laboratorios:</label>
                 <input v-model="nuevoLegajo.rangos_laboratorios" type="text" class="form-control" id="rango_nums" name="rango_nums" readonly required />
               </div>
-              <button type="button" class="btn btn-primary" @click="crearLegajo">Crear</button>
-              <button type="button" class="btn btn-secondary" @click="cerrarModalCrearLegajo">Cerrar</button>
             </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" @click="crearLegajo">Crear</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalCrearLegajo">Cerrar</button>
           </div>
         </div>
       </div>
