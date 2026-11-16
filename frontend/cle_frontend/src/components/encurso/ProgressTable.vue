@@ -74,10 +74,10 @@
       <table class="table table-hover mb-0">
         <thead class="text-center sticky-thead">
           <tr>
-            <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Solicitud de Servicio</th>
+            <th v-if="isTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Solicitud de Servicio</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Legajo</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Recepcion</th>
-            <th colspan="3" class="add-border-right align-middle text-center">Orden de Servicio</th>
+            <th v-if="isTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Recepcion</th>
+            <th v-if="isTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Orden de Servicio</th>
             <th v-if="isTecnologicoOrDireccionOrArea" colspan="4" class="add-border-right align-middle text-center">Inter Area</th>
             <th colspan="5" class="add-border-right align-middle text-center">Informe de Area</th>
             <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
@@ -91,12 +91,12 @@
           </tr>
           <tr>
             <!-- Subcolumnas de Solicitud de Servicio -->
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('nro_dataServicio')">N° <span class="sort-icon">{{ sortKey === 'nro_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('fecha_dataServicio')">Fecha <span class="sort-icon">{{ sortKey === 'fecha_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Area Tematica</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">ST-01 Presupuesto</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Data Servicio</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-02 Solicitud</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('nro_dataServicio')">N° <span class="sort-icon">{{ sortKey === 'nro_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('fecha_dataServicio')">Fecha <span class="sort-icon">{{ sortKey === 'fecha_dataServicio' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Area Tematica</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">ST-01 Presupuesto</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Data Servicio</th>
+            <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-02 Solicitud</th>
             <!-- Subcolumnas de Legajo -->
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center sortable" @click="setSort('nro_legajo')">N° <span class="sort-icon">{{ sortKey === 'nro_legajo' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
@@ -105,13 +105,13 @@
             <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Pago</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center sortable" @click="setSort('plazo_pago')">Plazo <span class="sort-icon">{{ sortKey === 'plazo_pago' ? (sortDir === 'asc' ? '↑' : '↓') : '⇅' }}</span></th>
             <!-- Subcolumnas de Recepcion -->
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">ST-03 Recepcion</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="align-middle text-center">Muestras</th>
-            <th v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">ST-03 Recepcion</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Muestras</th>
+            <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Orden de Servicio -->
-            <th class="align-middle text-center">Fecha</th>
-            <th class="align-middle text-center">ST-05 Orden</th>
-            <th class="add-border-right align-middle text-center">Plazo</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
+            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">ST-05 Orden</th>
+            <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Inter Area -->
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
@@ -143,16 +143,16 @@
 
             <!-- Columna Solicitud de Servicio -->
 
-            <td v-if="isAdminOrTecnologicoOrDireccion">{{ fila.nro_dataServicio }}</td>
-            <td v-if="isAdminOrTecnologicoOrDireccion" class="fecha-columna">{{ fila.fecha_dataServicio }}</td>
-            <td v-if="isAdminOrTecnologicoOrDireccion" style="white-space: nowrap;">{{ fila.area_tematica }}</td>
-            <td v-if="isAdminOrTecnologicoOrDireccion">
+            <td v-if="isTecnologicoOrDireccion">{{ fila.nro_dataServicio }}</td>
+            <td v-if="isTecnologicoOrDireccion" class="fecha-columna">{{ fila.fecha_dataServicio }}</td>
+            <td v-if="isTecnologicoOrDireccion" style="white-space: nowrap;">{{ fila.area_tematica }}</td>
+            <td v-if="isTecnologicoOrDireccion">
               {{ fila.nro_presupuesto }}
               <span v-if="fila.presupuestos_adicionales && fila.presupuestos_adicionales.length > 0" style="color:#888; font-size:11px;">
                 , {{ fila.presupuestos_adicionales.map(p => p.nro_presupuesto).join(', ') }}
               </span>
             </td>
-            <td v-if="isAdminOrTecnologicoOrDireccion">
+            <td v-if="isTecnologicoOrDireccion">
               <div style="position: relative; display: inline-flex; justify-content: center; align-items: center;" @click.stop>
                 <button class="ds-icon-btn" @click="toggleDSPopup(fila.nro_dataServicio)" title="Data Servicio">
                   <i class="bi bi-file-earmark-check-fill"></i>
@@ -167,7 +167,7 @@
                 </div>
               </div>
             </td>
-            <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
+            <td v-if="isTecnologicoOrDireccion" class="add-border-right">
               <!-- Sin archivos -->
               <template v-if="!fila.adjuntos_solicitud || fila.adjuntos_solicitud.length === 0">
                 <div v-if="isServiciosTecnologicos" class="att-empty">
@@ -278,7 +278,7 @@
 
             <!-- Columna Recepcion -->
 
-            <td v-if="isAdminOrTecnologicoOrDireccion">
+            <td v-if="isTecnologicoOrDireccion">
               <template v-if="fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total'">
                 <template v-if="!fila.nros_remitos">
                   <div v-if="isServiciosTecnologicos">
@@ -295,7 +295,7 @@
                 </template>
               </template>
             </td>
-            <td v-if="isAdminOrTecnologicoOrDireccion">
+            <td v-if="isTecnologicoOrDireccion">
               <div>
                 <template v-if="fila.estado_recepcion">
                   <div v-if="isServiciosTecnologicos">
@@ -312,7 +312,7 @@
                 <i v-else-if="isServiciosTecnologicos && fila.nro_legajo" class="bi bi-plus-circle action-icon" @click="abrirModalEstadoMuestras(fila)"></i>
               </div>
             </td>
-            <td v-if="isAdminOrTecnologicoOrDireccion" class="add-border-right">
+            <td v-if="isTecnologicoOrDireccion" class="add-border-right">
               <template v-if="fila.estado_recepcion === 'total'">-</template>
               <template v-else>
                 <div v-if="isServiciosTecnologicos">
@@ -330,17 +330,17 @@
 
             <!-- Columna Orden de Servicio -->
 
-            <td>
+            <td v-if="isTecnologicoOrDireccion">
               <template v-if="(fila.nro_ordenServicio  !== '' ) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <span class="no-wrap-column">
                   {{ fila.fecha_ordenServicio }}
                 </span>
               </template>
               <template v-else>
-              
+
               </template>
             </td>
-            <td>
+            <td v-if="isTecnologicoOrDireccion">
               <template v-if="(fila.ordenServicio_completo === '' || fila.ordenServicio_completo === false) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                   <div v-if="isServiciosTecnologicos">
                       <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearOrdenServicio(fila)"></i>
@@ -360,7 +360,7 @@
                 </div>
               </template>
             </td>
-            <td class="add-border-right">
+            <td v-if="isTecnologicoOrDireccion" class="add-border-right">
               <template v-if="fila.ciclos && fila.ciclos.some(c => c.firma_direccion)">-</template>
               <template v-else-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-if="isServiciosTecnologicos">
@@ -2908,7 +2908,10 @@
       const isDireccion = ref(userRole === 'direccion');
       const isAreaJefe = ref(userRole === 'area_jefe');
       const isAreaStandard = ref(userRole === 'area_standard');
-      const isTecnologicoOrDireccionOrArea = ref(userRole === 'servicios_tecnologicos' || userRole === 'direccion' || userRole === 'area_jefe' || userRole === 'area_standard' );
+      // SS / Recepcion / OS: visibles solo para ST y Dirección (no administración)
+      const isTecnologicoOrDireccion = ref(userRole === 'servicios_tecnologicos' || userRole === 'direccion');
+      // Inter Area: visible para ST, Dirección, Área y Administración
+      const isTecnologicoOrDireccionOrArea = ref(userRole === 'servicios_tecnologicos' || userRole === 'direccion' || userRole === 'area_jefe' || userRole === 'area_standard' || userRole === 'administracion');
 
       // Setup Data Servicio
       const mostrarModalDataServicio = ref(false);
@@ -5551,6 +5554,7 @@
         isDireccion,
         isAreaJefe,
         isAreaStandard,
+        isTecnologicoOrDireccion,
         isTecnologicoOrDireccionOrArea,
         userAreaTematica,
         userAreaTematicaFormatted,
