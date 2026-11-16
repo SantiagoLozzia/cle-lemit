@@ -67,20 +67,17 @@
                   <!-- Concepto de Facturación -->
                   <div class="mb-3">
                     <label class="form-label text-left">Concepto de Facturación:</label>
-                    <div class="d-flex flex-wrap gap-1 mb-2" v-if="conceptosSeleccionados.length > 0">
+                    <select v-model="conceptoAgregar" @change="agregarConcepto" class="form-select form-select-sm">
+                      <option value="">Seleccionar concepto para agregar...</option>
+                      <option v-for="c in conceptosDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
+                    </select>
+                    <div class="concepto-box mt-2" v-if="conceptosSeleccionados.length > 0">
                       <span v-for="c in conceptosSeleccionados" :key="c.id"
                             class="badge d-flex align-items-center gap-1"
                             style="background:#026290; font-size:12px; padding:5px 10px; cursor:pointer;"
                             @click="quitarConcepto(c)">
                         {{ c.nombre }} <i class="bi bi-x" style="font-size:11px;"></i>
                       </span>
-                    </div>
-                    <div class="d-flex gap-2">
-                      <select v-model="conceptoAgregar" class="form-select form-select-sm">
-                        <option value="">Agregar concepto...</option>
-                        <option v-for="c in conceptosDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
-                      </select>
-                      <button type="button" class="btn btn-sm btn-outline-primary" :disabled="!conceptoAgregar" @click="agregarConcepto">Agregar</button>
                     </div>
                   </div>
 
@@ -266,4 +263,13 @@
   </script>
 
   <style scoped>
+  .concepto-box {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 42px;
+  }
   </style>

@@ -1261,27 +1261,26 @@
           <div class="no-print px-3 pb-3">
             <hr>
             <h6 class="fw-bold mb-2" style="color:#026290;">Concepto de Facturación</h6>
-            <div class="d-flex flex-wrap gap-1 mb-2">
-              <span v-if="conceptosDS.length === 0" class="text-muted" style="font-size:13px;">Sin conceptos asignados.</span>
-              <span v-for="c in conceptosDS" :key="c.id"
-                    class="badge d-flex align-items-center gap-1"
-                    style="background:#026290; font-size:12px; padding:5px 10px; cursor:pointer;"
-                    @click="quitarConceptoDS(c)">
-                {{ c.nombre }} <i class="bi bi-x" style="font-size:11px;"></i>
-              </span>
-            </div>
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-              <select v-model="conceptoSeleccionadoDS" class="form-select form-select-sm" style="max-width:280px;">
-                <option value="">Agregar concepto...</option>
+            <div class="d-flex gap-2 align-items-center flex-wrap mb-2">
+              <select v-model="conceptoSeleccionadoDS" @change="agregarConceptoDS" class="form-select form-select-sm" style="max-width:280px;">
+                <option value="">Seleccionar concepto para agregar...</option>
                 <option v-for="c in conceptosCatalogoDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
               </select>
-              <button class="btn btn-sm btn-outline-primary" :disabled="!conceptoSeleccionadoDS" @click="agregarConceptoDS">Agregar</button>
               <button class="btn btn-sm btn-primary" @click="guardarConceptosDS" :disabled="guardandoConceptosDS">
                 <span v-if="guardandoConceptosDS" class="spinner-border spinner-border-sm me-1"></span>
                 Guardar
               </button>
               <span v-if="mensajeConceptoDS" :style="mensajeConceptoDS === 'ok' ? 'color:#198754;font-size:13px;' : 'color:#dc3545;font-size:13px;'">
                 {{ mensajeConceptoDS === 'ok' ? '✓ Guardado' : '✗ Error al guardar' }}
+              </span>
+            </div>
+            <div class="concepto-box">
+              <span v-if="conceptosDS.length === 0" class="text-muted" style="font-size:13px;">Sin conceptos asignados.</span>
+              <span v-for="c in conceptosDS" :key="c.id"
+                    class="badge d-flex align-items-center gap-1"
+                    style="background:#026290; font-size:12px; padding:5px 10px; cursor:pointer;"
+                    @click="quitarConceptoDS(c)">
+                {{ c.nombre }} <i class="bi bi-x" style="font-size:11px;"></i>
               </span>
             </div>
           </div>
@@ -6568,6 +6567,16 @@
   .ia-tipo-btn {
     text-align: center;
     min-width: 90px;
+  }
+
+  .concepto-box {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 42px;
   }
 
 
