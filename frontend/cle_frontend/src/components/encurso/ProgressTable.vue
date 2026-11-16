@@ -1270,7 +1270,7 @@
                 {{ c.nombre }} <i class="bi bi-x" style="font-size:11px;"></i>
               </span>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
               <select v-model="conceptoSeleccionadoDS" class="form-select form-select-sm" style="max-width:280px;">
                 <option value="">Agregar concepto...</option>
                 <option v-for="c in conceptosCatalogoDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
@@ -1280,6 +1280,9 @@
                 <span v-if="guardandoConceptosDS" class="spinner-border spinner-border-sm me-1"></span>
                 Guardar
               </button>
+              <span v-if="mensajeConceptoDS" :style="mensajeConceptoDS === 'ok' ? 'color:#198754;font-size:13px;' : 'color:#dc3545;font-size:13px;'">
+                {{ mensajeConceptoDS === 'ok' ? '✓ Guardado' : '✗ Error al guardar' }}
+              </span>
             </div>
           </div>
           <!-- Modal Footer -->
@@ -2971,6 +2974,7 @@
       const nroDataServicioAbierto = ref(null);
       const conceptoSeleccionadoDS = ref('');
       const guardandoConceptosDS = ref(false);
+      const mensajeConceptoDS = ref('');
       const conceptosCatalogoDisponibles = computed(() =>
         catalogoConceptos.value.filter(c => !conceptosDS.value.some(x => x.id === c.id))
       );
@@ -3729,13 +3733,18 @@
       const guardarConceptosDS = async () => {
         if (!nroDataServicioAbierto.value) return;
         guardandoConceptosDS.value = true;
+        mensajeConceptoDS.value = '';
         try {
           await api.patch(`/encurso/actualizar_conceptos_ds/${nroDataServicioAbierto.value}/`, {
             conceptos_facturacion: conceptosDS.value.map(c => c.id),
           });
+          mensajeConceptoDS.value = 'ok';
+          setTimeout(() => { mensajeConceptoDS.value = ''; }, 3000);
           fetchData();
         } catch (err) {
           console.error('Error guardando conceptos:', err);
+          mensajeConceptoDS.value = 'error';
+          setTimeout(() => { mensajeConceptoDS.value = ''; }, 4000);
         } finally {
           guardandoConceptosDS.value = false;
         }
@@ -5958,6 +5967,7 @@
         conceptoSeleccionadoDS,
         conceptosCatalogoDisponibles,
         guardandoConceptosDS,
+        mensajeConceptoDS,
         agregarConceptoDS,
         quitarConceptoDS,
         guardarConceptosDS,
