@@ -3574,7 +3574,7 @@
                   nro_legajo: legajoCorrespondiente ? legajoCorrespondiente.nro_legajo : '',
                   fecha_legajo: legajoCorrespondiente ? formatDate(legajoCorrespondiente.fecha_legajo) : '',
                   adjuntos_factura,
-                  pago: legajoCorrespondiente ? legajoCorrespondiente.pago : '',
+                  pago: legajoCorrespondiente ? legajoCorrespondiente.pago : null,
                   plazo_pago: legajoCorrespondiente ? legajoCorrespondiente.plazo_pago : '',
                   legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo : '',
                   labs_adicionales_pendientes: legajoCorrespondiente ? (legajoCorrespondiente.labs_adicionales_pendientes || 0) : 0,
