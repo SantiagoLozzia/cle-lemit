@@ -6770,17 +6770,6 @@
     overflow: visible;
   }
 
-  /* Footer pegado al fondo de la hoja */
-  /* Layout estándar de footers de modales */
-  .modal-footer {
-    gap: 8px;
-    padding: 12px 16px;
-  }
-  .modal-footer .btn {
-    flex: 1;
-    min-width: 0;
-  }
-
   #modalAbrirDataServicio.show .modal-footer-a4,
   #modalAbrirLegajo.show .modal-footer-a4 {
     position: fixed;

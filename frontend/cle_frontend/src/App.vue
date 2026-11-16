@@ -304,8 +304,13 @@ tr.row-selected td {
   margin-left: 0.5rem;
 }
 
+.modal-footer {
+  padding: 12px 16px;
+  gap: 8px;
+}
 .modal-footer .btn {
-  width: 45%; /* Establece el ancho de los botones */
+  flex: 1;
+  min-width: 0;
 }
 
 .modal-dialog-a4 .modal-content {
