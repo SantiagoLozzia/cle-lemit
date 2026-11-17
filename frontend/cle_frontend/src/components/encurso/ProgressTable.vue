@@ -392,13 +392,26 @@
                   <span v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" title="Informe rechazado — esperando corrección del inter-área">
                     <i class="bi bi-sticky-fill ia-papelito" style="color:#f39c12"></i>
                   </span>
-                  <span v-else-if="ia.estado_correc_informe === 'subido'" class="ia-estado ia-blink" title="Corrección subida — confirmar">
-                    <i class="bi bi-circle-fill" style="color:#e67e22"></i>
-                    <button class="btn btn-xs btn-success ms-1" style="font-size:0.65rem;padding:1px 4px" @click="confirmarCorreccionInformeAP(ia)">OK</button>
-                  </span>
-                  <span v-else-if="ia.estado_correc_informe === 'confirmado'" class="ia-estado" title="Corrección de informe confirmada">
-                    <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
-                  </span>
+                  <div v-else-if="ia.estado_correc_informe === 'subido'" class="st-sd-cell ia-estado" @click.stop>
+                    <button class="st-sd-trigger ia-blink" @click.stop="togglePopupConfirmIA(ia.id)" title="Ver / Confirmar / Rechazar informe corregido" style="border-color:#2980b9;color:#2980b9;">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
+                      <span class="st-sd-badge" style="background:#2980b9;"></span>
+                    </button>
+                    <i class="bi bi-sticky-fill"
+                       style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#e74c3c; cursor:pointer; z-index:10;"
+                       @click.stop="verComentarioRechazoIA(ia, 'informe')" title="Ver nota de rechazo anterior"></i>
+                    <div v-if="popupConfirmIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -120deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupConfirmIAId = null" title="Ver informe">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="confirmarInterareaPrincipal(ia); popupConfirmIAId = null" title="Confirmar">
+                        <i class="bi bi-check-lg"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -60deg" @click.stop="abrirModalRechazarIA(ia); popupConfirmIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
+                      </div>
+                    </div>
+                  </div>
                   <div v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="st-sd-cell ia-estado" @click.stop>
                     <button class="st-sd-trigger ia-blink" @click.stop="togglePopupConfirmIA(ia.id)" title="Ver / Confirmar / Rechazar" style="border-color:#2980b9;color:#2980b9;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
@@ -425,15 +438,29 @@
                 </template>
                 <template v-else-if="esInterAreaDeIA(ia)">
                   <!-- Inter-área: ve qué hacer -->
-                  <span v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" :title="'Informe rechazado: ' + (ia.comentario_rechazo_ap || '')">
-                    <i class="bi bi-sticky-fill ia-papelito" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'informe')"></i>
-                    <label :for="'ia-informe-corr-' + ia.id" style="cursor:pointer;" title="Subir informe corregido">
-                      <i class="bi bi-paperclip action-icon" style="font-size:14px; color:#e74c3c; margin-left:2px;"></i>
-                    </label>
-                    <input :id="'ia-informe-corr-' + ia.id" style="display:none;" type="file"
-                           accept=".doc,.docx,.odt,.rtf"
-                           @change="subirInformeAreaCicloIA($event, ia)">
-                  </span>
+                  <div v-if="ia.estado_correc_informe === 'rechazado'" class="st-sd-cell ia-estado" @click.stop>
+                    <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                            @click.stop="togglePopupCorreccionIA(ia.id)" title="Ver / Reemplazar informe rechazado">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                    </button>
+                    <i class="bi bi-sticky-fill"
+                       style="position:absolute; top:-6px; left:calc(100% + 4px); font-size:13px; color:#e74c3c; cursor:pointer; z-index:10;"
+                       @click.stop="verComentarioRechazoIA(ia, 'informe')" title="Ver nota de rechazo"></i>
+                    <div v-if="popupCorreccionIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -120deg"
+                           @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupCorreccionIAId = null" title="Ver informe">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion" style="--rotation: -60deg" title="Reemplazar informe">
+                        <label :for="'ia-informe-corr-' + ia.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                          <i class="bi bi-arrow-repeat"></i>
+                        </label>
+                        <input :id="'ia-informe-corr-' + ia.id" style="display:none;" type="file"
+                               accept=".doc,.docx,.odt,.rtf"
+                               @change="subirInformeAreaCicloIA($event, ia); popupCorreccionIAId = null">
+                      </div>
+                    </div>
+                  </div>
                   <span v-else-if="ia.estado_correc_informe === 'subido'" class="ia-estado" title="Corrección enviada — esperando revisión del área principal">
                     <i class="bi bi-clock" style="color:#e67e22"></i>
                   </span>
@@ -3756,6 +3783,7 @@
         popupAreaIAId.value = null;
         popupDirIAId.value = null;
         popupConfirmIAId.value = null;
+        popupCorreccionIAId.value = null;
         popupFormatoIAId.value = null;
       };
 
@@ -5378,6 +5406,7 @@
       const popupAreaIAId = ref(null);
       const popupDirIAId = ref(null);
       const popupConfirmIAId = ref(null);
+      const popupCorreccionIAId = ref(null);
       const popupFormatoIAId = ref(null);
       const generandoPDFIAId = ref(null);
       const cicloIAParaFirmaArea = ref(null);
@@ -5389,6 +5418,7 @@
       const togglePopupAreaIA = (iaId) => { popupAreaIAId.value = popupAreaIAId.value === iaId ? null : iaId; };
       const togglePopupDirIA = (iaId) => { popupDirIAId.value = popupDirIAId.value === iaId ? null : iaId; };
       const togglePopupConfirmIA = (iaId) => { popupConfirmIAId.value = popupConfirmIAId.value === iaId ? null : iaId; };
+      const togglePopupCorreccionIA = (iaId) => { popupCorreccionIAId.value = popupCorreccionIAId.value === iaId ? null : iaId; };
       const togglePopupFormatoIA = (cicloIAId) => {
         const opening = popupFormatoIAId.value !== cicloIAId;
         popupFormatoIAId.value = opening ? cicloIAId : null;
@@ -6171,7 +6201,8 @@
         confirmarRevisionCicloIA,
         generarPDFCicloIA,
         popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupDirIAId,
-        popupConfirmIAId, popupFormatoIAId,
+        popupConfirmIAId, popupCorreccionIAId, popupFormatoIAId,
+        togglePopupCorreccionIA,
         generandoPDFIAId,
         cicloIsIA,
         togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupDirIA,
