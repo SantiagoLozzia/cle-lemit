@@ -77,9 +77,9 @@
             <th v-if="isTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Solicitud de Servicio</th>
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Legajo</th>
             <th v-if="isTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Recepcion</th>
-            <th v-if="isTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Orden de Servicio</th>
+            <th v-if="isTecnologicoOrDireccion" colspan="2" class="add-border-right align-middle text-center">Orden de Servicio</th>
             <th v-if="isTecnologicoOrDireccionOrArea" colspan="4" class="add-border-right align-middle text-center">Inter Area</th>
-            <th colspan="5" class="add-border-right align-middle text-center">Informe de Area</th>
+            <th colspan="6" class="add-border-right align-middle text-center">Informe de Area</th>
             <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
             <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
             <th colspan="1" class="add-border-right align-middle text-center">Servicios Tecnologicos</th>
@@ -110,8 +110,7 @@
             <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Orden de Servicio -->
             <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
-            <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">ST-05 Orden</th>
-            <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">Plazo</th>
+            <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-05 Orden</th>
             <!-- Subcolumnas de Inter Area -->
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
@@ -122,7 +121,8 @@
             <th class="align-middle text-center">Solicitante</th>
             <th class="align-middle text-center">Informe Area</th>
             <th class="align-middle text-center">Registros de Ensayo</th>
-            <th class="add-border-right align-middle text-center">Tipo</th>
+            <th class="align-middle text-center">Tipo</th>
+            <th class="add-border-right align-middle text-center">Plazo</th>
             <!-- Subcolumnas de Administracion -->
             <th class="add-border-right align-middle text-center">Formato</th>
             <!-- Subcolumnas de Servicios Tecnologicos -->
@@ -340,7 +340,7 @@
 
               </template>
             </td>
-            <td v-if="isTecnologicoOrDireccion">
+            <td v-if="isTecnologicoOrDireccion" class="add-border-right">
               <template v-if="(fila.ordenServicio_completo === '' || fila.ordenServicio_completo === false) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                   <div v-if="isServiciosTecnologicos">
                       <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearOrdenServicio(fila)"></i>
@@ -357,21 +357,6 @@
                      @click="abrirOrdenServicio(fila)"></i>
                   <span v-if="fila.os_modificada"
                         style="position:absolute; top:-4px; right:-4px; width:8px; height:8px; border-radius:50%; background:#ffc107; display:block;"></span>
-                </div>
-              </template>
-            </td>
-            <td v-if="isTecnologicoOrDireccion" class="add-border-right">
-              <template v-if="fila.ciclos && fila.ciclos.some(c => c.firma_direccion)">-</template>
-              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <div v-if="isServiciosTecnologicos">
-                  <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor: pointer;" :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
-                    {{ diasRestantesOS(fila) }}
-                  </span>
-                </div>
-                <div v-else>
-                  <span :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
-                    {{ diasRestantesOS(fila) }}
-                  </span>
                 </div>
               </template>
             </td>
@@ -650,7 +635,7 @@
             </td>
 
             <!-- Columna Estado/Tipo (por ciclo) -->
-            <td class="add-border-right">
+            <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'tipo-ia-sp-' + ia.id" class="ia-sp"></div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila)">
@@ -665,6 +650,23 @@
                 </span>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
+            </td>
+
+            <!-- Columna Plazo (días restantes OS) -->
+            <td class="add-border-right" style="text-align:center; vertical-align:middle;">
+              <template v-if="fila.ciclos && fila.ciclos.some(c => c.firma_direccion)">—</template>
+              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+                <div v-if="isServiciosTecnologicos">
+                  <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor:pointer;" :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
+                    <span class="plazo-badge" :class="plazoCriticidad(diasRestantesOS(fila))">{{ diasRestantesOS(fila) }}</span>
+                  </span>
+                </div>
+                <div v-else>
+                  <span :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
+                    <span class="plazo-badge" :class="plazoCriticidad(diasRestantesOS(fila))">{{ diasRestantesOS(fila) }}</span>
+                  </span>
+                </div>
               </template>
             </td>
 
