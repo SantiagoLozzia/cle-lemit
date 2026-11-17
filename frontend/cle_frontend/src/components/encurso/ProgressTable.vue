@@ -86,6 +86,7 @@
             <th colspan="1" class="add-border-right align-middle text-center">Servicios Tecnologicos</th>
             <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
             <th colspan="1" class="add-border-right align-middle text-center">Responsable Area</th>
+            <th colspan="1" class="add-border-right align-middle text-center">Firma AP</th>
             <th colspan="1" class="add-border-right align-middle text-center">Direccion</th>
             <th  v-if="isAdminOrTecnologicoOrDireccion" colspan="1" class="align-middle text-center">Archivo</th>
             <th colspan="1" class="align-middle text-center"></th>
@@ -133,6 +134,8 @@
             <!-- Subcolumnas de Administracion PDF -->
             <th class="add-border-right align-middle text-center">PDF</th>
             <!-- Subcolumnas de Responsable Area -->
+            <th class="add-border-right align-middle text-center">Firma</th>
+            <!-- Subcolumnas de Firma AP -->
             <th class="add-border-right align-middle text-center">Firma</th>
             <!-- Subcolumnas de Direccion -->
             <th class="add-border-right align-middle text-center">Firma</th>
@@ -1197,18 +1200,55 @@
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
             </td>
 
+            <!-- Columna Firma AP (Área Principal) — solo aplica al pipeline IA -->
+            <td class="add-border-right">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'ap-ia-' + ia.id" class="ciclo-row" style="height:50px">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).firma_responsable_ap && !ultimoCicloIA(ia).corregir">
+                  <div v-if="esPrincipalDeIA(ia)" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupAPIA(ia.id)" title="Opciones firma AP">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupAPIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupAPIAId = null" title="Ver PDF firmado área">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaAPCicloIA(ultimoCicloIA(ia)); popupAPIAId = null" title="Firmar">
+                        <i class="bi bi-pen"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoAPIA(ultimoCicloIA(ia)); popupAPIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_ap">
+                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                  </div>
+                </template>
+                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
+              </div>
+              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row"></div>
+              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+            </td>
+
             <!-- Columna Dirección - Firma (por ciclo) -->
             <td class="add-border-right">
               <!-- IA pipeline — Firma Dirección -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'dir-ia-' + ia.id" class="ciclo-row" style="height:50px">
-                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).firma_direccion">
+                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_ap && !ultimoCicloIA(ia).firma_direccion">
                   <div v-if="isDireccion" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupDirIA(ia.id)" title="Opciones firma dirección IA">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                       <span class="st-sd-badge"></span>
                     </button>
                     <div v-if="popupDirIAId === ia.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupDirIAId = null" title="Ver PDF firmado área">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupDirIAId = null" title="Ver PDF firmado AP">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaDireccionCicloIA(ultimoCicloIA(ia)); popupDirIAId = null" title="Firmar">
@@ -1223,7 +1263,7 @@
                 </template>
                 <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_direccion">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
-                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_direccion || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_direccion || ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
                   </div>
@@ -2584,6 +2624,42 @@
       </div>
     </div>
 
+    <!-- Modal Rechazo Firma AP -->
+    <div class="modal" :class="{ 'show': mostrarModalRechazoAPIA }" id="mostrarModalRechazoAPIA">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" style="border-bottom-color:#ffc107;">
+            <h5 class="modal-title" style="color:#b8860b;">Rechazar Firma — Área Principal</h5>
+            <button type="button" class="btn-close" @click="cerrarModalRechazoAPIA"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted small mb-3">
+              La firma del área principal será removida. Si elegís <strong>Área</strong>, también se borra la firma del jefe inter-área y deberá volver a firmar.
+            </p>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Enviar de vuelta a:</label>
+              <div class="d-flex gap-3">
+                <label style="cursor:pointer;">
+                  <input type="radio" v-model="rechazoAPIADestino" value="area"> &nbsp;Jefe Inter-Área
+                </label>
+              </div>
+            </div>
+            <div class="mb-2">
+              <label class="form-label fw-semibold">Nota de corrección (opcional):</label>
+              <textarea v-model="rechazoAPIANota" class="form-control" rows="3"
+                        placeholder="Describí los cambios necesarios..." style="border-color:#ffc107;"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" @click="confirmarRechazoAPIA">
+              <i class="bi bi-x-circle"></i> Rechazar
+            </button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModalRechazoAPIA">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Datos de Facturación -->
     <div class="modal" :class="{ 'show': mostrarModalFacturacion }" id="mostrarModalFacturacion">
       <div class="modal-dialog modal-dialog-md">
@@ -3635,6 +3711,8 @@
                       registros_ensayo: c.registros_ensayo || [],
                       adjunto_informeServicio: c.adjunto_informeServicio,
                       firma_responsable_area: c.firma_responsable_area,
+                      firma_responsable_ap: c.firma_responsable_ap,
+                      adjunto_firmado_ap: c.adjunto_firmado_ap || null,
                       firma_direccion: c.firma_direccion,
                       nota_rechazo_st: c.nota_rechazo_st,
                       rechazo_st_destino: c.rechazo_st_destino,
@@ -3783,6 +3861,7 @@
         popupSTIAId.value = null;
         popupPDFAdminIAId.value = null;
         popupAreaIAId.value = null;
+        popupAPIAId.value = null;
         popupDirIAId.value = null;
         popupConfirmIAId.value = null;
         popupCorreccionIAId.value = null;
@@ -5412,12 +5491,15 @@
       const popupFormatoIAId = ref(null);
       const generandoPDFIAId = ref(null);
       const cicloIAParaFirmaArea = ref(null);
+      const cicloIAParaFirmaAP = ref(null);
       const cicloIAParaFirmaDireccion = ref(null);
       const cicloIsIA = ref(false);
+      const popupAPIAId = ref(null);
 
       const togglePopupSTIA = (iaId) => { popupSTIAId.value = popupSTIAId.value === iaId ? null : iaId; };
       const togglePopupPDFAdminIA = (iaId) => { popupPDFAdminIAId.value = popupPDFAdminIAId.value === iaId ? null : iaId; };
       const togglePopupAreaIA = (iaId) => { popupAreaIAId.value = popupAreaIAId.value === iaId ? null : iaId; };
+      const togglePopupAPIA = (iaId) => { popupAPIAId.value = popupAPIAId.value === iaId ? null : iaId; };
       const togglePopupDirIA = (iaId) => { popupDirIAId.value = popupDirIAId.value === iaId ? null : iaId; };
       const togglePopupConfirmIA = (iaId) => { popupConfirmIAId.value = popupConfirmIAId.value === iaId ? null : iaId; };
       const togglePopupCorreccionIA = (iaId) => { popupCorreccionIAId.value = popupCorreccionIAId.value === iaId ? null : iaId; };
@@ -5515,6 +5597,12 @@
         nextTick(() => limpiarFirma());
       };
 
+      const abrirModalFirmaAPCicloIA = (cicloIA) => {
+        cicloIAParaFirmaAP.value = cicloIA;
+        mostrarModalFirmaResponsableArea.value = true;
+        nextTick(() => limpiarFirma());
+      };
+
       const abrirModalFirmaDireccionCicloIA = (cicloIA) => {
         cicloIAParaFirmaDireccion.value = cicloIA;
         mostrarModalFirmaDireccion.value = true;
@@ -5532,15 +5620,18 @@
       };
 
       const confirmarFirmaResponsableAreaCiclo = async () => {
+        const isIAAP = !!cicloIAParaFirmaAP.value;
         const isIA = !!cicloIAParaFirmaArea.value;
-        const obj = isIA ? cicloIAParaFirmaArea.value : cicloSeleccionado.value;
+        const obj = isIAAP ? cicloIAParaFirmaAP.value : (isIA ? cicloIAParaFirmaArea.value : cicloSeleccionado.value);
         if (!obj || (!firmaUsuarioUrl.value && !firmaHecha.value)) return;
         const payload = {};
         if (!firmaUsuarioUrl.value && firmaHecha.value) {
           payload.firma_imagen = signatureCanvas.value.toDataURL('image/png');
         }
         try {
-          if (isIA) {
+          if (isIAAP) {
+            await api.put(`/encurso/ia/ciclo/${obj.id}/confirmar_firma_ap/`, payload);
+          } else if (isIA) {
             await api.post(`/encurso/ia/ciclo/${obj.id}/confirmar_firma_area/`, payload);
           } else {
             await api.put(`/encurso/confirmar_firma_responsable_area_ciclo/${obj.id}/`, payload);
@@ -5548,6 +5639,7 @@
           mostrarModalFirmaResponsableArea.value = false;
           firmaHecha.value = false;
           cicloIAParaFirmaArea.value = null;
+          cicloIAParaFirmaAP.value = null;
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
@@ -5595,6 +5687,43 @@
           setTimeout(() => { showErrorAlert.value = false; }, 5000);
         }
       };
+
+        // Rechazo Firma AP (Área Principal)
+        const mostrarModalRechazoAPIA = ref(false);
+        const rechazoAPIANota = ref('');
+        const rechazoAPIADestino = ref('area');
+        const cicloIAParaRechazoAP = ref(null);
+
+        const abrirModalRechazoAPIA = (cicloIA) => {
+          cicloIAParaRechazoAP.value = cicloIA;
+          rechazoAPIADestino.value = 'area';
+          rechazoAPIANota.value = '';
+          mostrarModalRechazoAPIA.value = true;
+        };
+        const cerrarModalRechazoAPIA = () => {
+          mostrarModalRechazoAPIA.value = false;
+          cicloIAParaRechazoAP.value = null;
+        };
+        const confirmarRechazoAPIA = async () => {
+          const ciclo = cicloIAParaRechazoAP.value;
+          if (!ciclo) return;
+          try {
+            await api.put(`/encurso/ia/ciclo/${ciclo.id}/rechazar_firma_ap/`, {
+              destino: rechazoAPIADestino.value,
+              nota_rechazo: rechazoAPIANota.value,
+            });
+            mostrarModalRechazoAPIA.value = false;
+            cicloIAParaRechazoAP.value = null;
+            fetchData();
+            showSuccessAlert.value = true;
+            setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+          } catch (error) {
+            mostrarModalRechazoAPIA.value = false;
+            cicloIAParaRechazoAP.value = null;
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 5000);
+          }
+        };
 
         // Rechazo Dirección
         const abrirModalRechazoDireccion = (ciclo) => {
@@ -6196,18 +6325,20 @@
         correccionesNuevas,
         abrirModalFirmaResponsableAreaCiclo,
         abrirModalFirmaAreaCicloIA,
+        abrirModalFirmaAPCicloIA,
         abrirModalFirmaDireccionCicloIA,
         cicloIAParaFirmaArea,
+        cicloIAParaFirmaAP,
         cicloIAParaFirmaDireccion,
         subirInformeServicioCicloIA,
         confirmarRevisionCicloIA,
         generarPDFCicloIA,
-        popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupDirIAId,
+        popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupAPIAId, popupDirIAId,
         popupConfirmIAId, popupCorreccionIAId, popupFormatoIAId,
         togglePopupCorreccionIA,
         generandoPDFIAId,
         cicloIsIA,
-        togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupDirIA,
+        togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupAPIA, togglePopupDirIA,
         togglePopupConfirmIA, togglePopupFormatoIA,
         tipoIALabel,
         mostrarModalTipoIA, abrirModalTipoIA, confirmarCambioTipoIA, cerrarModalTipoIA,
@@ -6244,6 +6375,9 @@
         abrirModalRechazoSTIA,
         // Rechazo Área IA
         abrirModalRechazoAreaIA,
+        // Rechazo Firma AP (Área Principal)
+        mostrarModalRechazoAPIA, rechazoAPIANota, rechazoAPIADestino,
+        abrirModalRechazoAPIA, cerrarModalRechazoAPIA, confirmarRechazoAPIA,
         // Rechazo Dirección IA
         abrirModalRechazoDireccionIA,
         // Archivar

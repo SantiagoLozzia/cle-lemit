@@ -450,6 +450,8 @@ class CicloInterarea(models.Model):
 
     firma_responsable_area = models.BooleanField(default=False)
     adjunto_firmado_area = models.FileField(upload_to='informes_ia_firmados/', null=True, blank=True)
+    firma_responsable_ap = models.BooleanField(default=False)
+    adjunto_firmado_ap = models.FileField(upload_to='informes_ia_firmados/', null=True, blank=True)
     firma_direccion = models.BooleanField(default=False)
     adjunto_firmado_direccion = models.FileField(upload_to='informes_ia_firmados/', null=True, blank=True)
 

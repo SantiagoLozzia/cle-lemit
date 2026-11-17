@@ -2162,6 +2162,9 @@ class RechazarFirmaResponsableAreaCicloIA(APIView):
         if ciclo_ia.adjunto_firmado_area:
             ciclo_ia.adjunto_firmado_area.delete(save=False)
             ciclo_ia.adjunto_firmado_area = None
+        if ciclo_ia.adjunto_firmado_ap:
+            ciclo_ia.adjunto_firmado_ap.delete(save=False)
+            ciclo_ia.adjunto_firmado_ap = None
         if ciclo_ia.adjunto_firmado_direccion:
             ciclo_ia.adjunto_firmado_direccion.delete(save=False)
             ciclo_ia.adjunto_firmado_direccion = None
@@ -2170,6 +2173,7 @@ class RechazarFirmaResponsableAreaCicloIA(APIView):
             ciclo_ia.adjunto_informeServicio_pdf = None
         ciclo_ia.pdf_confirmado_admin = False
         ciclo_ia.firma_responsable_area = False
+        ciclo_ia.firma_responsable_ap = False
         ciclo_ia.firma_direccion = False
         ciclo_ia.revision_confirmada = False
         ciclo_ia.nota_rechazo_area = nota
@@ -2191,6 +2195,125 @@ class RechazarFirmaResponsableAreaCicloIA(APIView):
         return JsonResponse({'message': 'Informe inter-area rechazado por responsable de área correctamente.'})
 
 
+class ConfirmarFirmaResponsableAPCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        solicitud = ciclo_ia.nro_solicitudInterarea
+
+        try:
+            if request.user.userprofile.rol not in PRIVILEGED_ROLES and \
+               request.user.userprofile.area_tematica != solicitud.areaTematica_origen:
+                return JsonResponse({'error': 'No tiene permisos para firmar este informe inter-area.'}, status=403)
+        except AttributeError:
+            return JsonResponse({'error': 'No tiene permisos.'}, status=403)
+
+        sig_bytes = None
+        profile = getattr(request.user, 'userprofile', None)
+        if profile and profile.firma:
+            sig_bytes = profile.firma.read()
+        else:
+            firma_b64 = request.data.get('firma_imagen', '')
+            if firma_b64:
+                _, data = firma_b64.split(',', 1)
+                sig_bytes = b64lib.b64decode(data)
+
+        fuente = ciclo_ia.adjunto_firmado_area or ciclo_ia.adjunto_informeServicio_pdf
+        if sig_bytes and fuente:
+            try:
+                doc = fitz.open(fuente.path)
+                page = doc[-1]
+                pw, ph = page.rect.width, page.rect.height
+
+                sig_x0 = (pw - 175) / 2
+                sig_x1 = sig_x0 + 175
+                sig_rect = fitz.Rect(sig_x0, ph - 150, sig_x1, ph - 100)
+                page.insert_image(sig_rect, stream=sig_bytes)
+
+                leyenda = (profile.leyenda.strip() if profile and profile.leyenda else '') or \
+                          f"{request.user.first_name} {request.user.last_name}".strip() or \
+                          request.user.username
+                page.insert_textbox(
+                    fitz.Rect(sig_x0, ph - 98, sig_x1, ph - 72),
+                    leyenda,
+                    fontsize=7.5,
+                    align=fitz.TEXT_ALIGN_CENTER,
+                )
+
+                buf = BytesIO()
+                doc.save(buf)
+                doc.close()
+                buf.seek(0)
+
+                original_name = os.path.basename(fuente.name)
+                nombre_base, ext = os.path.splitext(original_name)
+                ciclo_ia.adjunto_firmado_ap.save(
+                    f"{nombre_base}_firmado_ap{ext}",
+                    ContentFile(buf.read()),
+                    save=False,
+                )
+            except Exception:
+                logger.exception("Error al insertar firma de área principal inter-area en PDF")
+
+        ciclo_ia.firma_responsable_ap = True
+        ciclo_ia.save()
+        _log(request, 'firma_responsable_ap_ia',
+             f'Firma del responsable área principal registrada — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Firma del responsable área principal confirmada correctamente.'})
+
+
+class RechazarFirmaResponsableAPCicloIA(APIView):
+    permission_classes = [IsAuthenticated, IsAreaJefe]
+
+    def put(self, request, ciclo_id):
+        ciclo_ia = get_object_or_404(CicloInterarea, pk=ciclo_id)
+        solicitud = ciclo_ia.nro_solicitudInterarea
+
+        try:
+            if request.user.userprofile.rol not in PRIVILEGED_ROLES and \
+               request.user.userprofile.area_tematica != solicitud.areaTematica_origen:
+                return JsonResponse({'error': 'No tiene permisos para rechazar este informe inter-area.'}, status=403)
+        except AttributeError:
+            return JsonResponse({'error': 'No tiene permisos.'}, status=403)
+
+        destino = request.data.get('destino', 'area')
+        nota = request.data.get('nota_rechazo', '')
+
+        if ciclo_ia.adjunto_firmado_ap:
+            ciclo_ia.adjunto_firmado_ap.delete(save=False)
+            ciclo_ia.adjunto_firmado_ap = None
+        if ciclo_ia.adjunto_firmado_direccion:
+            ciclo_ia.adjunto_firmado_direccion.delete(save=False)
+            ciclo_ia.adjunto_firmado_direccion = None
+
+        ciclo_ia.firma_responsable_ap = False
+        ciclo_ia.firma_direccion = False
+
+        if destino == 'area':
+            if ciclo_ia.adjunto_firmado_area:
+                ciclo_ia.adjunto_firmado_area.delete(save=False)
+                ciclo_ia.adjunto_firmado_area = None
+            ciclo_ia.firma_responsable_area = False
+
+        ciclo_ia.nota_rechazo_area = nota
+        ciclo_ia.rechazo_area_destino = destino
+        ciclo_ia.save()
+        if nota:
+            CorreccionIA.objects.create(
+                ciclo_ia=ciclo_ia,
+                tipo='area',
+                destinatario=destino,
+                descripcion=nota,
+                autor=request.user,
+            )
+        _log(request, 'rechazar_firma_ap_ia',
+             f'Firma área principal rechazada → {destino} — cicloIA #{ciclo_ia.numero}, circuito #{solicitud.nro_circuito_id}',
+             nro_circuito=solicitud.nro_circuito_id)
+        return JsonResponse({'message': 'Informe inter-area rechazado por responsable área principal correctamente.'})
+
+
 class ConfirmarFirmaDireccionCicloIA(APIView):
     permission_classes = [IsAuthenticated, IsDireccion]
 
@@ -2207,7 +2330,7 @@ class ConfirmarFirmaDireccionCicloIA(APIView):
                 _, data = firma_b64.split(',', 1)
                 sig_bytes = b64lib.b64decode(data)
 
-        fuente = ciclo_ia.adjunto_firmado_area or ciclo_ia.adjunto_informeServicio_pdf
+        fuente = ciclo_ia.adjunto_firmado_ap or ciclo_ia.adjunto_firmado_area or ciclo_ia.adjunto_informeServicio_pdf
         if sig_bytes and fuente:
             try:
                 doc = fitz.open(fuente.path)
@@ -2262,6 +2385,9 @@ class RechazarFirmaDireccionCicloIA(APIView):
         if ciclo_ia.adjunto_firmado_area:
             ciclo_ia.adjunto_firmado_area.delete(save=False)
             ciclo_ia.adjunto_firmado_area = None
+        if ciclo_ia.adjunto_firmado_ap:
+            ciclo_ia.adjunto_firmado_ap.delete(save=False)
+            ciclo_ia.adjunto_firmado_ap = None
         if ciclo_ia.adjunto_firmado_direccion:
             ciclo_ia.adjunto_firmado_direccion.delete(save=False)
             ciclo_ia.adjunto_firmado_direccion = None
@@ -2270,6 +2396,7 @@ class RechazarFirmaDireccionCicloIA(APIView):
             ciclo_ia.adjunto_informeServicio_pdf = None
         ciclo_ia.pdf_confirmado_admin = False
         ciclo_ia.firma_direccion = False
+        ciclo_ia.firma_responsable_ap = False
         ciclo_ia.firma_responsable_area = False
         ciclo_ia.revision_confirmada = False
 
