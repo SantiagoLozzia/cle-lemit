@@ -423,15 +423,12 @@
                     <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
                   </span>
                   <span v-else class="ia-estado">
-                    <template v-if="ultimoCicloIA(ia)">
-                      <label :for="'ia-informe-area-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir informe inter-área">
-                        <i class="bi bi-paperclip action-icon"></i>
-                      </label>
-                      <input :id="'ia-informe-area-' + ultimoCicloIA(ia).id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="subirInformeAreaCicloIA($event, ultimoCicloIA(ia))">
-                    </template>
-                    <i v-else class="bi bi-clock" style="color:#95a5a6" title="Esperando creación del ciclo"></i>
+                    <label :for="'ia-informe-area-' + ia.id" style="cursor:pointer;" title="Subir informe inter-área">
+                      <i class="bi bi-paperclip action-icon"></i>
+                    </label>
+                    <input :id="'ia-informe-area-' + ia.id" style="display:none;" type="file"
+                           accept=".doc,.docx,.odt,.rtf"
+                           @change="subirInformeAreaCicloIA($event, ia)">
                   </span>
                 </template>
                 <template v-else>
@@ -4831,14 +4828,29 @@
       // Siempre true — se mantiene por compatibilidad pero ya no oculta nada
       const mostrarInformeAreaEnFila = () => true;
 
-      // Inter Area — subir informe área por el inter-área
-      const subirInformeAreaCicloIA = async (event, cicloIA) => {
+      // Inter Area — subir informe área por el inter-área (crea ciclo si no existe)
+      const subirInformeAreaCicloIA = async (event, ia) => {
         const archivo = event.target.files[0];
         if (!archivo) return;
+        let cicloId;
+        const cicloExistente = ultimoCicloIA(ia);
+        if (cicloExistente) {
+          cicloId = cicloExistente.id;
+        } else {
+          try {
+            const res = await api.post(`/encurso/ia/ciclo/crear/${ia.id}/`);
+            cicloId = res.data.id;
+          } catch (e) {
+            console.error('Error al crear ciclo inter-área:', e);
+            showErrorAlert.value = true;
+            setTimeout(() => { showErrorAlert.value = false; }, 3000);
+            return;
+          }
+        }
         const formData = new FormData();
         formData.append('archivo', archivo);
         try {
-          await api.post(`/encurso/ia/ciclo/${cicloIA.id}/subir_informe_area/`, formData);
+          await api.post(`/encurso/ia/ciclo/${cicloId}/subir_informe_area/`, formData);
           fetchData();
           showSuccessAlert.value = true;
           setTimeout(() => { showSuccessAlert.value = false; }, 3000);
