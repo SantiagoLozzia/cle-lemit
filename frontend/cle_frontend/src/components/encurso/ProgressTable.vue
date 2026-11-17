@@ -78,6 +78,7 @@
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Legajo</th>
             <th v-if="isTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Recepcion</th>
             <th v-if="isTecnologicoOrDireccion" colspan="2" class="add-border-right align-middle text-center">Orden de Servicio</th>
+            <th v-if="isAreaJefe || isAreaStandard" colspan="1" class="add-border-right align-middle text-center">Legajo</th>
             <th v-if="isTecnologicoOrDireccionOrArea" colspan="4" class="add-border-right align-middle text-center">Inter Area</th>
             <th colspan="6" class="add-border-right align-middle text-center">Informe de Area</th>
             <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
@@ -111,6 +112,8 @@
             <!-- Subcolumnas de Orden de Servicio -->
             <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
             <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-05 Orden</th>
+            <!-- Subcolumna N° Legajo para área -->
+            <th v-if="isAreaJefe || isAreaStandard" class="add-border-right align-middle text-center">N°</th>
             <!-- Subcolumnas de Inter Area -->
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
@@ -361,6 +364,11 @@
               </template>
             </td>
 
+            <!-- N° Legajo para área e inter-área -->
+            <td v-if="isAreaJefe || isAreaStandard" class="add-border-right" style="text-align:center; vertical-align:middle; font-weight:bold; white-space:nowrap;">
+              {{ fila.nro_legajo || '—' }}
+            </td>
+
             <!-- Columna Inter Area — Fecha / Área -->
             <td v-if="isTecnologicoOrDireccionOrArea" style="text-align:center;">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row ia-row">
@@ -503,9 +511,9 @@
                 <span class="badge"
                       :class="ia.tipo === 'resultado' ? 'bg-success' : ia.tipo === 'complementario' ? 'bg-secondary' : 'bg-primary'"
                       style="font-size:10px;"
-                      :style="(esInterAreaDeIA(ia) || esPrincipalDeIA(ia)) ? 'cursor:pointer; text-decoration:underline dotted;' : ''"
-                      :title="(esInterAreaDeIA(ia) || esPrincipalDeIA(ia)) ? 'Cambiar tipo' : tipoIALabel(ia.tipo)"
-                      @click.stop="(esInterAreaDeIA(ia) || esPrincipalDeIA(ia)) && abrirModalTipoIA(ia)">
+                      :style="esPrincipalDeIA(ia) ? 'cursor:pointer; text-decoration:underline dotted;' : ''"
+                      :title="esPrincipalDeIA(ia) ? 'Cambiar tipo' : tipoIALabel(ia.tipo)"
+                      @click.stop="esPrincipalDeIA(ia) && abrirModalTipoIA(ia)">
                   {{ tipoIALabel(ia.tipo) }}
                 </span>
               </div>
@@ -518,10 +526,12 @@
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'fecha-ia-sp-' + ia.id" class="ia-sp"></div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
-              </div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              <template v-if="!esSoloInterAreaEnFila(fila)">
+                <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                  <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
+                </div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Solicitante -->
@@ -535,7 +545,7 @@
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'infarea-ia-sp-' + ia.id" class="ia-sp"></div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
                      :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
@@ -619,7 +629,7 @@
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'reg-ia-sp-' + ia.id" class="ia-sp"></div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <template v-if="mostrarInformeAreaEnFila(fila)">
+              <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
                    :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
@@ -643,7 +653,7 @@
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'tipo-ia-sp-' + ia.id" class="ia-sp"></div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <template v-if="mostrarInformeAreaEnFila(fila)">
+              <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
                       class="badge"
@@ -660,6 +670,7 @@
 
             <!-- Columna Plazo (días restantes OS) -->
             <td class="add-border-right" style="text-align:center; vertical-align:middle;">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <template v-if="fila.ciclos && fila.ciclos.some(c => c.firma_direccion)">—</template>
               <template v-else-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
                 <div v-if="isServiciosTecnologicos">
@@ -672,6 +683,7 @@
                     <span class="plazo-badge" :class="plazoCriticidad(diasRestantesOS(fila))">{{ diasRestantesOS(fila) }}</span>
                   </span>
                 </div>
+              </template>
               </template>
             </td>
 
@@ -4825,6 +4837,9 @@
 
       const esMiAreaEsteFila = (fila) => normalizeArea(fila.area_tematica) === normalizeArea(userAreaTematicaFormatted);
 
+      // Usuario de área viendo fila de otra área (solo inter-área en esa fila)
+      const esSoloInterAreaEnFila = (fila) => (isAreaJefe.value || isAreaStandard.value) && !esMiAreaEsteFila(fila);
+
       // Siempre true — se mantiene por compatibilidad pero ya no oculta nada
       const mostrarInformeAreaEnFila = () => true;
 
@@ -5976,6 +5991,7 @@
         esPrincipalDeIA,
         esInterAreaDeIA,
         esMiAreaEsteFila,
+        esSoloInterAreaEnFila,
         mostrarInformeAreaEnFila,
         // Acciones inter-área
         subirInformeAreaCicloIA,
