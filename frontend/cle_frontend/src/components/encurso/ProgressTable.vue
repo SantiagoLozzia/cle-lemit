@@ -422,8 +422,16 @@
                   <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe subido">
                     <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
                   </span>
-                  <span v-else class="ia-estado" title="Pendiente de subir informe">
-                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  <span v-else class="ia-estado">
+                    <template v-if="ultimoCicloIA(ia)">
+                      <label :for="'ia-informe-area-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir informe inter-área">
+                        <i class="bi bi-paperclip action-icon"></i>
+                      </label>
+                      <input :id="'ia-informe-area-' + ultimoCicloIA(ia).id" style="display:none;" type="file"
+                             accept=".doc,.docx,.odt,.rtf"
+                             @change="subirInformeAreaCicloIA($event, ultimoCicloIA(ia))">
+                    </template>
+                    <i v-else class="bi bi-clock" style="color:#95a5a6" title="Esperando creación del ciclo"></i>
                   </span>
                 </template>
                 <template v-else>
@@ -556,7 +564,7 @@
                            @click.stop="abrirArchivo(ciclo.adjunto_informeArea); popupInformeAreaId = null" title="Ver">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <template v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion">
+                      <template v-if="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && esMiAreaEsteFila(fila)">
                         <label class="st-sd-opcion" style="--rotation: -60deg; cursor:pointer;" title="Reemplazar"
                                :for="'reemplazar-inf-area-' + ciclo.id" @click.stop="popupInformeAreaId = null">
                           <i class="bi bi-arrow-repeat"></i>
@@ -567,7 +575,7 @@
                       </template>
                     </div>
                   </span>
-                  <span v-else-if="isAreaJefe || isAreaStandard" style="display:inline-flex; align-items:center; gap:4px;">
+                  <span v-else-if="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila)" style="display:inline-flex; align-items:center; gap:4px;">
                     <label :for="'inf-area-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe área">
                       <i class="bi bi-paperclip action-icon"></i>
                     </label>
@@ -582,7 +590,7 @@
                 </div>
                 <!-- Sin ciclos: clip para área, reloj para otros -->
                 <div v-if="fila.ciclos.length === 0" class="ciclo-row">
-                  <span v-if="isAreaJefe || isAreaStandard">
+                  <span v-if="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila)">
                     <label :for="'inf-area-primer-' + fila.nro_circuito" style="cursor:pointer;" title="Subir primer informe área">
                       <i class="bi bi-paperclip action-icon"></i>
                     </label>
@@ -593,7 +601,7 @@
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
                 <!-- Clip para agregar otro parcial: fila separada debajo del último -->
-                <div v-if="(isAreaJefe || isAreaStandard)
+                <div v-if="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila)
                            && fila.ciclos.length > 0
                            && fila.ciclos[fila.ciclos.length-1].adjunto_informeArea
                            && fila.ciclos[fila.ciclos.length-1].tipo === 'parcial'"
@@ -620,8 +628,8 @@
                    :class="{ 'ciclo-row--final': fila.ciclos.some(c => c.tipo === 'final') }">
                 <AttachmentCell
                   :files="ciclo.registros_ensayo"
-                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
-                  :can-delete="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion"
+                  :can-upload="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && esMiAreaEsteFila(fila)"
+                  :can-delete="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && esMiAreaEsteFila(fila)"
                   :input-id="'registros-ciclo-' + ciclo.id"
                   file-icon="bi bi-folder-check"
                   empty-icon="bi bi-folder-plus"
@@ -643,9 +651,9 @@
                 <span v-if="ciclo.adjunto_informeArea"
                       class="badge"
                       :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
-                      :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
-                      :title="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
-                      @click.stop="(isAreaJefe || isAreaStandard) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
+                      :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
+                      :title="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
+                      @click.stop="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
                   {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
                 </span>
               </div>
@@ -4808,16 +4816,38 @@
         return ia.ciclos[ia.ciclos.length - 1];
       };
 
+      const normalizeArea = (s) => s ? s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim() : '';
+
       const esPrincipalDeIA = (ia) => {
-        return isAreaJefe.value && formatAreaTematica(ia.areaTematica_origen) === userAreaTematicaFormatted;
+        return isAreaJefe.value && normalizeArea(ia.areaTematica_origen) === normalizeArea(userAreaTematica);
       };
 
       const esInterAreaDeIA = (ia) => {
-        return (isAreaJefe.value || isAreaStandard.value) && ia.inter_areaTematica === userAreaTematicaFormatted;
+        return (isAreaJefe.value || isAreaStandard.value) && normalizeArea(ia.inter_areaTematica_raw) === normalizeArea(userAreaTematica);
       };
+
+      const esMiAreaEsteFila = (fila) => normalizeArea(fila.area_tematica) === normalizeArea(userAreaTematicaFormatted);
 
       // Siempre true — se mantiene por compatibilidad pero ya no oculta nada
       const mostrarInformeAreaEnFila = () => true;
+
+      // Inter Area — subir informe área por el inter-área
+      const subirInformeAreaCicloIA = async (event, cicloIA) => {
+        const archivo = event.target.files[0];
+        if (!archivo) return;
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        try {
+          await api.post(`/encurso/ia/ciclo/${cicloIA.id}/subir_informe_area/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al subir informe inter-área:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
 
       // Inter Area — confirmación inicial por área principal
       const confirmarInterareaPrincipal = async (ia) => {
@@ -5933,7 +5963,10 @@
         ultimoCicloIA,
         esPrincipalDeIA,
         esInterAreaDeIA,
+        esMiAreaEsteFila,
         mostrarInformeAreaEnFila,
+        // Acciones inter-área
+        subirInformeAreaCicloIA,
         // Acciones área principal
         confirmarInterareaPrincipal,
         confirmarCorreccionInformeAP,
