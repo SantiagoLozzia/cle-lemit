@@ -399,22 +399,26 @@
                   <span v-else-if="ia.estado_correc_informe === 'confirmado'" class="ia-estado" title="Corrección de informe confirmada">
                     <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
                   </span>
-                  <div v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="st-sd-cell ia-estado" @click.stop>
+                  <div v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="st-sd-cell ia-estado" @click.stop>
                     <button class="st-sd-trigger ia-blink" @click.stop="togglePopupConfirmIA(ia.id)" title="Ver / Confirmar / Rechazar" style="border-color:#2980b9;color:#2980b9;">
-                      <i class="bi bi-circle-fill" style="font-size:11px;"></i>
+                      <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
+                      <span class="st-sd-badge" style="background:#2980b9;"></span>
                     </button>
                     <div v-if="popupConfirmIAId === ia.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupConfirmIAId = null" title="Ver informe">
+                      <div class="st-sd-opcion" style="--rotation: -120deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupConfirmIAId = null" title="Ver informe">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="confirmarInterareaPrincipal(ia); popupConfirmIAId = null" title="Confirmar">
                         <i class="bi bi-check-lg"></i>
                       </div>
-                      <div class="st-sd-opcion" style="--rotation: -30deg; border-color:#dc3545; color:#dc3545;" @click.stop="abrirModalRechazarIA(ia); popupConfirmIAId = null" title="Rechazar">
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -60deg" @click.stop="abrirModalRechazarIA(ia); popupConfirmIAId = null" title="Rechazar">
                         <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
+                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Esperando registros del inter-área">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                  </span>
                   <span v-else class="ia-estado" title="Esperando informe del inter-área">
                     <i class="bi bi-clock" style="color:#95a5a6"></i>
                   </span>
@@ -486,8 +490,12 @@
                     <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros subidos">
                       <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
                     </span>
-                    <span v-else class="ia-estado" title="Pendiente de subir registros">
-                      <i class="bi bi-clock" style="color:#95a5a6"></i>
+                    <span v-else class="ia-estado">
+                      <label :for="'ia-registros-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir registros de ensayo">
+                        <i class="bi bi-paperclip action-icon"></i>
+                      </label>
+                      <input :id="'ia-registros-' + ultimoCicloIA(ia).id" style="display:none;" type="file"
+                             @change="subirRegistroEnsayoCicloIA($event, ultimoCicloIA(ia))">
                     </span>
                   </template>
                   <template v-else>
@@ -4876,6 +4884,24 @@
         }
       };
 
+      // Inter Area — subir registro de ensayo por el inter-área
+      const subirRegistroEnsayoCicloIA = async (event, cicloIA) => {
+        const archivo = event.target.files[0];
+        if (!archivo) return;
+        const formData = new FormData();
+        formData.append('archivo', archivo);
+        try {
+          await api.post(`/encurso/ia/ciclo/${cicloIA.id}/subir_registro_ensayo/`, formData);
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 3000);
+        } catch (e) {
+          console.error('Error al subir registro de ensayo inter-área:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 3000);
+        }
+      };
+
       // Inter Area — confirmación inicial por área principal
       const confirmarInterareaPrincipal = async (ia) => {
         try {
@@ -5995,6 +6021,7 @@
         mostrarInformeAreaEnFila,
         // Acciones inter-área
         subirInformeAreaCicloIA,
+        subirRegistroEnsayoCicloIA,
         // Acciones área principal
         confirmarInterareaPrincipal,
         confirmarCorreccionInformeAP,
