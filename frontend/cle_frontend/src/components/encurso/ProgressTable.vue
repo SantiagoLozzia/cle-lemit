@@ -492,8 +492,10 @@
                 </template>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-for="ciclo in fila.ciclos" :key="'ia-inf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <template v-if="!esSoloInterAreaEnFila(fila)">
+                <div v-for="ciclo in fila.ciclos" :key="'ia-inf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              </template>
             </td>
 
             <!-- Columna Inter Area — Estado Registros IA -->
@@ -547,8 +549,10 @@
                 </template>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-for="ciclo in fila.ciclos" :key="'ia-reg-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <template v-if="!esSoloInterAreaEnFila(fila)">
+                <div v-for="ciclo in fila.ciclos" :key="'ia-reg-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              </template>
             </td>
 
             <!-- Columna Tipo IA -->
@@ -564,8 +568,10 @@
                 </span>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-for="ciclo in fila.ciclos" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <template v-if="!esSoloInterAreaEnFila(fila)">
+                <div v-for="ciclo in fila.ciclos" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              </template>
             </td>
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
@@ -582,7 +588,7 @@
 
             <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
-              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+              <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 {{ fila.nombre_solicitante }}
               </template>
             </td>
@@ -735,6 +741,7 @@
 
             <!-- Columna Administracion - Informe Servicio (por ciclo) -->
             <td class="add-border-right">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <!-- IA pipeline — Admin -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'adm-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia)">
@@ -951,10 +958,12 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Revisión Servicios Tecnológicos (por ciclo) -->
             <td class="add-border-right">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <!-- IA pipeline — ST -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'st-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeServicio && !ultimoCicloIA(ia).revision_confirmada && !ultimoCicloIA(ia).corregir">
@@ -1053,10 +1062,12 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna PDF Admin (por ciclo) -->
             <td class="add-border-right">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <!-- IA pipeline — PDF Admin -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'pdf-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).revision_confirmada && !ultimoCicloIA(ia).pdf_confirmado_admin && !ultimoCicloIA(ia).corregir">
@@ -1124,10 +1135,12 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Responsable Área - Firma (por ciclo) -->
             <td class="add-border-right">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <!-- IA pipeline — Firma Área -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'area-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).pdf_confirmado_admin && !ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).corregir">
@@ -1198,10 +1211,12 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Firma AP (Área Principal) — solo aplica al pipeline IA -->
             <td class="add-border-right">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <div v-for="ia in fila.solicitudes_interarea" :key="'ap-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).firma_responsable_ap && !ultimoCicloIA(ia).corregir">
                   <div v-if="esPrincipalDeIA(ia)" class="st-sd-cell" @click.stop>
@@ -1235,10 +1250,12 @@
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row"></div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Dirección - Firma (por ciclo) -->
             <td class="add-border-right">
+              <template v-if="!esSoloInterAreaEnFila(fila)">
               <!-- IA pipeline — Firma Dirección -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'dir-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_ap && !ultimoCicloIA(ia).firma_direccion">
@@ -1307,6 +1324,7 @@
                 </template>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
+              </template>
             </td>
 
             <!-- Columna Archivo -->
