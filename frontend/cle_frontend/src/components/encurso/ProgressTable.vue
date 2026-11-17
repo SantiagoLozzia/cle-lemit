@@ -427,6 +427,12 @@
                   <!-- Inter-área: ve qué hacer -->
                   <span v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" :title="'Informe rechazado: ' + (ia.comentario_rechazo_ap || '')">
                     <i class="bi bi-sticky-fill ia-papelito" style="color:#e74c3c;cursor:pointer" @click="verComentarioRechazoIA(ia, 'informe')"></i>
+                    <label :for="'ia-informe-corr-' + ia.id" style="cursor:pointer;" title="Subir informe corregido">
+                      <i class="bi bi-paperclip action-icon" style="font-size:14px; color:#e74c3c; margin-left:2px;"></i>
+                    </label>
+                    <input :id="'ia-informe-corr-' + ia.id" style="display:none;" type="file"
+                           accept=".doc,.docx,.odt,.rtf"
+                           @change="subirInformeAreaCicloIA($event, ia)">
                   </span>
                   <span v-else-if="ia.estado_correc_informe === 'subido'" class="ia-estado" title="Corrección enviada — esperando revisión del área principal">
                     <i class="bi bi-clock" style="color:#e67e22"></i>
@@ -473,7 +479,7 @@
                     <span v-else-if="ia.estado_correc_registros === 'confirmado'" class="ia-estado" title="Corrección de registros confirmada">
                       <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
                     </span>
-                    <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
+                    <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length && !ia.estado_correc_informe" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
                       <i class="bi bi-circle-fill" style="color:#2980b9"></i>
                     </span>
                     <span v-else class="ia-estado" title="Esperando registros del inter-área">
@@ -2005,7 +2011,7 @@
             <button type="button" class="btn-close" @click="cerrarModalCrearSolicitudInterArea" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form class="was-validated">
+            <form>
               <!-- Selector principal: tipo de inter-área -->
               <div class="mb-4">
                 <label class="form-label fw-bold fs-6">Tipo de inter-área</label>
@@ -2105,9 +2111,26 @@
                 </div>
               </div>
 
-              <div class="mb-3">
-                <label for="num_labs" class="form-label text-left">Numeros de Laboratorio para Inter Area (opcional):</label>
-                <input v-model="nuevaSolicitudInterarea.num_labs" type="text" class="form-control" id="num_labs" name="num_labs"/>
+              <!-- Números de laboratorio picker (solo para Parcial/Complementario) -->
+              <div class="mb-3" v-if="nuevaSolicitudInterarea.tipo === 'parcial' || nuevaSolicitudInterarea.tipo === 'complementario'">
+                <label class="form-label fw-semibold" style="font-size:0.85rem">
+                  Números de Laboratorio <span class="text-danger">*</span>
+                </label>
+                <div v-if="labsDisponiblesIA.length" class="lab-picker">
+                  <span
+                    v-for="lab in labsDisponiblesIA"
+                    :key="lab.numero + '/' + lab.anio"
+                    class="lab-pill"
+                    :class="{ 'lab-pill--selected': lab.seleccionado }"
+                    @click="lab.seleccionado = !lab.seleccionado">
+                    {{ lab.numero }}
+                  </span>
+                </div>
+                <p v-else class="text-muted small mb-1">Sin números de laboratorio disponibles para este circuito.</p>
+                <small class="text-muted d-block mt-1">
+                  {{ labsSeleccionadosIA.length }} de {{ labsDisponiblesIA.length }} seleccionados
+                  <span v-if="labsDisponiblesIA.length"> · {{ labsDisponiblesIA[0]?.anio }}</span>
+                </small>
               </div>
 
               <div class="mb-3">
@@ -3302,6 +3325,8 @@
         ],
         nro_circuito: null,
       });
+      const labsDisponiblesIA = ref([]);
+      const labsSeleccionadosIA = computed(() => labsDisponiblesIA.value.filter(l => l.seleccionado));
       const nroSolicitudInterArea = ref();
       const fechaSolicitudInterArea = ref();
       const areaTematicaOrigen = ref();
@@ -4734,6 +4759,24 @@
         serviciosSeleccionados.value.splice(index, 1);
       };
 
+      const parsearRangosLab = (rangosStr) => {
+        if (!rangosStr) return [];
+        const labs = [];
+        const partes = rangosStr.split(',');
+        for (const parte of partes) {
+          const str = parte.trim();
+          const match = str.match(/^(\d+)(?:-(\d+))?\/(\d+)$/);
+          if (!match) continue;
+          const desde = parseInt(match[1]);
+          const hasta = match[2] ? parseInt(match[2]) : desde;
+          const anio = match[3];
+          for (let n = desde; n <= hasta; n++) {
+            labs.push({ numero: n, anio, seleccionado: false });
+          }
+        }
+        return labs;
+      };
+
       const abrirModalCrearSolicitudInterArea = async (fila) => {
         numeroCircuitoGlobal.value = fila.nro_circuito;
         try {
@@ -4741,6 +4784,10 @@
           nuevaSolicitudInterarea.value.nro_circuito = fila.nro_circuito;
           nuevaSolicitudInterarea.value.areaTematica_origen = fila.area_tematica;
           mostrarModalCrearSolicitudInterArea.value = true;
+          try {
+            const resOS = await api.get(`/encurso/obtener_ordenServicio/${fila.nro_circuito}/`);
+            labsDisponiblesIA.value = parsearRangosLab(resOS.data.rangos_laboratorios);
+          } catch (_) { labsDisponiblesIA.value = []; }
           if (!catalogoAranceles.value.length) {
             try {
               const res = await api.get('/aranceles/todos/');
@@ -4759,6 +4806,7 @@
         busquedaArancel.value = '';
         arancelAdicional.value = null;
         cantidadAdicional.value = 1;
+        labsDisponiblesIA.value = [];
         nuevaSolicitudInterarea.value = {
           fecha_solicitudInterarea: new Date().toISOString().substring(0, 10),
           areaTematica_origen: '',
@@ -4777,6 +4825,16 @@
             return;
           }
 
+          if (!serviciosSeleccionados.value.length) {
+            alert('Por favor agregá al menos un servicio antes de crear la solicitud.');
+            return;
+          }
+
+          if ((nuevaSolicitudInterarea.value.tipo === 'parcial' || nuevaSolicitudInterarea.value.tipo === 'complementario') && !labsSeleccionadosIA.value.length) {
+            alert('Para tipo Parcial o Complementario es obligatorio seleccionar al menos un número de laboratorio.');
+            return;
+          }
+
           nuevaSolicitudInterarea.value.servicios_solicitudInterarea = [];
           serviciosSeleccionados.value.forEach(servicio => {
             nuevaSolicitudInterarea.value.servicios_solicitudInterarea.push({
@@ -4785,6 +4843,12 @@
               cant: servicio.cant,
             });
           });
+
+          if (labsSeleccionadosIA.value.length) {
+            const anio = labsSeleccionadosIA.value[0].anio;
+            const nums = labsSeleccionadosIA.value.map(l => l.numero).join(', ');
+            nuevaSolicitudInterarea.value.num_labs = `${nums} / ${anio}`;
+          }
 
           nuevaSolicitudInterarea.value.areaTematica_origen = desformatearAreaTematica(nuevaSolicitudInterarea.value.areaTematica_origen);
 
@@ -6000,6 +6064,8 @@
         cerrarModalCrearSolicitudInterArea,
         mostrarModalCrearSolicitudInterArea,
         crearSolicitudInterArea,
+        labsDisponiblesIA,
+        labsSeleccionadosIA,
         abrirSolicitudInterArea,
         cerrarModalSolicitudInterArea,
         mostrarModalSolicitudInterArea,
@@ -7189,6 +7255,46 @@
 }
 .motivo-archivo-option input[type="radio"] {
   accent-color: #dc3545;
+}
+
+/* Lab picker — grilla estilo almanaque */
+.lab-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+.lab-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1.5px solid #adb5bd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.lab-pill:hover {
+  border-color: #026290;
+  background: #e8f4f8;
+}
+.lab-pill--selected {
+  background: #026290;
+  border-color: #026290;
+  color: #fff;
+}
+.lab-pill--selected:hover {
+  background: #015070;
+  border-color: #015070;
 }
 </style>
   
