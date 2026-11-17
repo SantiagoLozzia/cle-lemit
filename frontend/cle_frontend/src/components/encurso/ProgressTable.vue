@@ -389,9 +389,11 @@
                 <!-- Estado informe según rol -->
                 <template v-if="esPrincipalDeIA(ia)">
                   <!-- Área principal: ve estado de confirmación -->
-                  <span v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" title="Informe rechazado — esperando corrección del inter-área">
-                    <i class="bi bi-sticky-fill ia-papelito" style="color:#f39c12"></i>
-                  </span>
+                  <div v-if="ia.estado_correc_informe === 'rechazado'" class="ia-estado" style="position:relative; display:inline-flex; align-items:center;" title="Informe rechazado — esperando corrección del inter-área">
+                    <i class="bi bi-clock" style="color:#95a5a6"></i>
+                    <i class="bi bi-sticky-fill"
+                       style="position:absolute; top:-6px; left:calc(100% - 3px); font-size:13px; color:#f39c12; z-index:10;"></i>
+                  </div>
                   <div v-else-if="ia.estado_correc_informe === 'subido'" class="st-sd-cell ia-estado" @click.stop>
                     <button class="st-sd-trigger ia-blink" @click.stop="togglePopupConfirmIA(ia.id)" title="Ver / Confirmar / Rechazar informe corregido" style="border-color:#2980b9;color:#2980b9;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
