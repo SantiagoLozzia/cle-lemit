@@ -684,6 +684,27 @@
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
+                  <template v-else-if="ultimoCicloIA(ia).corregir">
+                    <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger" style="border-color:#2b579a; color:#2b579a;"
+                              @click.stop="togglePopupFormatoIA(ultimoCicloIA(ia).id)" title="Ver / Reemplazar informe IA">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                        <span class="st-sd-badge"></span>
+                      </button>
+                      <div v-if="popupFormatoIAId === ultimoCicloIA(ia).id" class="st-sd-dial">
+                        <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)" title="Ver Word IA">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="st-sd-opcion" style="--rotation: -90deg" title="Reemplazar archivo">
+                          <label :for="'ia-reemplazar-' + ultimoCicloIA(ia).id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                            <i class="bi bi-arrow-repeat"></i>
+                          </label>
+                          <input :id="'ia-reemplazar-' + ultimoCicloIA(ia).id" type="file" style="display:none;" accept=".doc,.docx,.odt,.rtf" @change="subirInformeServicioCicloIA($event, ultimoCicloIA(ia))">
+                        </div>
+                      </div>
+                    </div>
+                    <i v-else class="bi bi-stopwatch"></i>
+                  </template>
                   <template v-else-if="ultimoCicloIA(ia).adjunto_informeServicio">
                     <div style="position:relative; display:inline-flex; align-items:center;">
                       <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:16px; cursor:pointer;"
@@ -881,8 +902,11 @@
                       <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)" title="Ver">
                         <i class="bi bi-eye"></i>
                       </div>
-                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -60deg" @click.stop="confirmarRevisionCicloIA(ia)" title="Confirmar OK">
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="confirmarRevisionCicloIA(ia)" title="Confirmar OK">
                         <i class="bi bi-check-lg"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoSTIA(ultimoCicloIA(ia)); popupSTIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
@@ -1048,11 +1072,14 @@
                       <span class="st-sd-badge"></span>
                     </button>
                     <div v-if="popupAreaIAId === ia.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -135deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupAreaIAId = null" title="Ver PDF IA">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupAreaIAId = null" title="Ver PDF IA">
                         <i class="bi bi-eye"></i>
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaAreaCicloIA(ultimoCicloIA(ia)); popupAreaIAId = null" title="Firmar">
                         <i class="bi bi-pen"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoAreaIA(ultimoCicloIA(ia)); popupAreaIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
@@ -1124,6 +1151,9 @@
                       </div>
                       <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaDireccionCicloIA(ultimoCicloIA(ia)); popupDirIAId = null" title="Firmar">
                         <i class="bi bi-pen"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoDireccionIA(ultimoCicloIA(ia)); popupDirIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
                       </div>
                     </div>
                   </div>
@@ -3674,6 +3704,7 @@
         popupAreaIAId.value = null;
         popupDirIAId.value = null;
         popupConfirmIAId.value = null;
+        popupFormatoIAId.value = null;
       };
 
       const onFirmaActualizada = (e) => { firmaUsuarioUrl.value = e.detail.firma_url || null; };
@@ -5198,15 +5229,22 @@
       const popupAreaIAId = ref(null);
       const popupDirIAId = ref(null);
       const popupConfirmIAId = ref(null);
+      const popupFormatoIAId = ref(null);
       const generandoPDFIAId = ref(null);
       const cicloIAParaFirmaArea = ref(null);
       const cicloIAParaFirmaDireccion = ref(null);
+      const cicloIsIA = ref(false);
 
       const togglePopupSTIA = (iaId) => { popupSTIAId.value = popupSTIAId.value === iaId ? null : iaId; };
       const togglePopupPDFAdminIA = (iaId) => { popupPDFAdminIAId.value = popupPDFAdminIAId.value === iaId ? null : iaId; };
       const togglePopupAreaIA = (iaId) => { popupAreaIAId.value = popupAreaIAId.value === iaId ? null : iaId; };
       const togglePopupDirIA = (iaId) => { popupDirIAId.value = popupDirIAId.value === iaId ? null : iaId; };
       const togglePopupConfirmIA = (iaId) => { popupConfirmIAId.value = popupConfirmIAId.value === iaId ? null : iaId; };
+      const togglePopupFormatoIA = (cicloIAId) => {
+        const opening = popupFormatoIAId.value !== cicloIAId;
+        popupFormatoIAId.value = opening ? cicloIAId : null;
+        if (opening) document.dispatchEvent(new Event('speed-dial-open'));
+      };
 
       const tipoIALabel = (tipo) => ({ parcial: 'Parcial', resultado: 'Resultado', complementario: 'Compl.' }[tipo] || 'Parcial');
 
@@ -5380,12 +5418,21 @@
         // Rechazo Dirección
         const abrirModalRechazoDireccion = (ciclo) => {
           cicloSeleccionado.value = ciclo;
+          cicloIsIA.value = false;
+          rechazoDireccionDestino.value = 'st';
+          rechazoDireccionNota.value = '';
+          mostrarModalRechazoDireccion.value = true;
+        };
+        const abrirModalRechazoDireccionIA = (cicloIA) => {
+          cicloSeleccionado.value = cicloIA;
+          cicloIsIA.value = true;
           rechazoDireccionDestino.value = 'st';
           rechazoDireccionNota.value = '';
           mostrarModalRechazoDireccion.value = true;
         };
         const cerrarModalRechazoDireccion = () => {
           mostrarModalRechazoDireccion.value = false;
+          cicloIsIA.value = false;
         };
         const abrirModalVerRechazo = (ciclo) => {
           cicloVerRechazo.value = ciclo;
@@ -5395,16 +5442,21 @@
           const ciclo = cicloSeleccionado.value;
           if (!ciclo) return;
           try {
-            await api.put(`/encurso/rechazar_firma_direccion_ciclo/${ciclo.id}/`, {
+            const url = cicloIsIA.value
+              ? `/encurso/ia/ciclo/${ciclo.id}/rechazar_firma_direccion/`
+              : `/encurso/rechazar_firma_direccion_ciclo/${ciclo.id}/`;
+            await api.put(url, {
               destino: rechazoDireccionDestino.value,
               nota_rechazo: rechazoDireccionNota.value,
             });
             mostrarModalRechazoDireccion.value = false;
+            cicloIsIA.value = false;
             fetchData();
             showSuccessAlert.value = true;
             setTimeout(() => { showSuccessAlert.value = false; }, 3000);
           } catch (error) {
             mostrarModalRechazoDireccion.value = false;
+            cicloIsIA.value = false;
             showErrorAlert.value = true;
             setTimeout(() => { showErrorAlert.value = false; }, 5000);
           }
@@ -5413,12 +5465,21 @@
         // Rechazo Área
         const abrirModalRechazoArea = (ciclo) => {
           cicloSeleccionado.value = ciclo;
+          cicloIsIA.value = false;
+          rechazoAreaDestino.value = 'st';
+          rechazoAreaNota.value = '';
+          mostrarModalRechazoArea.value = true;
+        };
+        const abrirModalRechazoAreaIA = (cicloIA) => {
+          cicloSeleccionado.value = cicloIA;
+          cicloIsIA.value = true;
           rechazoAreaDestino.value = 'st';
           rechazoAreaNota.value = '';
           mostrarModalRechazoArea.value = true;
         };
         const cerrarModalRechazoArea = () => {
           mostrarModalRechazoArea.value = false;
+          cicloIsIA.value = false;
         };
         const abrirModalVerRechazoArea = (ciclo) => {
           cicloVerRechazoArea.value = ciclo;
@@ -5428,16 +5489,21 @@
           const ciclo = cicloSeleccionado.value;
           if (!ciclo) return;
           try {
-            await api.put(`/encurso/rechazar_firma_area_ciclo/${ciclo.id}/`, {
+            const url = cicloIsIA.value
+              ? `/encurso/ia/ciclo/${ciclo.id}/rechazar_firma_area/`
+              : `/encurso/rechazar_firma_area_ciclo/${ciclo.id}/`;
+            await api.put(url, {
               destino: rechazoAreaDestino.value,
               nota_rechazo: rechazoAreaNota.value,
             });
             mostrarModalRechazoArea.value = false;
+            cicloIsIA.value = false;
             fetchData();
             showSuccessAlert.value = true;
             setTimeout(() => { showSuccessAlert.value = false; }, 3000);
           } catch (error) {
             mostrarModalRechazoArea.value = false;
+            cicloIsIA.value = false;
             showErrorAlert.value = true;
             setTimeout(() => { showErrorAlert.value = false; }, 5000);
           }
@@ -5446,12 +5512,21 @@
         // Rechazo ST
         const abrirModalRechazoST = (ciclo) => {
           cicloSeleccionado.value = ciclo;
+          cicloIsIA.value = false;
+          rechazoSTDestino.value = 'administracion';
+          rechazoSTNota.value = '';
+          mostrarModalRechazoST.value = true;
+        };
+        const abrirModalRechazoSTIA = (cicloIA) => {
+          cicloSeleccionado.value = cicloIA;
+          cicloIsIA.value = true;
           rechazoSTDestino.value = 'administracion';
           rechazoSTNota.value = '';
           mostrarModalRechazoST.value = true;
         };
         const cerrarModalRechazoST = () => {
           mostrarModalRechazoST.value = false;
+          cicloIsIA.value = false;
         };
         const abrirModalVerRechazoST = (ciclo) => {
           cicloVerRechazoST.value = ciclo;
@@ -5461,16 +5536,21 @@
           const ciclo = cicloSeleccionado.value;
           if (!ciclo) return;
           try {
-            await api.put(`/encurso/rechazar_revision_st_ciclo/${ciclo.id}/`, {
+            const url = cicloIsIA.value
+              ? `/encurso/ia/ciclo/${ciclo.id}/rechazar_revision_st/`
+              : `/encurso/rechazar_revision_st_ciclo/${ciclo.id}/`;
+            await api.put(url, {
               destino: rechazoSTDestino.value,
               nota: rechazoSTNota.value,
             });
             mostrarModalRechazoST.value = false;
+            cicloIsIA.value = false;
             fetchData();
             showSuccessAlert.value = true;
             setTimeout(() => { showSuccessAlert.value = false; }, 3000);
           } catch (error) {
             mostrarModalRechazoST.value = false;
+            cicloIsIA.value = false;
             showErrorAlert.value = true;
             setTimeout(() => { showErrorAlert.value = false; }, 5000);
           }
@@ -5935,10 +6015,11 @@
         confirmarRevisionCicloIA,
         generarPDFCicloIA,
         popupSTIAId, popupPDFAdminIAId, popupAreaIAId, popupDirIAId,
-        popupConfirmIAId,
+        popupConfirmIAId, popupFormatoIAId,
         generandoPDFIAId,
+        cicloIsIA,
         togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupDirIA,
-        togglePopupConfirmIA,
+        togglePopupConfirmIA, togglePopupFormatoIA,
         tipoIALabel,
         mostrarModalTipoIA, abrirModalTipoIA, confirmarCambioTipoIA, cerrarModalTipoIA,
         cerrarModalFirmaResponsableArea,
@@ -5971,6 +6052,11 @@
         rechazoSTDestino, rechazoSTNota,
         abrirModalRechazoST, cerrarModalRechazoST,
         abrirModalVerRechazoST, confirmarRechazoST,
+        abrirModalRechazoSTIA,
+        // Rechazo Área IA
+        abrirModalRechazoAreaIA,
+        // Rechazo Dirección IA
+        abrirModalRechazoDireccionIA,
         // Archivar
         abrirModalArchivar,
         cerrarModalArchivar,
