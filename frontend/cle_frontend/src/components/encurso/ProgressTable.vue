@@ -3784,6 +3784,7 @@
                   legajo_completo: legajoCorrespondiente ? legajoCorrespondiente.completo : '',
                   labs_adicionales_pendientes: legajoCorrespondiente ? (legajoCorrespondiente.labs_adicionales_pendientes || 0) : 0,
                   monto_adicional_pendiente: legajoCorrespondiente ? !!legajoCorrespondiente.monto_adicional_pendiente : false,
+                  rangos_laboratorios: legajoCorrespondiente ? (legajoCorrespondiente.rangos_laboratorios || '') : '',
                   // Recepcion
                   nros_remitos: recepcionCorrespondiente ? recepcionCorrespondiente.nros_remitos : '',
                   estado_recepcion: recepcionCorrespondiente ? recepcionCorrespondiente.estado_recepcion : '',
@@ -4867,7 +4868,7 @@
         serviciosSeleccionados.value.splice(index, 1);
       };
 
-      const parsearRangosLab = (rangosStr) => {
+      const parsearRangosLab = (rangosStr, preseleccionar = false) => {
         if (!rangosStr) return [];
         const labs = [];
         const partes = rangosStr.split(',');
@@ -4879,7 +4880,7 @@
           const hasta = match[2] ? parseInt(match[2]) : desde;
           const anio = match[3];
           for (let n = desde; n <= hasta; n++) {
-            labs.push({ numero: n, anio, seleccionado: false });
+            labs.push({ numero: n, anio, seleccionado: preseleccionar });
           }
         }
         return labs;
@@ -4892,10 +4893,7 @@
           nuevaSolicitudInterarea.value.nro_circuito = fila.nro_circuito;
           nuevaSolicitudInterarea.value.areaTematica_origen = fila.area_tematica;
           mostrarModalCrearSolicitudInterArea.value = true;
-          try {
-            const resOS = await api.get(`/encurso/obtener_ordenServicio/${fila.nro_circuito}/`);
-            labsDisponiblesIA.value = parsearRangosLab(resOS.data.rangos_laboratorios);
-          } catch (_) { labsDisponiblesIA.value = []; }
+          labsDisponiblesIA.value = parsearRangosLab(fila.rangos_laboratorios, true);
           if (!catalogoAranceles.value.length) {
             try {
               const res = await api.get('/aranceles/todos/');
