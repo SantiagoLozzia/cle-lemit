@@ -2079,7 +2079,7 @@
             <button type="button" class="btn-close" @click="cerrarModalCrearSolicitudInterArea" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form>
+            <form @submit.prevent>
               <!-- Selector principal: tipo de inter-área -->
               <div class="mb-4">
                 <label class="form-label fw-bold fs-6">Tipo de inter-área</label>
@@ -2087,7 +2087,7 @@
                   <button type="button"
                     class="btn flex-fill py-3 ia-tipo-btn"
                     :class="nuevaSolicitudInterarea.tipo === 'parcial' ? 'btn-primary' : 'btn-outline-primary'"
-                    @click="nuevaSolicitudInterarea.tipo = 'parcial'; nuevaSolicitudInterarea.genera_informe_parcial = true">
+                    @click="nuevaSolicitudInterarea.tipo = 'parcial'; nuevaSolicitudInterarea.genera_informe_parcial = true; erroresIA.tipo = null">
                     <i class="bi bi-file-earmark-text d-block mb-1" style="font-size:1.5rem"></i>
                     <strong>Parcial</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">El inter-área produce su propio informe que pasa por administración, ST, firma y dirección</small>
@@ -2095,7 +2095,7 @@
                   <button type="button"
                     class="btn flex-fill py-3 ia-tipo-btn"
                     :class="nuevaSolicitudInterarea.tipo === 'resultado' ? 'btn-secondary' : 'btn-outline-secondary'"
-                    @click="nuevaSolicitudInterarea.tipo = 'resultado'; nuevaSolicitudInterarea.genera_informe_parcial = false">
+                    @click="nuevaSolicitudInterarea.tipo = 'resultado'; nuevaSolicitudInterarea.genera_informe_parcial = false; erroresIA.tipo = null">
                     <i class="bi bi-clipboard-check d-block mb-1" style="font-size:1.5rem"></i>
                     <strong>Resultado</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">El inter-área entrega resultados directamente al área principal sin informe propio</small>
@@ -2104,41 +2104,50 @@
                     class="btn flex-fill py-3 ia-tipo-btn"
                     :class="nuevaSolicitudInterarea.tipo === 'complementario' ? '' : 'btn-outline-secondary'"
                     :style="nuevaSolicitudInterarea.tipo === 'complementario' ? 'background:#8e44ad; color:#fff; border-color:#8e44ad;' : ''"
-                    @click="nuevaSolicitudInterarea.tipo = 'complementario'; nuevaSolicitudInterarea.genera_informe_parcial = false">
+                    @click="nuevaSolicitudInterarea.tipo = 'complementario'; nuevaSolicitudInterarea.genera_informe_parcial = false; erroresIA.tipo = null">
                     <i class="bi bi-plus-circle d-block mb-1" style="font-size:1.5rem"></i>
                     <strong>Complementario</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">Informe complementario; no habilita nuevo parcial ni nueva inter-área</small>
                   </button>
                 </div>
+                <div v-if="erroresIA.tipo" class="ia-error-msg">{{ erroresIA.tipo }}</div>
               </div>
 
               <hr class="my-3">
 
+              <!-- Todos los campos debajo se deshabilitan hasta que se elija un tipo -->
+              <fieldset :disabled="!nuevaSolicitudInterarea.tipo" :class="{ 'ia-fieldset-disabled': !nuevaSolicitudInterarea.tipo }">
+
               <div class="mb-3">
                   <label for="fecha_solicitudInterarea" class="form-label text-left">Fecha:</label>
-                  <input v-model="nuevaSolicitudInterarea.fecha_solicitudInterarea" type="date" class="form-control" id="fecha_solicitudInterarea" name="fecha_solicitudInterarea" readonly required />
+                  <input v-model="nuevaSolicitudInterarea.fecha_solicitudInterarea" type="date" class="form-control" id="fecha_solicitudInterarea" name="fecha_solicitudInterarea" readonly />
               </div>
 
               <div class="mb-3">
                 <label for="areaTematica_origen" class="form-label text-left">Area Temática:</label>
-                <input v-model="nuevaSolicitudInterarea.areaTematica_origen" type="text" class="form-control" id="areaTematica_origen" name="areaTematica_origen" readonly required />
+                <input v-model="nuevaSolicitudInterarea.areaTematica_origen" type="text" class="form-control" id="areaTematica_origen" name="areaTematica_origen" readonly />
               </div>
 
               <div class="mb-3">
                 <label for="inter_areaTematica" class="form-label text-left">Inter Area Temática</label>
-                <select v-model="nuevaSolicitudInterarea.inter_areaTematica" class="form-select" id="inter_areaTematica" name="inter_areaTematica" required>
+                <select v-model="nuevaSolicitudInterarea.inter_areaTematica"
+                  class="form-select" :class="{ 'is-invalid': erroresIA.inter_areaTematica }"
+                  id="inter_areaTematica" name="inter_areaTematica"
+                  @change="erroresIA.inter_areaTematica = null">
+                  <option value="">— Seleccionar —</option>
                   <option v-for="(option, key) in inter_areaTematicaOptions" :key="key" :value="option.value">
                     {{ option.label }}
                   </option>
                 </select>
+                <div v-if="erroresIA.inter_areaTematica" class="ia-error-msg">{{ erroresIA.inter_areaTematica }}</div>
               </div>
-              
+
               <!-- Servicios de la orden de servicio (checkboxes) -->
               <div class="mb-3">
                 <label class="form-label fw-semibold" style="font-size:0.85rem">Servicios de la Orden de Servicio</label>
                 <div v-if="serviciosDisponibles.servicio_solicitado && serviciosDisponibles.servicio_solicitado.length" class="ia-os-list">
                   <label v-for="sv in serviciosDisponibles.servicio_solicitado" :key="sv.nro_servicio" class="ia-os-item">
-                    <input type="checkbox" :checked="isServicioOSSeleccionado(sv)" @change="toggleServicioOS(sv, $event.target.checked)">
+                    <input type="checkbox" :checked="isServicioOSSeleccionado(sv)" @change="toggleServicioOS(sv, $event.target.checked); erroresIA.servicios = null">
                     <span class="ia-os-label">
                       <strong>{{ sv.cant }}×</strong> {{ sv.servicio }}
                       <small v-if="sv.norma" class="text-muted"> · {{ sv.norma }}</small>
@@ -2146,6 +2155,7 @@
                   </label>
                 </div>
                 <p v-else class="text-muted small mb-0">Sin servicios en la OS.</p>
+                <div v-if="erroresIA.servicios" class="ia-error-msg">{{ erroresIA.servicios }}</div>
               </div>
 
               <!-- Servicio adicional del catálogo -->
@@ -2163,7 +2173,7 @@
                 <div v-if="arancelAdicional" class="d-flex align-items-center gap-2 mt-1 p-2 bg-light rounded">
                   <span class="flex-grow-1 small">{{ arancelAdicional.servicio }}<small v-if="arancelAdicional.norma" class="text-muted"> · {{ arancelAdicional.norma }}</small></span>
                   <input v-model.number="cantidadAdicional" type="number" min="1" class="form-control form-control-sm" style="width:70px" placeholder="Cant.">
-                  <button type="button" class="btn btn-sm btn-primary" @click="agregarArancel">Agregar</button>
+                  <button type="button" class="btn btn-sm btn-primary" @click="agregarArancel; erroresIA.servicios = null">Agregar</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary" @click="arancelAdicional = null">✕</button>
                 </div>
               </div>
@@ -2189,12 +2199,13 @@
                   <button type="button"
                     ref="labsPickerTriggerRef"
                     class="lab-cal-trigger"
-                    :class="{ 'lab-cal-trigger--open': labsPickerAbierto }"
+                    :class="{ 'lab-cal-trigger--open': labsPickerAbierto, 'lab-cal-trigger--error': erroresIA.num_labs }"
                     @click="abrirLabsPicker">
                     <span v-if="!labsSeleccionadosIA.length" class="text-muted">Seleccionar números de laboratorio...</span>
                     <span v-else>{{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}</span>
                     <i class="bi bi-grid-3x3-gap" style="font-size:0.78rem; flex-shrink:0;"></i>
                   </button>
+                  <div v-if="erroresIA.num_labs" class="ia-error-msg">{{ erroresIA.num_labs }}</div>
                   <!-- Popup flotante vía Teleport (position: fixed, encima de todo) -->
                   <Teleport to="body">
                     <!-- Overlay transparente para cerrar al hacer click afuera -->
@@ -2206,7 +2217,7 @@
                           <span class="text-muted fw-normal ms-1" style="font-size:0.75rem;">({{ labsDisponiblesIA.length }})</span>
                         </span>
                         <div class="d-flex gap-2 align-items-center">
-                          <button type="button" class="btn btn-link btn-sm py-0 px-1 text-primary" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = true)">Todos</button>
+                          <button type="button" class="btn btn-link btn-sm py-0 px-1 text-primary" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = true); erroresIA.num_labs = null">Todos</button>
                           <button type="button" class="btn btn-link btn-sm py-0 px-1 text-danger" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = false)">Limpiar</button>
                           <button type="button" class="lab-cal-close" @click.stop="labsPickerAbierto = false">✕</button>
                         </div>
@@ -2217,7 +2228,7 @@
                           :key="lab.numero + '/' + lab.anio"
                           class="lab-cal-cell"
                           :class="{ 'lab-cal-cell--selected': lab.seleccionado }"
-                          @click.stop="lab.seleccionado = !lab.seleccionado">
+                          @click.stop="lab.seleccionado = !lab.seleccionado; erroresIA.num_labs = null">
                           {{ lab.numero }}
                         </span>
                       </div>
@@ -2232,13 +2243,19 @@
 
               <div class="mb-3">
                 <label for="muestras_solicitudIa" class="form-label text-left">Muestras a entregar:</label>
-                <input v-model="nuevaSolicitudInterarea.muestras_solicitudIa" type="text" class="form-control" id="muestras_solicitudIa" name="muestras_solicitudIa" required />
+                <input v-model="nuevaSolicitudInterarea.muestras_solicitudIa" type="text"
+                  class="form-control" :class="{ 'is-invalid': erroresIA.muestras }"
+                  id="muestras_solicitudIa" name="muestras_solicitudIa"
+                  @input="erroresIA.muestras = null" />
+                <div v-if="erroresIA.muestras" class="ia-error-msg">{{ erroresIA.muestras }}</div>
               </div>
 
               <div class="mb-3">
                 <label for="observaciones_interArea" class="form-label text-left">Observaciones:</label>
                 <input v-model="nuevaSolicitudInterarea.observaciones_interArea" type="text" class="form-control" id="observaciones_interArea" name="observaciones_interArea" />
               </div>
+
+              </fieldset>
             </form>
 
           </div>
@@ -3461,6 +3478,7 @@
       const labsDisponiblesIA = ref([]);
       const labsSeleccionadosIA = computed(() => labsDisponiblesIA.value.filter(l => l.seleccionado));
       const labsPickerAbierto = ref(false);
+      const erroresIA = ref({});
       const labsPickerTriggerRef = ref(null);
       const labsPickerStyle = ref({});
 
@@ -4969,6 +4987,7 @@
         cantidadAdicional.value = 1;
         labsDisponiblesIA.value = [];
         labsPickerAbierto.value = false;
+        erroresIA.value = {};
         nuevaSolicitudInterarea.value = {
           fecha_solicitudInterarea: new Date().toISOString().substring(0, 10),
           areaTematica_origen: '',
@@ -4982,18 +5001,27 @@
       };
 
       const crearSolicitudInterArea = () => {
+          erroresIA.value = {};
+          const errs = {};
+
           if (!nuevaSolicitudInterarea.value.tipo) {
-            alert('Por favor seleccioná el tipo de inter-área.');
-            return;
+            errs.tipo = 'Seleccioná el tipo de inter-área.';
           }
-
+          if (!nuevaSolicitudInterarea.value.inter_areaTematica) {
+            errs.inter_areaTematica = 'Seleccioná el inter-área temática.';
+          }
           if (!serviciosSeleccionados.value.length) {
-            alert('Por favor agregá al menos un servicio antes de crear la solicitud.');
-            return;
+            errs.servicios = 'Agregá al menos un servicio.';
+          }
+          if ((nuevaSolicitudInterarea.value.tipo === 'parcial' || nuevaSolicitudInterarea.value.tipo === 'complementario') && !labsSeleccionadosIA.value.length) {
+            errs.num_labs = 'Seleccioná al menos un número de laboratorio.';
+          }
+          if (!nuevaSolicitudInterarea.value.muestras_solicitudIa?.trim()) {
+            errs.muestras = 'Ingresá las muestras a entregar.';
           }
 
-          if ((nuevaSolicitudInterarea.value.tipo === 'parcial' || nuevaSolicitudInterarea.value.tipo === 'complementario') && !labsSeleccionadosIA.value.length) {
-            alert('Para tipo Parcial o Complementario es obligatorio seleccionar al menos un número de laboratorio.');
+          if (Object.keys(errs).length) {
+            erroresIA.value = errs;
             return;
           }
 
@@ -6284,6 +6312,7 @@
         labsPickerTriggerRef,
         labsPickerStyle,
         abrirLabsPicker,
+        erroresIA,
         abrirSolicitudInterArea,
         cerrarModalSolicitudInterArea,
         mostrarModalSolicitudInterArea,
@@ -7578,6 +7607,18 @@
   border-top: 1px solid #dee2e6;
   font-size: 0.8rem;
   color: #495057;
+}
+.lab-cal-trigger--error {
+  border-color: #dc3545 !important;
+}
+.ia-error-msg {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+.ia-fieldset-disabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 </style>
   
