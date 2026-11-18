@@ -149,9 +149,9 @@ body {
 }
 
 .table td {
-    padding: 15px;
+    padding: 6px 10px;
     vertical-align: middle;
-    text-align: center; /* Centra el texto horizontalmente */
+    text-align: center;
 }
 
 .table th {
@@ -187,7 +187,7 @@ tr.row-selected td {
 }
 
 .bi {
-  font-size: 24px;
+  font-size: 18px;
 }
 
 .modal {
