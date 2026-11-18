@@ -6460,7 +6460,7 @@
   }
 
   /* Headers pegados al tope al hacer scroll vertical */
-  /* Usamos box-shadow en lugar de border para evitar el bug de border-collapse + sticky */
+  /* Usamos box-shadow INSET en lugar de border para evitar el bug border-collapse + sticky */
   .sticky-thead th {
     position: sticky;
     z-index: 20;
@@ -6468,33 +6468,31 @@
     border: none !important;
   }
 
-  /* Fila 1 del encabezado: pegada al tope */
+  /* Fila 1: pegada al tope — separador inferior inset (no empuja fila 2) */
   .sticky-thead tr:first-child th {
     top: 0;
     height: 42px;
     z-index: 25;
     background-color: #026290;
-    box-shadow: 0 1px 0 rgba(255,255,255,0.15); /* borde inferior fila 1 */
+    box-shadow: inset 0 -1px 0 rgba(255,255,255,0.15);
   }
 
-  /* Fila 2 del encabezado: pegada justo debajo de la fila 1 */
+  /* Fila 2: pegada debajo de fila 1 — todos los th tienen separador vertical sutil */
   .sticky-thead tr:nth-child(2) th {
     top: 42px;
     z-index: 20;
     background-color: #026290;
-    box-shadow: 0 2px 0 #014f73; /* borde inferior separador hacia el body */
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.15), inset 0 -2px 0 #014f73;
   }
 
-  /* Separadores de sección dentro del encabezado: línea blanca sutil */
-  /* box-shadow inset para borde derecho — no afectado por border-collapse */
-  .sticky-thead th.add-border-right {
-    box-shadow: inset -1px 0 0 rgba(255,255,255,0.3);
-  }
-  .sticky-thead tr:nth-child(2) th.add-border-right {
-    box-shadow: inset -1px 0 0 rgba(255,255,255,0.3), 0 2px 0 #014f73;
-  }
+  /* Separador de sección (más prominente) en fila 1 */
   .sticky-thead tr:first-child th.add-border-right {
-    box-shadow: inset -1px 0 0 rgba(255,255,255,0.3), 0 1px 0 rgba(255,255,255,0.15);
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(255,255,255,0.15);
+  }
+
+  /* Separador de sección (más prominente) en fila 2 */
+  .sticky-thead tr:nth-child(2) th.add-border-right {
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.4), inset 0 -2px 0 #014f73;
   }
 
   /* Agrega un borde vertical a la derecha de las subcolumnas en el cuerpo */
