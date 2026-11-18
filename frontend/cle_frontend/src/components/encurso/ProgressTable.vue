@@ -6462,8 +6462,8 @@
   /* Headers pegados al tope al hacer scroll vertical */
   .sticky-thead th {
     position: sticky;
-    z-index: 2;
-    /* Quitar bordes internos de Bootstrap en el encabezado oscuro */
+    z-index: 20;
+    background-color: #026290;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;
@@ -6474,14 +6474,16 @@
   .sticky-thead tr:first-child th {
     top: 0;
     height: 42px;
-    z-index: 3;
+    z-index: 25;
+    background-color: #026290;
     border-bottom: 1px solid rgba(255,255,255,0.15) !important;
   }
 
   /* Fila 2 del encabezado: pegada justo debajo de la fila 1 */
   .sticky-thead tr:nth-child(2) th {
     top: 42px;
-    z-index: 2;
+    z-index: 20;
+    background-color: #026290;
     border-bottom: 2px solid #014f73 !important;
   }
 
