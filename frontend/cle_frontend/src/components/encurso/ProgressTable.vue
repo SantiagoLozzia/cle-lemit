@@ -371,7 +371,9 @@
 
             <!-- Columna Inter Area — Fecha / Área -->
             <td v-if="isTecnologicoOrDireccionOrArea" style="text-align:center;">
-              <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row ia-row">
+              <div v-for="ia in fila.solicitudes_interarea" :key="ia.id"
+                class="ciclo-row ia-row"
+                :class="{ 'ia-row-pendiente': iaDebeParpadear(ia) }">
                 <span class="no-wrap-column" style="font-size:0.78rem">{{ ia.fecha }}</span>
                 <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ ia.inter_areaTematica }}</span>
                 <i class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
@@ -3479,6 +3481,23 @@
       const labsSeleccionadosIA = computed(() => labsDisponiblesIA.value.filter(l => l.seleccionado));
       const labsPickerAbierto = ref(false);
       const erroresIA = ref({});
+
+      // IAs ya abiertas esta sesión (persiste en sessionStorage)
+      const iaVistoIds = ref(new Set(
+        JSON.parse(sessionStorage.getItem('ia_vistas') || '[]')
+      ));
+      const marcarIAVista = (iaId) => {
+        iaVistoIds.value.add(iaId);
+        sessionStorage.setItem('ia_vistas', JSON.stringify([...iaVistoIds.value]));
+      };
+      const iaDebeParpadear = (ia) => {
+        if (iaVistoIds.value.has(ia.id)) return false;
+        // Inter-área: tienen una solicitud activa pendiente de atención
+        if (esInterAreaDeIA(ia)) return true;
+        // Área principal: la IA llegó pero aún no la confirmaron
+        if (esPrincipalDeIA(ia) && !ia.confirmado_ap) return true;
+        return false;
+      };
       const labsPickerTriggerRef = ref(null);
       const labsPickerStyle = ref({});
 
@@ -5063,7 +5082,7 @@
       const mostrarModalSolicitudInterArea = ref(false);
 
       const abrirSolicitudInterArea = (ia) => {
-        // ia es el objeto de la solicitud ya mapeado en fetchData
+        marcarIAVista(ia.id);
         nroSolicitudInterArea.value = ia.id;
         fechaSolicitudInterArea.value = ia.fecha;
         areaTematicaOrigen.value = formatAreaTematica(ia.areaTematica_origen);
@@ -6313,6 +6332,7 @@
         labsPickerStyle,
         abrirLabsPicker,
         erroresIA,
+        iaDebeParpadear,
         abrirSolicitudInterArea,
         cerrarModalSolicitudInterArea,
         mostrarModalSolicitudInterArea,
@@ -7101,6 +7121,15 @@
 
   .ia-blink i {
     animation: ia-pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes ia-row-glow {
+    0%, 100% { background-color: transparent; box-shadow: none; }
+    50% { background-color: rgba(2, 98, 144, 0.13); box-shadow: 0 0 0 2px rgba(2, 98, 144, 0.18); }
+  }
+  .ia-row-pendiente {
+    animation: ia-row-glow 1.6s ease-in-out infinite;
+    border-radius: 5px;
   }
 
   /* Botones de tipo de rechazo */
