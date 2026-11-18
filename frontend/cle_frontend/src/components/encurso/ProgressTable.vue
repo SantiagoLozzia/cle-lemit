@@ -86,7 +86,6 @@
             <th colspan="1" class="add-border-right align-middle text-center">Servicios Tecnologicos</th>
             <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
             <th colspan="1" class="add-border-right align-middle text-center">Responsable Area</th>
-            <th colspan="1" class="add-border-right align-middle text-center">Firma AP</th>
             <th colspan="1" class="add-border-right align-middle text-center">Direccion</th>
             <th  v-if="isAdminOrTecnologicoOrDireccion" colspan="1" class="align-middle text-center">Archivo</th>
             <th colspan="1" class="align-middle text-center"></th>
@@ -134,8 +133,6 @@
             <!-- Subcolumnas de Administracion PDF -->
             <th class="add-border-right align-middle text-center">PDF</th>
             <!-- Subcolumnas de Responsable Area -->
-            <th class="add-border-right align-middle text-center">Firma</th>
-            <!-- Subcolumnas de Firma AP -->
             <th class="add-border-right align-middle text-center">Firma</th>
             <!-- Subcolumnas de Direccion -->
             <th class="add-border-right align-middle text-center">Firma</th>
@@ -1141,10 +1138,11 @@
             <!-- Columna Responsable Área - Firma (por ciclo) -->
             <td class="add-border-right">
               <template v-if="!esSoloInterAreaEnFila(fila)">
-              <!-- IA pipeline — Firma Área -->
+              <!-- IA pipeline — Firma Área (inter-área jefe primero, luego jefe área principal) -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'area-ia-' + ia.id" class="ciclo-row" style="height:50px">
+                <!-- Paso 1: firma del jefe inter-área -->
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).pdf_confirmado_admin && !ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).corregir">
-                  <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
+                  <div v-if="isAreaJefe && esInterAreaDeIA(ia)" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupAreaIA(ia.id)" title="Opciones firma IA">
                       <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
                       <span class="st-sd-badge"></span>
@@ -1163,9 +1161,31 @@
                   </div>
                   <i v-else class="bi bi-stopwatch"></i>
                 </template>
-                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area">
+                <!-- Paso 2: firma del jefe área principal -->
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).firma_responsable_ap && !ultimoCicloIA(ia).corregir">
+                  <div v-if="esPrincipalDeIA(ia)" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger" @click.stop="togglePopupAPIA(ia.id)" title="Opciones firma área principal IA">
+                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
+                      <span class="st-sd-badge"></span>
+                    </button>
+                    <div v-if="popupAPIAId === ia.id" class="st-sd-dial">
+                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupAPIAId = null" title="Ver PDF firmado área">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaAPCicloIA(ultimoCicloIA(ia)); popupAPIAId = null" title="Firmar">
+                        <i class="bi bi-pen"></i>
+                      </div>
+                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoAPIA(ultimoCicloIA(ia)); popupAPIAId = null" title="Rechazar">
+                        <i class="bi bi-x-lg"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
+                <!-- Ambas firmas completadas -->
+                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_ap">
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
-                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
                   </div>
@@ -1210,45 +1230,6 @@
                   </div>
                 </template>
               </div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
-              </template>
-            </td>
-
-            <!-- Columna Firma AP (Área Principal) — solo aplica al pipeline IA -->
-            <td class="add-border-right">
-              <template v-if="!esSoloInterAreaEnFila(fila)">
-              <div v-for="ia in fila.solicitudes_interarea" :key="'ap-ia-' + ia.id" class="ciclo-row" style="height:50px">
-                <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_area && !ultimoCicloIA(ia).firma_responsable_ap && !ultimoCicloIA(ia).corregir">
-                  <div v-if="esPrincipalDeIA(ia)" class="st-sd-cell" @click.stop>
-                    <button class="st-sd-trigger" @click.stop="togglePopupAPIA(ia.id)" title="Opciones firma AP">
-                      <i class="bi bi-filetype-pdf" style="font-size:13px;"></i>
-                      <span class="st-sd-badge"></span>
-                    </button>
-                    <div v-if="popupAPIAId === ia.id" class="st-sd-dial">
-                      <div class="st-sd-opcion" style="--rotation: -150deg" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf); popupAPIAId = null" title="Ver PDF firmado área">
-                        <i class="bi bi-eye"></i>
-                      </div>
-                      <div class="st-sd-opcion st-sd-opcion--ok" style="--rotation: -90deg" @click.stop="abrirModalFirmaAPCicloIA(ultimoCicloIA(ia)); popupAPIAId = null" title="Firmar">
-                        <i class="bi bi-pen"></i>
-                      </div>
-                      <div class="st-sd-opcion st-sd-opcion--danger" style="--rotation: -30deg" @click.stop="abrirModalRechazoAPIA(ultimoCicloIA(ia)); popupAPIAId = null" title="Rechazar">
-                        <i class="bi bi-x-lg"></i>
-                      </div>
-                    </div>
-                  </div>
-                  <i v-else class="bi bi-stopwatch"></i>
-                </template>
-                <template v-else-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).firma_responsable_ap">
-                  <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
-                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
-                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
-                  </div>
-                </template>
-                <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
-              </div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row"></div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
               </template>
             </td>
