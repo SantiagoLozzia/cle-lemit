@@ -2184,21 +2184,37 @@
                 <label class="form-label fw-semibold" style="font-size:0.85rem">
                   Números de Laboratorio <span class="text-danger">*</span>
                 </label>
-                <div v-if="labsDisponiblesIA.length" class="lab-picker">
-                  <span
-                    v-for="lab in labsDisponiblesIA"
-                    :key="lab.numero + '/' + lab.anio"
-                    class="lab-pill"
-                    :class="{ 'lab-pill--selected': lab.seleccionado }"
-                    @click="lab.seleccionado = !lab.seleccionado">
-                    {{ lab.numero }}
-                  </span>
+                <div v-if="labsDisponiblesIA.length">
+                  <!-- Botón para abrir/cerrar el selector -->
+                  <button type="button" class="lab-dropdown-toggle" @click="labsPickerAbierto = !labsPickerAbierto">
+                    <span>{{ labsPickerAbierto ? 'Cerrar selector' : 'Seleccionar números de laboratorio' }}</span>
+                    <i class="bi" :class="labsPickerAbierto ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size:0.8rem"></i>
+                  </button>
+                  <!-- Grilla desplegable -->
+                  <div v-if="labsPickerAbierto" class="lab-dropdown-panel">
+                    <div class="lab-dropdown-actions">
+                      <button type="button" class="btn btn-link btn-sm py-0 px-0" @click="labsDisponiblesIA.forEach(l => l.seleccionado = true)">Seleccionar todos</button>
+                      <span class="text-muted" style="font-size:0.75rem">|</span>
+                      <button type="button" class="btn btn-link btn-sm py-0 px-0" @click="labsDisponiblesIA.forEach(l => l.seleccionado = false)">Limpiar</button>
+                    </div>
+                    <div class="lab-dropdown-grid">
+                      <span
+                        v-for="lab in labsDisponiblesIA"
+                        :key="lab.numero + '/' + lab.anio"
+                        class="lab-pill"
+                        :class="{ 'lab-pill--selected': lab.seleccionado }"
+                        @click="lab.seleccionado = !lab.seleccionado">
+                        {{ lab.numero }}
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Resumen en texto simple -->
+                  <div class="lab-resumen-texto" v-if="labsSeleccionadosIA.length">
+                    {{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}
+                  </div>
+                  <p v-else class="text-muted small mb-0 mt-1">Ningún número seleccionado</p>
                 </div>
                 <p v-else class="text-muted small mb-1">Sin números de laboratorio disponibles para este circuito.</p>
-                <small class="text-muted d-block mt-1">
-                  {{ labsSeleccionadosIA.length }} de {{ labsDisponiblesIA.length }} seleccionados
-                  <span v-if="labsDisponiblesIA.length"> · {{ labsDisponiblesIA[0]?.anio }}</span>
-                </small>
               </div>
 
               <div class="mb-3">
@@ -3431,6 +3447,7 @@
       });
       const labsDisponiblesIA = ref([]);
       const labsSeleccionadosIA = computed(() => labsDisponiblesIA.value.filter(l => l.seleccionado));
+      const labsPickerAbierto = ref(false);
       const nroSolicitudInterArea = ref();
       const fechaSolicitudInterArea = ref();
       const areaTematicaOrigen = ref();
@@ -4893,7 +4910,8 @@
           nuevaSolicitudInterarea.value.nro_circuito = fila.nro_circuito;
           nuevaSolicitudInterarea.value.areaTematica_origen = fila.area_tematica;
           mostrarModalCrearSolicitudInterArea.value = true;
-          labsDisponiblesIA.value = parsearRangosLab(fila.rangos_laboratorios, true);
+          labsDisponiblesIA.value = parsearRangosLab(fila.rangos_laboratorios, false);
+          labsPickerAbierto.value = false;
           if (!catalogoAranceles.value.length) {
             try {
               const res = await api.get('/aranceles/todos/');
@@ -4913,6 +4931,7 @@
         arancelAdicional.value = null;
         cantidadAdicional.value = 1;
         labsDisponiblesIA.value = [];
+        labsPickerAbierto.value = false;
         nuevaSolicitudInterarea.value = {
           fecha_solicitudInterarea: new Date().toISOString().substring(0, 10),
           areaTematica_origen: '',
@@ -6224,6 +6243,7 @@
         crearSolicitudInterArea,
         labsDisponiblesIA,
         labsSeleccionadosIA,
+        labsPickerAbierto,
         abrirSolicitudInterArea,
         cerrarModalSolicitudInterArea,
         mostrarModalSolicitudInterArea,
@@ -7427,30 +7447,58 @@
 }
 
 /* Lab picker — grilla estilo almanaque */
-.lab-picker {
+.lab-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #495057;
+  gap: 8px;
+}
+.lab-dropdown-toggle:hover {
+  border-color: #026290;
+  background: #f0f8fc;
+}
+.lab-dropdown-panel {
+  border: 1px solid #ced4da;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: #f8f9fa;
+  padding: 8px 10px 10px;
+}
+.lab-dropdown-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+.lab-dropdown-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 10px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  background: #f8f9fa;
+  gap: 5px;
 }
 .lab-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 36px;
-  height: 32px;
-  padding: 0 8px;
+  height: 30px;
+  padding: 0 7px;
   border: 1.5px solid #adb5bd;
-  border-radius: 6px;
+  border-radius: 5px;
   background: #fff;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
 .lab-pill:hover {
   border-color: #026290;
@@ -7464,6 +7512,12 @@
 .lab-pill--selected:hover {
   background: #015070;
   border-color: #015070;
+}
+.lab-resumen-texto {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #212529;
+  padding: 5px 2px;
 }
 </style>
   
