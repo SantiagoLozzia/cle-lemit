@@ -3468,14 +3468,15 @@
         if (!labsPickerAbierto.value) {
           const rect = labsPickerTriggerRef.value?.getBoundingClientRect();
           if (rect) {
-            const popupWidth = Math.max(rect.width, 300);
+            const popupWidth = 280;
             const spaceBelow = window.innerHeight - rect.bottom - 8;
-            const popupMaxHeight = Math.min(360, spaceBelow > 200 ? spaceBelow : window.innerHeight * 0.5);
-            const top = spaceBelow > 200 ? rect.bottom + 4 : rect.top - popupMaxHeight - 4;
+            const popupMaxHeight = Math.min(320, spaceBelow > 180 ? spaceBelow : window.innerHeight * 0.5);
+            const top = spaceBelow > 180 ? rect.bottom + 4 : rect.top - popupMaxHeight - 4;
+            const left = Math.min(rect.left, window.innerWidth - popupWidth - 8);
             labsPickerStyle.value = {
               position: 'fixed',
               top: top + 'px',
-              left: rect.left + 'px',
+              left: left + 'px',
               width: popupWidth + 'px',
               maxHeight: popupMaxHeight + 'px',
               zIndex: 9000,
