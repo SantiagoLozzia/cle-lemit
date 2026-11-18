@@ -112,7 +112,7 @@ export default {
 @import "~bootstrap-icons/font/bootstrap-icons.css";
 
 html {
-  font-size: 13px;
+  font-size: 81.25%; /* equivale a 13px en base 16px; escala con DPI del sistema */
 }
 
 body {
