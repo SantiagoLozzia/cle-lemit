@@ -3492,10 +3492,15 @@
       };
       const iaDebeParpadear = (ia) => {
         if (iaVistoIds.value.has(ia.id)) return false;
-        // Inter-área: tienen una solicitud activa pendiente de atención
+        // Inter-área: recibieron una solicitud de trabajo pendiente
         if (esInterAreaDeIA(ia)) return true;
-        // Área principal: la IA llegó pero aún no la confirmaron
-        if (esPrincipalDeIA(ia) && !ia.confirmado_ap) return true;
+        // Área principal: solo cuando la inter-área sometió algo que requiere su revisión
+        // (NO cuando acaban de crear la solicitud — eso no es un evento entrante)
+        if (esPrincipalDeIA(ia)) {
+          const ciclo = ultimoCicloIA(ia);
+          if (ia.estado_correc_informe === 'subido') return true;
+          if (ciclo && ciclo.adjunto_informeArea && ciclo.registros_ensayo && ciclo.registros_ensayo.length) return true;
+        }
         return false;
       };
       const labsPickerTriggerRef = ref(null);
