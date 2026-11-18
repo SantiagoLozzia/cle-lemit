@@ -2187,38 +2187,45 @@
                 <div v-if="labsDisponiblesIA.length">
                   <!-- Trigger -->
                   <button type="button"
+                    ref="labsPickerTriggerRef"
                     class="lab-cal-trigger"
                     :class="{ 'lab-cal-trigger--open': labsPickerAbierto }"
-                    @click="labsPickerAbierto = !labsPickerAbierto">
+                    @click="abrirLabsPicker">
                     <span v-if="!labsSeleccionadosIA.length" class="text-muted">Seleccionar números de laboratorio...</span>
                     <span v-else>{{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}</span>
-                    <i class="bi" :class="labsPickerAbierto ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size:0.78rem; flex-shrink:0;"></i>
+                    <i class="bi bi-grid-3x3-gap" style="font-size:0.78rem; flex-shrink:0;"></i>
                   </button>
-                  <!-- Calendario popup (inline pero estilizado como flotante) -->
-                  <div v-if="labsPickerAbierto" class="lab-cal-popup">
-                    <div class="lab-cal-header">
-                      <span class="fw-semibold" style="font-size:0.82rem; color:#026290;">
-                        <i class="bi bi-flask me-1" style="font-size:0.78rem;"></i>
-                        {{ labsDisponiblesIA[0]?.anio }}
-                        <span class="text-muted fw-normal ms-1" style="font-size:0.75rem;">({{ labsDisponiblesIA.length }} números)</span>
-                      </span>
-                      <div class="d-flex gap-2 align-items-center">
-                        <button type="button" class="btn btn-link btn-sm py-0 px-1 text-primary" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = true)">Todos</button>
-                        <button type="button" class="btn btn-link btn-sm py-0 px-1 text-danger" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = false)">Limpiar</button>
-                        <button type="button" class="lab-cal-close" @click.stop="labsPickerAbierto = false">✕</button>
+                  <!-- Popup flotante vía Teleport (position: fixed, encima de todo) -->
+                  <Teleport to="body">
+                    <!-- Overlay transparente para cerrar al hacer click afuera -->
+                    <div v-if="labsPickerAbierto" class="lab-cal-overlay" @click="labsPickerAbierto = false"></div>
+                    <div v-if="labsPickerAbierto" class="lab-cal-popup" :style="labsPickerStyle">
+                      <div class="lab-cal-header">
+                        <span class="fw-semibold" style="font-size:0.82rem; color:#026290;">
+                          Nros de Lab · {{ labsDisponiblesIA[0]?.anio }}
+                          <span class="text-muted fw-normal ms-1" style="font-size:0.75rem;">({{ labsDisponiblesIA.length }})</span>
+                        </span>
+                        <div class="d-flex gap-2 align-items-center">
+                          <button type="button" class="btn btn-link btn-sm py-0 px-1 text-primary" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = true)">Todos</button>
+                          <button type="button" class="btn btn-link btn-sm py-0 px-1 text-danger" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = false)">Limpiar</button>
+                          <button type="button" class="lab-cal-close" @click.stop="labsPickerAbierto = false">✕</button>
+                        </div>
+                      </div>
+                      <div class="lab-cal-grid">
+                        <span
+                          v-for="lab in labsDisponiblesIA"
+                          :key="lab.numero + '/' + lab.anio"
+                          class="lab-cal-cell"
+                          :class="{ 'lab-cal-cell--selected': lab.seleccionado }"
+                          @click.stop="lab.seleccionado = !lab.seleccionado">
+                          {{ lab.numero }}
+                        </span>
+                      </div>
+                      <div v-if="labsSeleccionadosIA.length" class="lab-cal-footer">
+                        {{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}
                       </div>
                     </div>
-                    <div class="lab-cal-grid">
-                      <span
-                        v-for="lab in labsDisponiblesIA"
-                        :key="lab.numero + '/' + lab.anio"
-                        class="lab-cal-cell"
-                        :class="{ 'lab-cal-cell--selected': lab.seleccionado }"
-                        @click="lab.seleccionado = !lab.seleccionado">
-                        {{ lab.numero }}
-                      </span>
-                    </div>
-                  </div>
+                  </Teleport>
                 </div>
                 <p v-else class="text-muted small mb-1">Sin números de laboratorio disponibles para este circuito.</p>
               </div>
@@ -3454,6 +3461,29 @@
       const labsDisponiblesIA = ref([]);
       const labsSeleccionadosIA = computed(() => labsDisponiblesIA.value.filter(l => l.seleccionado));
       const labsPickerAbierto = ref(false);
+      const labsPickerTriggerRef = ref(null);
+      const labsPickerStyle = ref({});
+
+      const abrirLabsPicker = () => {
+        if (!labsPickerAbierto.value) {
+          const rect = labsPickerTriggerRef.value?.getBoundingClientRect();
+          if (rect) {
+            const popupWidth = Math.max(rect.width, 300);
+            const spaceBelow = window.innerHeight - rect.bottom - 8;
+            const popupMaxHeight = Math.min(360, spaceBelow > 200 ? spaceBelow : window.innerHeight * 0.5);
+            const top = spaceBelow > 200 ? rect.bottom + 4 : rect.top - popupMaxHeight - 4;
+            labsPickerStyle.value = {
+              position: 'fixed',
+              top: top + 'px',
+              left: rect.left + 'px',
+              width: popupWidth + 'px',
+              maxHeight: popupMaxHeight + 'px',
+              zIndex: 9000,
+            };
+          }
+        }
+        labsPickerAbierto.value = !labsPickerAbierto.value;
+      };
       const nroSolicitudInterArea = ref();
       const fechaSolicitudInterArea = ref();
       const areaTematicaOrigen = ref();
@@ -6250,6 +6280,9 @@
         labsDisponiblesIA,
         labsSeleccionadosIA,
         labsPickerAbierto,
+        labsPickerTriggerRef,
+        labsPickerStyle,
+        abrirLabsPicker,
         abrirSolicitudInterArea,
         cerrarModalSolicitudInterArea,
         mostrarModalSolicitudInterArea,
@@ -7473,18 +7506,18 @@
 .lab-cal-trigger--open {
   border-color: #026290;
 }
-.lab-cal-trigger--open {
-  border-radius: 6px 6px 0 0;
-  border-bottom-color: transparent;
+.lab-cal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8999;
 }
 .lab-cal-popup {
   background: #fff;
-  border: 1px solid #026290;
-  border-top: none;
-  border-radius: 0 0 10px 10px;
-  box-shadow: 0 6px 20px rgba(2, 98, 144, 0.13);
-  padding: 12px 14px 14px;
-  margin-bottom: 4px;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 12px 14px;
+  overflow-y: auto;
 }
 .lab-cal-header {
   display: flex;
@@ -7518,15 +7551,14 @@
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  border-radius: 50%;
-  font-size: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
   color: #212529;
   transition: background 0.1s, color 0.1s;
   min-width: 0;
-  padding: 2px;
 }
 .lab-cal-cell:hover {
   background: #d4edf7;
@@ -7538,6 +7570,13 @@
 }
 .lab-cal-cell--selected:hover {
   background: #015070;
+}
+.lab-cal-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #dee2e6;
+  font-size: 0.8rem;
+  color: #495057;
 }
 </style>
   
