@@ -2185,34 +2185,40 @@
                   Números de Laboratorio <span class="text-danger">*</span>
                 </label>
                 <div v-if="labsDisponiblesIA.length">
-                  <!-- Botón para abrir/cerrar el selector -->
-                  <button type="button" class="lab-dropdown-toggle" @click="labsPickerAbierto = !labsPickerAbierto">
-                    <span>{{ labsPickerAbierto ? 'Cerrar selector' : 'Seleccionar números de laboratorio' }}</span>
-                    <i class="bi" :class="labsPickerAbierto ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size:0.8rem"></i>
+                  <!-- Trigger -->
+                  <button type="button"
+                    class="lab-cal-trigger"
+                    :class="{ 'lab-cal-trigger--open': labsPickerAbierto }"
+                    @click="labsPickerAbierto = !labsPickerAbierto">
+                    <span v-if="!labsSeleccionadosIA.length" class="text-muted">Seleccionar números de laboratorio...</span>
+                    <span v-else>{{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}</span>
+                    <i class="bi" :class="labsPickerAbierto ? 'bi-chevron-up' : 'bi-chevron-down'" style="font-size:0.78rem; flex-shrink:0;"></i>
                   </button>
-                  <!-- Grilla desplegable -->
-                  <div v-if="labsPickerAbierto" class="lab-dropdown-panel">
-                    <div class="lab-dropdown-actions">
-                      <button type="button" class="btn btn-link btn-sm py-0 px-0" @click="labsDisponiblesIA.forEach(l => l.seleccionado = true)">Seleccionar todos</button>
-                      <span class="text-muted" style="font-size:0.75rem">|</span>
-                      <button type="button" class="btn btn-link btn-sm py-0 px-0" @click="labsDisponiblesIA.forEach(l => l.seleccionado = false)">Limpiar</button>
+                  <!-- Calendario popup (inline pero estilizado como flotante) -->
+                  <div v-if="labsPickerAbierto" class="lab-cal-popup">
+                    <div class="lab-cal-header">
+                      <span class="fw-semibold" style="font-size:0.82rem; color:#026290;">
+                        <i class="bi bi-flask me-1" style="font-size:0.78rem;"></i>
+                        {{ labsDisponiblesIA[0]?.anio }}
+                        <span class="text-muted fw-normal ms-1" style="font-size:0.75rem;">({{ labsDisponiblesIA.length }} números)</span>
+                      </span>
+                      <div class="d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-link btn-sm py-0 px-1 text-primary" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = true)">Todos</button>
+                        <button type="button" class="btn btn-link btn-sm py-0 px-1 text-danger" style="font-size:0.75rem" @click.stop="labsDisponiblesIA.forEach(l => l.seleccionado = false)">Limpiar</button>
+                        <button type="button" class="lab-cal-close" @click.stop="labsPickerAbierto = false">✕</button>
+                      </div>
                     </div>
-                    <div class="lab-dropdown-grid">
+                    <div class="lab-cal-grid">
                       <span
                         v-for="lab in labsDisponiblesIA"
                         :key="lab.numero + '/' + lab.anio"
-                        class="lab-pill"
-                        :class="{ 'lab-pill--selected': lab.seleccionado }"
+                        class="lab-cal-cell"
+                        :class="{ 'lab-cal-cell--selected': lab.seleccionado }"
                         @click="lab.seleccionado = !lab.seleccionado">
                         {{ lab.numero }}
                       </span>
                     </div>
                   </div>
-                  <!-- Resumen en texto simple -->
-                  <div class="lab-resumen-texto" v-if="labsSeleccionadosIA.length">
-                    {{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}
-                  </div>
-                  <p v-else class="text-muted small mb-0 mt-1">Ningún número seleccionado</p>
                 </div>
                 <p v-else class="text-muted small mb-1">Sin números de laboratorio disponibles para este circuito.</p>
               </div>
@@ -7447,7 +7453,7 @@
 }
 
 /* Lab picker — grilla estilo almanaque */
-.lab-dropdown-toggle {
+.lab-cal-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7459,65 +7465,79 @@
   font-size: 0.85rem;
   cursor: pointer;
   color: #495057;
+  text-align: left;
   gap: 8px;
+  transition: border-color 0.12s;
 }
-.lab-dropdown-toggle:hover {
+.lab-cal-trigger:hover,
+.lab-cal-trigger--open {
   border-color: #026290;
-  background: #f0f8fc;
 }
-.lab-dropdown-panel {
-  border: 1px solid #ced4da;
+.lab-cal-trigger--open {
+  border-radius: 6px 6px 0 0;
+  border-bottom-color: transparent;
+}
+.lab-cal-popup {
+  background: #fff;
+  border: 1px solid #026290;
   border-top: none;
-  border-radius: 0 0 6px 6px;
-  background: #f8f9fa;
-  padding: 8px 10px 10px;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 6px 20px rgba(2, 98, 144, 0.13);
+  padding: 12px 14px 14px;
+  margin-bottom: 4px;
 }
-.lab-dropdown-actions {
+.lab-cal-header {
   display: flex;
-  gap: 8px;
   align-items: center;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dee2e6;
+}
+.lab-cal-close {
+  background: none;
+  border: none;
   font-size: 0.8rem;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
 }
-.lab-dropdown-grid {
+.lab-cal-close:hover {
+  background: #f0f0f0;
+  color: #212529;
+}
+.lab-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.lab-cal-cell {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.lab-pill {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  height: 30px;
-  padding: 0 7px;
-  border: 1.5px solid #adb5bd;
-  border-radius: 5px;
-  background: #fff;
-  font-size: 0.8rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   user-select: none;
-  transition: background 0.1s, border-color 0.1s, color 0.1s;
+  color: #212529;
+  transition: background 0.1s, color 0.1s;
+  min-width: 0;
+  padding: 2px;
 }
-.lab-pill:hover {
-  border-color: #026290;
-  background: #e8f4f8;
+.lab-cal-cell:hover {
+  background: #d4edf7;
+  color: #026290;
 }
-.lab-pill--selected {
+.lab-cal-cell--selected {
   background: #026290;
-  border-color: #026290;
   color: #fff;
 }
-.lab-pill--selected:hover {
+.lab-cal-cell--selected:hover {
   background: #015070;
-  border-color: #015070;
-}
-.lab-resumen-texto {
-  margin-top: 6px;
-  font-size: 0.85rem;
-  color: #212529;
-  padding: 5px 2px;
 }
 </style>
   
