@@ -6454,20 +6454,18 @@
   /* Contenedor de tabla: crece para llenar el espacio restante bajo los filtros */
   .table-scroll-wrapper {
     flex: 1;
-    min-height: 0; /* permite que flex children se encojan */
+    min-height: 0;
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: scroll; /* siempre visible para evitar layout shift al aparecer */
   }
 
   /* Headers pegados al tope al hacer scroll vertical */
+  /* Usamos box-shadow en lugar de border para evitar el bug de border-collapse + sticky */
   .sticky-thead th {
     position: sticky;
     z-index: 20;
     background-color: #026290;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
+    border: none !important;
   }
 
   /* Fila 1 del encabezado: pegada al tope */
@@ -6476,7 +6474,7 @@
     height: 42px;
     z-index: 25;
     background-color: #026290;
-    border-bottom: 1px solid rgba(255,255,255,0.15) !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.15); /* borde inferior fila 1 */
   }
 
   /* Fila 2 del encabezado: pegada justo debajo de la fila 1 */
@@ -6484,12 +6482,19 @@
     top: 42px;
     z-index: 20;
     background-color: #026290;
-    border-bottom: 2px solid #014f73 !important;
+    box-shadow: 0 2px 0 #014f73; /* borde inferior separador hacia el body */
   }
 
   /* Separadores de sección dentro del encabezado: línea blanca sutil */
+  /* box-shadow inset para borde derecho — no afectado por border-collapse */
   .sticky-thead th.add-border-right {
-    border-right: 1px solid rgba(255,255,255,0.3) !important;
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.3);
+  }
+  .sticky-thead tr:nth-child(2) th.add-border-right {
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.3), 0 2px 0 #014f73;
+  }
+  .sticky-thead tr:first-child th.add-border-right {
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.3), 0 1px 0 rgba(255,255,255,0.15);
   }
 
   /* Agrega un borde vertical a la derecha de las subcolumnas en el cuerpo */
