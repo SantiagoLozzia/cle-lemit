@@ -919,7 +919,7 @@
                   <!-- Con informe servicio, sin corrección -->
                   <template v-else-if="ciclo.adjunto_informeServicio && !ciclo.corregir">
                     <div style="position:relative; display:inline-flex; align-items:center;">
-                      <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }" title="Informe de servicio"></i>
+                      <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:22px;" title="Informe de servicio"></i>
                       <i class="bi bi-check-circle-fill"
                          style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                       <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'st' && c.estado === 'pendiente' && c.destinatario === 'administracion')"
@@ -1054,7 +1054,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio)"
                        title="Ver informe de servicio (Word)">
-                    <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
+                    <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:22px;"></i>
                     <i class="bi bi-check-circle-fill"
                        style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
@@ -1128,7 +1128,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio_pdf)"
                        title="Ver PDF confirmado por Administración">
-                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:22px;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
@@ -1222,7 +1222,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por responsable de área">
-                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:22px;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                     <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'area' && c.estado === 'pendiente' && c.destinatario === 'administracion')"
                        class="bi bi-sticky-fill"
@@ -1296,7 +1296,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por dirección">
-                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
+                    <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:22px;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                     <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'direccion' && c.estado === 'pendiente' && c.destinatario === 'administracion')"
                        class="bi bi-sticky-fill"
