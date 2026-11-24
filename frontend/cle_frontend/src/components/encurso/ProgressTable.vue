@@ -469,7 +469,7 @@
                     <i class="bi bi-clock" style="color:#e67e22"></i>
                   </span>
                   <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe subido">
-                    <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
+                    <i class="bi bi-file-earmark-check-fill" style="color:#026290"></i>
                   </span>
                   <span v-else class="ia-estado">
                     <label :for="'ia-informe-area-' + ia.id" style="cursor:pointer;" title="Subir informe inter-área">
@@ -510,7 +510,7 @@
                       <button class="btn btn-xs btn-success ms-1" style="font-size:0.65rem;padding:1px 4px" @click="confirmarCorreccionRegistrosAP(ia)">OK</button>
                     </span>
                     <span v-else-if="ia.estado_correc_registros === 'confirmado'" class="ia-estado" title="Corrección de registros confirmada">
-                      <i class="bi bi-check-circle-fill" style="color:#27ae60"></i>
+                      <i class="bi bi-check-circle-fill" style="color:#026290"></i>
                     </span>
                     <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length && !ia.estado_correc_informe" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
                       <i class="bi bi-circle-fill" style="color:#2980b9"></i>
@@ -527,7 +527,7 @@
                       <i class="bi bi-clock" style="color:#e67e22"></i>
                     </span>
                     <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros subidos">
-                      <i class="bi bi-file-earmark-check-fill" style="color:#27ae60"></i>
+                      <i class="bi bi-file-earmark-check-fill" style="color:#026290"></i>
                     </span>
                     <span v-else class="ia-estado">
                       <label :for="'ia-registros-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir registros de ensayo">
@@ -609,7 +609,7 @@
                        @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                   </span>
                   <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap" style="position:relative; display:inline-flex; align-items:center;">
-                    <i class="bi bi-file-earmark-check-fill action-icon" style="color:#198754; cursor:pointer;"
+                    <i class="bi bi-file-earmark-check-fill action-icon" style="color:#026290; cursor:pointer;"
                        @click.stop="togglePopupInformeArea(ciclo.id)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
                     <i v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada"
@@ -781,7 +781,7 @@
                       <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:16px; cursor:pointer;"
                          @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)" title="Ver Word IA"></i>
                       <i class="bi bi-check-circle-fill"
-                         style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                         style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                     </div>
                   </template>
                 </template>
@@ -921,7 +921,7 @@
                     <div style="position:relative; display:inline-flex; align-items:center;">
                       <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }" title="Informe de servicio"></i>
                       <i class="bi bi-check-circle-fill"
-                         style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                         style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                       <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'st' && c.estado === 'pendiente' && c.destinatario === 'administracion')"
                          class="bi bi-sticky-fill"
                          style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#9c7cc7; cursor:pointer; z-index:10;"
@@ -989,7 +989,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)">
                     <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:16px;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
@@ -1056,7 +1056,7 @@
                        title="Ver informe de servicio (Word)">
                     <i class="bi bi-file-earmark-word" style="color:#2b579a;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
                     <i class="bi bi-check-circle-fill"
-                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
               </div>
@@ -1095,7 +1095,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
@@ -1129,7 +1129,7 @@
                        @click.stop="abrirArchivo(ciclo.adjunto_informeServicio_pdf)"
                        title="Ver PDF confirmado por Administración">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
               </div>
@@ -1189,7 +1189,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
@@ -1223,7 +1223,7 @@
                        @click.stop="abrirArchivo(ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por responsable de área">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                     <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'area' && c.estado === 'pendiente' && c.destinatario === 'administracion')"
                        class="bi bi-sticky-fill"
                        style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#ffc107; cursor:pointer; z-index:10;"
@@ -1265,7 +1265,7 @@
                   <div style="position:relative; display:inline-flex; align-items:center; cursor:pointer;"
                        @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_firmado_direccion || ultimoCicloIA(ia).adjunto_firmado_ap || ultimoCicloIA(ia).adjunto_firmado_area || ultimoCicloIA(ia).adjunto_informeServicio_pdf)">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290; font-size:16px;"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </div>
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
@@ -1297,7 +1297,7 @@
                        @click.stop="abrirArchivo(ciclo.adjunto_firmado_direccion || ciclo.adjunto_firmado_area || ciclo.adjunto_informeServicio_pdf)"
                        title="Ver informe firmado por dirección">
                     <i class="bi bi-filetype-pdf action-icon" style="color:#026290;" :style="{ fontSize: ciclo.tipo === 'parcial' ? '16px' : '22px' }"></i>
-                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#198754; z-index:10;"></i>
+                    <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                     <i v-if="ciclo.historial_correcciones && ciclo.historial_correcciones.some(c => c.tipo === 'direccion' && c.estado === 'pendiente' && c.destinatario === 'administracion')"
                        class="bi bi-sticky-fill"
                        style="position:absolute; top:-5px; left:calc(100% + 9px); font-size:12px; color:#dc3545; cursor:pointer; z-index:10;"
