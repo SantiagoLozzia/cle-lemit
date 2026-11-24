@@ -256,12 +256,12 @@
                 <div v-if="fila.pago !== undefined && fila.pago !== null">
                   <div v-if="isAdministracion">
                       <span @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;"
-                            :class="[labelPagoBadgeClass(fila.pago), pendienteFactura(fila) !== null && !pagoEsCompleto(fila.pago) ? 'pago-pulse' : '']">
+                            :class="[labelPagoBadgeClass(fila.pago), fila.adjuntos_factura && fila.adjuntos_factura.length > 0 && !pagoEsCompleto(fila.pago) ? 'pago-pulse' : '']">
                         {{ labelPago(fila.pago) }}
                       </span>
                   </div>
                   <div v-else>
-                      <span :class="[labelPagoBadgeClass(fila.pago), pendienteFactura(fila) !== null && !pagoEsCompleto(fila.pago) ? 'pago-pulse' : '']">{{ labelPago(fila.pago) }}</span>
+                      <span :class="[labelPagoBadgeClass(fila.pago), fila.adjuntos_factura && fila.adjuntos_factura.length > 0 && !pagoEsCompleto(fila.pago) ? 'pago-pulse' : '']">{{ labelPago(fila.pago) }}</span>
                   </div>
                 </div>
             </td>
