@@ -469,7 +469,7 @@
                     <i class="bi bi-clock" style="color:#e67e22"></i>
                   </span>
                   <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe subido">
-                    <i class="bi bi-filetype-docx" style="color:#026290"></i>
+                    <i class="bi bi-file-earmark-word" style="color:#026290"></i>
                   </span>
                   <span v-else class="ia-estado">
                     <label :for="'ia-informe-area-' + ia.id" style="cursor:pointer;" title="Subir informe inter-área">
@@ -483,7 +483,7 @@
                 <template v-else>
                   <!-- Resto: ve estado genérico -->
                   <span v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe inter-área cargado">
-                    <i class="bi bi-filetype-docx" style="color:#026290"></i>
+                    <i class="bi bi-file-earmark-word" style="color:#026290"></i>
                   </span>
                   <span v-else class="ia-estado" title="Esperando informe">
                     <i class="bi bi-clock" style="color:#95a5a6"></i>
@@ -609,7 +609,7 @@
                        @click.stop="abrirModalVerRechazoST(ciclo)" title="Ver nota de rechazo de ST"></i>
                   </span>
                   <span v-else-if="ciclo.adjunto_informeArea" class="attachment-wrap" style="position:relative; display:inline-flex; align-items:center;">
-                    <i class="bi bi-filetype-docx action-icon" style="color:#026290; cursor:pointer;"
+                    <i class="bi bi-file-earmark-word action-icon" style="color:#026290; cursor:pointer;"
                        @click.stop="togglePopupInformeArea(ciclo.id)"
                        :title="'Informe ' + (ciclo.tipo === 'parcial' ? 'Parcial' : ciclo.tipo === 'complementario' ? 'Complementario' : 'Final') + ' ' + ciclo.numero"></i>
                     <i v-if="ciclo.rechazo_area_destino === 'area' && !ciclo.revision_confirmada"
