@@ -256,12 +256,12 @@
                 <div v-if="fila.pago !== undefined && fila.pago !== null">
                   <div v-if="isAdministracion">
                       <span @click="abrirModalPagoLegajo(fila)" style="cursor: pointer;"
-                            :class="labelPagoBadgeClass(fila.pago)">
+                            :class="[labelPagoBadgeClass(fila.pago), fila.tieneFacturas && !pagoEsCompleto(fila.pago) ? 'pago-pulse' : '']">
                         {{ labelPago(fila.pago) }}
                       </span>
                   </div>
                   <div v-else>
-                      <span :class="labelPagoBadgeClass(fila.pago)">{{ labelPago(fila.pago) }}</span>
+                      <span :class="[labelPagoBadgeClass(fila.pago), fila.tieneFacturas && !pagoEsCompleto(fila.pago) ? 'pago-pulse' : '']">{{ labelPago(fila.pago) }}</span>
                   </div>
                 </div>
             </td>
@@ -7150,6 +7150,14 @@
   .ia-row-pendiente {
     animation: ia-row-glow 1.6s ease-in-out infinite;
     border-radius: 5px;
+  }
+
+  @keyframes pago-pulse-anim {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.65; transform: scale(1.08); }
+  }
+  .pago-pulse {
+    animation: pago-pulse-anim 1.2s ease-in-out infinite;
   }
 
   /* Botones de tipo de rechazo */
