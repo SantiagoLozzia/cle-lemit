@@ -526,24 +526,30 @@
                     <span v-else-if="ia.estado_correc_registros === 'subido'" class="ia-estado" title="Corrección enviada">
                       <i class="bi bi-clock" style="color:#e67e22"></i>
                     </span>
-                    <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros subidos">
-                      <i class="bi bi-file-earmark-check-fill" style="color:#026290"></i>
-                    </span>
-                    <span v-else class="ia-estado">
-                      <label :for="'ia-registros-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir registros de ensayo">
-                        <i class="bi bi-paperclip action-icon"></i>
-                      </label>
-                      <input :id="'ia-registros-' + ultimoCicloIA(ia).id" style="display:none;" type="file"
-                             @change="subirRegistroEnsayoCicloIA($event, ultimoCicloIA(ia))">
-                    </span>
+                    <AttachmentCell v-else
+                      :files="ultimoCicloIA(ia).registros_ensayo || []"
+                      :can-upload="true"
+                      :can-delete="true"
+                      :input-id="'ia-registros-' + ultimoCicloIA(ia).id"
+                      file-icon="bi bi-folder-check"
+                      empty-icon="bi bi-folder-plus"
+                      tooltip-label="Registros IA"
+                      @upload="subirRegistroEnsayoCicloIA($event, ultimoCicloIA(ia))"
+                      @delete="eliminarRegistroEnsayoCicloIA"
+                    />
                   </template>
                   <template v-else>
-                    <span v-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros cargados">
-                      <i class="bi bi-file-earmark-text" style="color:#2980b9"></i>
-                    </span>
-                    <span v-else class="ia-estado" title="Esperando registros">
-                      <i class="bi bi-clock" style="color:#95a5a6"></i>
-                    </span>
+                    <AttachmentCell
+                      :files="ultimoCicloIA(ia).registros_ensayo || []"
+                      :can-upload="false"
+                      :can-delete="false"
+                      :input-id="'ia-registros-view-' + ultimoCicloIA(ia).id"
+                      file-icon="bi bi-folder-check"
+                      empty-icon="bi bi-stopwatch"
+                      tooltip-label="Registros IA"
+                      @upload="() => {}"
+                      @delete="() => {}"
+                    />
                   </template>
                 </template>
               </div>
@@ -5180,6 +5186,14 @@
         }
       };
 
+      const eliminarRegistroEnsayoCicloIA = async (id) => {
+        if (!confirm('¿Eliminar el registro de ensayo?')) return;
+        try {
+          await api.delete(`/encurso/ia/registro_ensayo/${id}/`);
+          fetchData();
+        } catch (e) { console.error('Error al eliminar registro ensayo IA:', e); }
+      };
+
       // Inter Area — confirmación inicial por área principal
       const confirmarInterareaPrincipal = async (ia) => {
         try {
@@ -6360,6 +6374,7 @@
         // Acciones inter-área
         subirInformeAreaCicloIA,
         subirRegistroEnsayoCicloIA,
+        eliminarRegistroEnsayoCicloIA,
         // Acciones área principal
         confirmarInterareaPrincipal,
         confirmarCorreccionInformeAP,
