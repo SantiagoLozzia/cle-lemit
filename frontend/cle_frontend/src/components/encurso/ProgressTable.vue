@@ -430,7 +430,7 @@
                       </div>
                     </div>
                   </div>
-                  <div v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="st-sd-cell ia-estado" @click.stop>
+                  <div v-else-if="!ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="st-sd-cell ia-estado" @click.stop>
                     <button class="st-sd-trigger ia-blink" @click.stop="togglePopupConfirmIA(ia.id)" title="Ver / Confirmar / Rechazar" style="border-color:#2980b9;color:#2980b9;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
                       <span class="st-sd-badge" style="background:#2980b9;"></span>
