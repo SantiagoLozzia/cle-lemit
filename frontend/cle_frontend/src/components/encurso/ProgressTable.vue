@@ -780,13 +780,24 @@
               <div v-for="ia in fila.solicitudes_interarea" :key="'adm-ia-' + ia.id" class="ciclo-row" style="height:50px">
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia)">
                   <template v-if="!ultimoCicloIA(ia).adjunto_informeServicio && !ultimoCicloIA(ia).corregir">
-                    <div v-if="isAdministracion">
-                      <label :for="'ia-inf-serv-' + ultimoCicloIA(ia).id" style="cursor:pointer;" title="Subir informe inter-área (formato)">
-                        <i class="bi bi-paperclip action-icon"></i>
-                      </label>
-                      <input :id="'ia-inf-serv-' + ultimoCicloIA(ia).id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="subirInformeServicioCicloIA($event, ultimoCicloIA(ia))">
+                    <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormatoIA(ultimoCicloIA(ia).id)" title="Formato institucional IA pendiente" style="border-color:#2b579a; color:#2b579a;">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                        <span class="st-sd-badge" style="background:#2b579a;"></span>
+                      </button>
+                      <div v-if="popupFormatoIAId === ultimoCicloIA(ia).id" class="st-sd-dial" @click.stop>
+                        <div class="st-sd-opcion" style="--rotation: -120deg"
+                             @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupFormatoIAId = null" title="Ver informe IA">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="st-sd-opcion" style="--rotation: -60deg" title="Subir formato institucional">
+                          <label :for="'ia-inf-serv-' + ultimoCicloIA(ia).id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                            <i class="bi bi-upload"></i>
+                          </label>
+                          <input :id="'ia-inf-serv-' + ultimoCicloIA(ia).id" type="file" style="display:none;" accept=".doc,.docx,.odt,.rtf"
+                                 @change="subirInformeServicioCicloIA($event, ultimoCicloIA(ia)); popupFormatoIAId = null">
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
@@ -857,13 +868,25 @@
                 <template v-if="ciclo.adjunto_informeArea && ciclo.registros_ensayo && ciclo.registros_ensayo.length > 0">
                   <!-- Sin informe servicio, sin corrección pendiente -->
                   <template v-if="!ciclo.adjunto_informeServicio && !ciclo.corregir">
-                    <div v-if="isAdministracion">
-                      <label :for="'inf-serv-ciclo-' + ciclo.id" style="cursor:pointer;" title="Subir informe servicio">
-                        <i class="bi bi-paperclip action-icon"></i>
-                      </label>
-                      <input :id="'inf-serv-ciclo-' + ciclo.id" style="display:none;" type="file"
-                             accept=".doc,.docx,.odt,.rtf"
-                             @change="subirInformeServicioCiclo($event, ciclo)">
+                    <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                      <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormato(ciclo.id)" title="Formato institucional pendiente" style="border-color:#2b579a; color:#2b579a;">
+                        <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
+                        <span class="st-sd-badge" style="background:#2b579a;"></span>
+                      </button>
+                      <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial" @click.stop>
+                        <div class="st-sd-opcion" style="--rotation: -120deg"
+                             @click.stop="abrirArchivo(ciclo.adjunto_informeArea); popupFormatoId = null" title="Ver informe área">
+                          <i class="bi bi-eye"></i>
+                        </div>
+                        <div class="st-sd-opcion" style="--rotation: -60deg" title="Subir formato institucional">
+                          <label :for="'inf-serv-ciclo-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                            <i class="bi bi-upload"></i>
+                          </label>
+                          <input :id="'inf-serv-ciclo-' + ciclo.id" style="display:none;" type="file"
+                                 accept=".doc,.docx,.odt,.rtf"
+                                 @change="subirInformeServicioCiclo($event, ciclo); popupFormatoId = null">
+                        </div>
+                      </div>
                     </div>
                     <i v-else class="bi bi-stopwatch"></i>
                   </template>
