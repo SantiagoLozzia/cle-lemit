@@ -78,7 +78,8 @@
             <th v-if="isAdminOrTecnologicoOrDireccion" colspan="6" class="add-border-right align-middle text-center">Legajo</th>
             <th v-if="isTecnologicoOrDireccion" colspan="3" class="add-border-right align-middle text-center">Recepcion</th>
             <th v-if="isTecnologicoOrDireccion" colspan="2" class="add-border-right align-middle text-center">Orden de Servicio</th>
-            <th v-if="isAreaJefe || isAreaStandard" colspan="1" class="add-border-right align-middle text-center">Legajo</th>
+            <th v-if="isAreaJefe || isAreaStandard" colspan="1" class="align-middle text-center">Legajo</th>
+            <th v-if="isAreaJefe || isAreaStandard" colspan="1" class="add-border-right align-middle text-center">Orden de Servicio</th>
             <th v-if="isTecnologicoOrDireccionOrArea" colspan="4" class="add-border-right align-middle text-center">Inter Area</th>
             <th colspan="6" class="add-border-right align-middle text-center">Informe de Area</th>
             <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
@@ -112,8 +113,9 @@
             <!-- Subcolumnas de Orden de Servicio -->
             <th v-if="isTecnologicoOrDireccion" class="align-middle text-center">Fecha</th>
             <th v-if="isTecnologicoOrDireccion" class="add-border-right align-middle text-center">ST-05 Orden</th>
-            <!-- Subcolumna N° Legajo para área -->
-            <th v-if="isAreaJefe || isAreaStandard" class="add-border-right align-middle text-center">N°</th>
+            <!-- Subcolumnas Legajo + OS para área -->
+            <th v-if="isAreaJefe || isAreaStandard" class="align-middle text-center">N°</th>
+            <th v-if="isAreaJefe || isAreaStandard" class="add-border-right align-middle text-center">OS</th>
             <!-- Subcolumnas de Inter Area -->
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
@@ -365,8 +367,21 @@
             </td>
 
             <!-- N° Legajo para área e inter-área -->
-            <td v-if="isAreaJefe || isAreaStandard" class="add-border-right" style="text-align:center; vertical-align:middle; font-weight:bold; white-space:nowrap;">
+            <td v-if="isAreaJefe || isAreaStandard" style="text-align:center; vertical-align:middle; font-weight:bold; white-space:nowrap;">
               {{ fila.nro_legajo || '—' }}
+            </td>
+            <!-- Orden de Servicio para área (solo si es el área principal, no inter-área) -->
+            <td v-if="isAreaJefe || isAreaStandard" class="add-border-right" style="text-align:center; vertical-align:middle;">
+              <template v-if="!esSoloInterAreaEnFila(fila) && fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
+                <div style="position:relative; display:inline-block;">
+                  <i class="bi bi-clipboard2" style="cursor:pointer;"
+                     :style="fila.os_modificada ? 'color:#b8860b;' : ''"
+                     :title="fila.os_modificada ? 'Orden de Servicio modificada — hay cambios pendientes de revisar' : 'Ver Orden de Servicio'"
+                     @click="abrirOrdenServicio(fila)"></i>
+                  <span v-if="fila.os_modificada"
+                        style="position:absolute; top:-4px; right:-4px; width:8px; height:8px; border-radius:50%; background:#ffc107; display:block;"></span>
+                </div>
+              </template>
             </td>
 
             <!-- Columna Inter Area — Fecha / Área -->
