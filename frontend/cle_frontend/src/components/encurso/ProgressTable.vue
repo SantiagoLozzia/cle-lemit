@@ -1602,7 +1602,7 @@
                 <span class="lg-value">{{ nombreSolicitante }}</span>
               </div>
               <div class="lg-field">
-                <span class="lg-label">Rango N° Laboratorios</span>
+                <span class="lg-label">Números de Laboratorio</span>
                 <span class="lg-value">{{ rangosLaboratorios }}</span>
               </div>
             </div>
@@ -1830,7 +1830,7 @@
                 <input v-model="legajoOS" type="text" readonly class="form-control" required />
               </div>
               <div class="mb-3">
-                <label class="form-label">Rangos Laboratorios:</label>
+                <label class="form-label">Números de Laboratorio:</label>
                 <input v-model="rangosOS" type="text" readonly class="form-control" required />
                 <div v-if="osModificadaActual && nuevoRangoOS" class="mt-1">
                   <span style="background:#fff3cd; border:1px solid #ffc107; padding:2px 10px; border-radius:4px; font-size:13px; font-weight:600;">
@@ -1929,7 +1929,7 @@
               </div>
 
               <div class="mb-3">
-                <label for="rangosOS" class="form-label text-left">Rangos Laboratorios:</label>
+                <label for="rangosOS" class="form-label text-left">Números de Laboratorio:</label>
                 <input v-model="rangosOS" type="text" class="form-control" id="rangosOS" name="rangosOS" readonly required />
               </div>
 
