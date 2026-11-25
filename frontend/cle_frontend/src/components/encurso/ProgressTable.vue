@@ -1169,7 +1169,7 @@
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
-                    <button class="st-sd-trigger" @click.stop="togglePopupPDFAdmin(ciclo.id)" title="Ver / Convertir a PDF"
+                    <button class="st-sd-trigger ia-blink" @click.stop="togglePopupPDFAdmin(ciclo.id)" title="Formato institucional pendiente — Ver / Convertir a PDF"
                             style="border-color:#2b579a; color:#2b579a;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
                       <span class="st-sd-badge"></span>
