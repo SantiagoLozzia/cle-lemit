@@ -530,10 +530,17 @@
                     <span v-else-if="ia.estado_correc_registros === 'confirmado'" class="ia-estado" title="Corrección de registros confirmada">
                       <i class="bi bi-check-circle-fill" style="color:#026290"></i>
                     </span>
-                    <span v-else-if="ia.confirmado_ap && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length" class="ia-estado" title="Registros confirmados por área principal" style="position:relative; display:inline-flex; align-items:center;">
-                      <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:22px;"></i>
-                      <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
-                    </span>
+                    <AttachmentCell v-else-if="ia.confirmado_ap && ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length"
+                      :files="ultimoCicloIA(ia).registros_ensayo || []"
+                      :can-upload="false"
+                      :can-delete="false"
+                      :input-id="'ia-registros-confirmed-' + ultimoCicloIA(ia).id"
+                      file-icon="bi bi-folder-check"
+                      empty-icon="bi bi-stopwatch"
+                      tooltip-label="Registros IA confirmados"
+                      @upload="() => {}"
+                      @delete="() => {}"
+                    />
                     <span v-else-if="ultimoCicloIA(ia).registros_ensayo && ultimoCicloIA(ia).registros_ensayo.length && !ia.estado_correc_informe && !ia.confirmado_ap" class="ia-estado ia-blink" title="Registros subidos — pendiente revisión">
                       <i class="bi bi-circle-fill" style="color:#2980b9"></i>
                     </span>
