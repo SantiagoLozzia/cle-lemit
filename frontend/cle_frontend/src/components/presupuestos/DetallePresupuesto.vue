@@ -97,7 +97,7 @@
     </ul>
   </Teleport>
 
-  <button @click="agregarServicio" class="btn btn-sm btn-outline-primary mt-3 mb-2">+ Agregar servicio</button>
+  <button v-if="!isAdmin" @click="agregarServicio" class="btn btn-sm btn-outline-primary mt-3 mb-2">+ Agregar servicio</button>
 </template>
 
 <script>
@@ -122,6 +122,7 @@ export default {
         const detallePresupuesto = ref([]);
         const serviciosSeleccionados = ref(new Set());
         const { emit } = getCurrentInstance();
+        const isAdmin = ref(sessionStorage.getItem('role') === 'administracion');
 
         // Estado del dropdown teleportado
         const activeDropdownIndex = ref(-1);
@@ -290,6 +291,7 @@ export default {
             sugerenciasActivas,
             dropdownStyle,
             activeDropdownIndex,
+            isAdmin,
         };
     }
 };

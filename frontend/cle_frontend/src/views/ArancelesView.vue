@@ -15,8 +15,8 @@
     <template v-if="tabActivo === 'libro'">
       <PageHeader title="Libro de Aranceles" :subtitle="arancelesData.length + ' servicios'" icon="bi bi-clipboard-data" />
       <div class="actions-bar">
-        <UpdateModule />
-        <NewService @arancel-creado="fetchAranceles" />
+        <UpdateModule v-if="!isAdmin" />
+        <NewService v-if="!isAdmin" @arancel-creado="fetchAranceles" />
       </div>
       <ArancelesTable :data="arancelesData" @arancel-editado="fetchAranceles" />
     </template>
@@ -99,6 +99,7 @@ export default {
     const tabActivo = ref('libro');
     const userRole = sessionStorage.getItem('role') || '';
     const isST = ref(userRole === 'servicios_tecnologicos');
+    const isAdmin = ref(userRole === 'administracion');
 
     const catalogoConceptos = ref([]);
     const modalConceptoAbierto = ref(false);
@@ -187,7 +188,7 @@ export default {
 
     return {
       moduloData, servicioData, arancelesData, fetchAranceles,
-      tabActivo, isST,
+      tabActivo, isST, isAdmin,
       catalogoConceptos, modalConceptoAbierto, editandoConcepto, formConcepto,
       abrirModalNuevoConcepto, abrirModalEditarConcepto, guardarConcepto, eliminarConcepto,
     };
