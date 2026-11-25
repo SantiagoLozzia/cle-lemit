@@ -391,7 +391,7 @@
                 :class="{ 'ia-row-pendiente': iaDebeParpadear(ia) }">
                 <span class="no-wrap-column" style="font-size:0.78rem">{{ ia.fecha }}</span>
                 <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ ia.inter_areaTematica }}</span>
-                <i class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
+                <i v-if="!isAdministracion" class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row">
                 <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)" title="Nueva solicitud inter-área"></i>
