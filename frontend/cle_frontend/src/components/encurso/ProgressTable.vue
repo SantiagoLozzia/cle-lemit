@@ -447,7 +447,7 @@
                       </div>
                     </div>
                   </div>
-                  <span v-else-if="ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe confirmado por área principal" style="position:relative; display:inline-flex; align-items:center;">
+                  <span v-else-if="ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe confirmado — click para abrir" style="position:relative; display:inline-flex; align-items:center; cursor:pointer;" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea)">
                     <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:22px;"></i>
                     <i class="bi bi-check-circle-fill" style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
                   </span>
@@ -486,7 +486,7 @@
                   <span v-else-if="ia.estado_correc_informe === 'subido'" class="ia-estado" title="Corrección enviada — esperando revisión del área principal">
                     <i class="bi bi-clock" style="color:#e67e22"></i>
                   </span>
-                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe subido">
+                  <span v-else-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe inter-área — click para abrir" style="cursor:pointer;" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea)">
                     <i class="bi bi-file-earmark-word" style="color:#026290; font-size:22px;"></i>
                   </span>
                   <span v-else class="ia-estado">
@@ -500,7 +500,7 @@
                 </template>
                 <template v-else>
                   <!-- Resto: ve estado genérico -->
-                  <span v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe inter-área cargado">
+                  <span v-if="ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea" class="ia-estado" title="Informe inter-área — click para abrir" style="cursor:pointer;" @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea)">
                     <i class="bi bi-file-earmark-word" style="color:#026290; font-size:22px;"></i>
                   </span>
                   <span v-else class="ia-estado" title="Esperando informe">
