@@ -820,6 +820,36 @@
                     </div>
                   </template>
                 </template>
+                <template v-else-if="!ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && ultimoCicloIA(ia).adjunto_informeServicio">
+                  <div style="position:relative; display:inline-flex; align-items:center;">
+                    <i class="bi bi-file-earmark-word" style="color:#2b579a; font-size:22px; cursor:pointer;"
+                       @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeServicio)" title="Ver formato institucional IA"></i>
+                    <i class="bi bi-check-circle-fill"
+                       style="position:absolute; top:-5px; left:calc(100% - 3px); font-size:12px; color:#026290; z-index:10;"></i>
+                  </div>
+                </template>
+                <template v-else-if="!ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && !ultimoCicloIA(ia).adjunto_informeServicio">
+                  <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
+                    <button class="st-sd-trigger ia-blink" @click.stop="togglePopupPDFAdminIA(ia.id)" title="Informe Inter-Área — aplicar formato institucional" style="border-color:#2b579a; color:#2b579a;">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
+                      <span class="st-sd-badge" style="background:#2b579a;"></span>
+                    </button>
+                    <div v-if="popupPDFAdminIAId === ia.id" class="st-sd-dial" @click.stop>
+                      <div class="st-sd-opcion" style="--rotation: -120deg"
+                           @click.stop="abrirArchivo(ultimoCicloIA(ia).adjunto_informeArea); popupPDFAdminIAId = null" title="Ver informe IA">
+                        <i class="bi bi-eye"></i>
+                      </div>
+                      <div class="st-sd-opcion" style="--rotation: -60deg" title="Subir formato institucional">
+                        <label :for="'ia-fmt-inst-' + ultimoCicloIA(ia).id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
+                          <i class="bi bi-upload"></i>
+                        </label>
+                        <input :id="'ia-fmt-inst-' + ultimoCicloIA(ia).id" type="file" style="display:none;" accept=".doc,.docx,.odt,.rtf"
+                               @change="subirInformeServicioCicloIA($event, ultimoCicloIA(ia)); popupPDFAdminIAId = null">
+                      </div>
+                    </div>
+                  </div>
+                  <i v-else class="bi bi-stopwatch"></i>
+                </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
