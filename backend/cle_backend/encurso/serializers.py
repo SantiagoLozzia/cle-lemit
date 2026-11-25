@@ -106,10 +106,21 @@ class CicloInterareaSerializer(serializers.ModelSerializer):
 
 class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
         ciclos = CicloInterareaSerializer(many=True, read_only=True)
+        servicio_solicitado = serializers.SerializerMethodField()
 
         class Meta:
                 model = SolicitudInterarea
                 fields = '__all__'
+
+        def get_servicio_solicitado(self, obj):
+                result = []
+                for d in obj.detalleinterarea_set.all():
+                        try:
+                                nombre = Servicio.objects.get(pk=d.nro_servicio_id).servicio
+                        except Exception:
+                                nombre = ''
+                        result.append({'nro_servicio': d.nro_servicio_id, 'cant': d.cant, 'servicio': nombre})
+                return result
 
 class CambiarRemitoSerializer(serializers.ModelSerializer):
         class Meta:
