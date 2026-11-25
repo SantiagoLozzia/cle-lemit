@@ -1,7 +1,10 @@
 <template>
   <div>
-    <NewRequester v-if="esAdministracion" />
-    <RequesterTable />
+    <RequesterTable>
+      <template v-if="esAdministracion" #actions>
+        <NewRequester />
+      </template>
+    </RequesterTable>
   </div>
 </template>
 

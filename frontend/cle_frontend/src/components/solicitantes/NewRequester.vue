@@ -1,8 +1,6 @@
 <template>
   <div>
-    <div class="button-container">
-      <button class="btn btn-primary float-start ms-2 mt-2" @click="mostrarFormulario">Nuevo +</button>
-    </div>
+    <button class="btn btn-primary custom-shadow-btn" @click="mostrarFormulario">Nuevo +</button>
 
     <div class="modal" :class="{ 'show': mostrarModal }" id="modalSolicitante">
       <div class="modal-dialog">

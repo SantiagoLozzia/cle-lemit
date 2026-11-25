@@ -7,6 +7,10 @@
       icon="bi bi-people-fill"
     />
 
+    <div v-if="$slots.actions" class="actions-bar">
+      <slot name="actions" />
+    </div>
+
     <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
       <input
         v-model="filterNombre"
@@ -136,6 +140,12 @@ export default {
 </script>
 
 <style scoped>
+.actions-bar {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 0 4px;
+}
+
 .table-container {
   width: 100%;
   overflow-x: auto;
