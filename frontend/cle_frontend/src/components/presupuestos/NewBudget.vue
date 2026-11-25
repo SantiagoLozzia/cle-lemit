@@ -155,7 +155,9 @@
       DetallePresupuesto,
     },
 
-    setup() {
+    emits: ['presupuesto-creado'],
+
+    setup(props, { emit }) {
       const inputProps = ref({ placeholder: 'Buscar solicitante' });
       const sugerencias = ref([]);
       const selectedSolicitante = ref(null);
@@ -276,6 +278,7 @@
           .then(response => {
             console.log(response.data);
             cerrarModal();
+            emit('presupuesto-creado');
            // Limpiar el formulario y mostrar la alerta de éxito
             nuevoPresupuesto.value = {
               fecha_presupuesto: null,
