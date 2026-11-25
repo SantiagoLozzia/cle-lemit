@@ -3709,7 +3709,9 @@
         const legajos = data.legajos || [];
 
         if (rol === 'servicios_tecnologicos') {
-          return ciclos.some(c =>
+          const circuitosConOS = new Set((data.ordenes_servicio || []).map(o => o.nro_circuito));
+          const necesitaOS = legajos.some(l => !circuitosConOS.has(l.nro_circuito));
+          return necesitaOS || ciclos.some(c =>
             (c.adjunto_informeServicio && !c.revision_confirmada) ||
             (c.historial_correcciones || []).some(r => r.destinatario === 'st' && r.estado === 'pendiente')
           );
@@ -3735,23 +3737,43 @@
         return false;
       };
 
-      const computeFingerprint = (data) => {
+      // Fingerprint por rol: área no incluye cambios de pago (no los ve), todos incluyen estado de OS
+      const computeRoleFp = (data, rol) => {
         const circuits = (data.solicitudes || []).map(s => s.nro_circuito).sort().join(',');
         const ciclosState = (data.ciclos || [])
           .map(c => `${c.id}:${c.firma_direccion}:${c.firma_responsable_area}:${c.revision_confirmada}:${!!c.adjunto_informeArea}:${!!c.adjunto_informeServicio}`)
           .sort().join('|');
         const legajosState = (data.legajos || []).map(l => `${l.nro_legajo}:${l.pago}`).sort().join('|');
-        return [circuits, ciclosState, legajosState].join('||');
+        const osState = (data.ordenes_servicio || []).map(o => `${o.nro_circuito}:${o.completo}`).sort().join('|');
+
+        if (rol === 'area_jefe' || rol === 'area_standard') {
+          return [circuits, ciclosState, osState].join('||');
+        }
+        return [circuits, ciclosState, legajosState, osState].join('||');
       };
+
+      // Mantener compatibilidad con fetchData
+      const computeFingerprint = (data) => computeRoleFp(data, sessionStorage.getItem('role'));
 
       const pollData = async () => {
         try {
           const response = await api.get('/encurso/obtener_todoencurso/');
-          const fp = computeFingerprint(response.data);
+          const rol = sessionStorage.getItem('role');
+          const fp = computeRoleFp(response.data, rol);
           if (lastFingerprint && fp !== lastFingerprint) {
-            hayActualizaciones.value = true;
-            if (hasPendingForMyRole(response.data)) {
-              playNotificationSound();
+            lastFingerprint = fp;
+            if (rol === 'administracion') {
+              // Admin: banner y sonido solo cuando le toca actuar
+              if (hasPendingForMyRole(response.data)) {
+                hayActualizaciones.value = true;
+                playNotificationSound();
+              }
+            } else {
+              // ST, área, dirección: banner siempre que haya cambios visibles para su rol
+              hayActualizaciones.value = true;
+              if (hasPendingForMyRole(response.data)) {
+                playNotificationSound();
+              }
             }
           }
         } catch {
