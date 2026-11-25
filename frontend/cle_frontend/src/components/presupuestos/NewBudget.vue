@@ -1,8 +1,8 @@
 <template>
   <div>
     <div>
-      <div class="actions-bar">
-        <button class="btn btn-primary custom-shadow-btn" @click="mostrarFormulario">+ Nuevo</button>
+      <div class="button-container">
+        <button class="btn btn-primary float-start ms-2 mt-2 custom-shadow-btn" @click="mostrarFormulario">+ Nuevo</button>
       </div>
   
       <div class="modal" :class="{ 'show': mostrarModal }" id="modalPresupuesto">

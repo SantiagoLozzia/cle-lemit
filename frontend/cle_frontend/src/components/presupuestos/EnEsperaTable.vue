@@ -1,7 +1,9 @@
 <template>
   <div>
     <PageHeader title="Presupuestos nuevos" :subtitle="sortedPresupuestos.length + ' presupuestos'" icon="bi bi-hourglass-split" />
-    <NewBudget @presupuesto-creado="fetchPresupuestos" />
+    <div class="clearfix">
+      <NewBudget @presupuesto-creado="fetchPresupuestos" />
+    </div>
     <div class="filter-bar">
       <select v-model="filterArea" class="filter-ctrl">
         <option value="">Todas las áreas</option>
@@ -504,7 +506,6 @@ export default {
   padding: 4px !important;
   font-size: 0.75rem;
 }
-.actions-bar { display: flex; align-items: flex-start; padding: 8px 4px 4px; }
 .filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; flex-wrap: wrap; }
 .filter-ctrl { height: 34px; padding: 0 28px 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; appearance: auto; cursor: pointer; outline: none; }
 .filter-ctrl:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
