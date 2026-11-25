@@ -11,30 +11,14 @@
       <slot name="actions" />
     </div>
 
-    <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
-      <input
-        v-model="filterNombre"
-        type="text"
-        placeholder="Buscar empresa o CUIT..."
-        class="form-control form-control-sm w-auto"
-        style="min-width: 200px"
-      >
-      <select v-model="filterPais" class="form-select form-select-sm w-auto">
+    <div class="filter-bar">
+      <input v-model="filterNombre" type="text" placeholder="Buscar empresa o CUIT..." class="filter-text" style="min-width:200px">
+      <select v-model="filterPais" class="filter-ctrl">
         <option value="">Todos los países</option>
         <option v-for="p in uniquePaises" :key="p" :value="p">{{ p }}</option>
       </select>
-      <input
-        v-model="filterProvincia"
-        type="text"
-        placeholder="Provincia..."
-        class="form-control form-control-sm w-auto"
-        style="min-width: 140px"
-      >
-      <button
-        v-if="filterNombre || filterPais || filterProvincia"
-        @click="clearFilters"
-        class="btn btn-sm btn-outline-secondary"
-      >✕ Limpiar</button>
+      <input v-model="filterProvincia" type="text" placeholder="Provincia..." class="filter-text" style="min-width:140px">
+      <button v-if="filterNombre || filterPais || filterProvincia" @click="clearFilters" class="filter-clear">✕ Limpiar</button>
     </div>
 
     <div class="table-container">
@@ -140,11 +124,7 @@ export default {
 </script>
 
 <style scoped>
-.actions-bar {
-  display: flex;
-  align-items: flex-start;
-  padding: 8px 0 4px;
-}
+.actions-bar { display: flex; align-items: flex-start; padding: 8px 4px 4px; }
 
 .table-container {
   width: 100%;
@@ -160,7 +140,11 @@ export default {
   border-right: 1px solid gainsboro;
 }
 
-.filter-bar {
-  margin-bottom: 8px;
-}
+.filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; flex-wrap: wrap; }
+.filter-ctrl { height: 34px; padding: 0 28px 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; appearance: auto; cursor: pointer; outline: none; }
+.filter-ctrl:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-text { height: 34px; padding: 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; outline: none; box-sizing: border-box; }
+.filter-text:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-clear { height: 34px; padding: 0 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.83rem; background: #fff; color: #6c757d; cursor: pointer; white-space: nowrap; }
+.filter-clear:hover { background: #f8f9fa; color: #343a40; border-color: #adb5bd; }
 </style>

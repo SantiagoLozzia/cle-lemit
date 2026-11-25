@@ -3,45 +3,47 @@
     <PageHeader title="Historial de Presupuestos" :subtitle="buscado && resultados.length > 0 ? resultados.length + ' resultados' : ''" icon="bi bi-clock-history" />
 
     <!-- Barra de filtros -->
-    <div class="filter-bar mb-3 d-flex flex-wrap align-items-end gap-2">
-      <div class="d-flex flex-column">
-        <small class="text-muted">Nro</small>
-        <input v-model="filtros.nro" type="number" placeholder="Ej: 42" class="form-control form-control-sm" style="width:90px">
+    <div class="filter-bar histo-bar">
+      <div class="histo-field">
+        <span class="histo-label">Nro</span>
+        <input v-model="filtros.nro" type="number" placeholder="Ej: 42" class="filter-text" style="width:90px">
       </div>
-      <div class="d-flex flex-column">
-        <small class="text-muted">Solicitante</small>
-        <input v-model="filtros.solicitante" type="text" placeholder="Nombre empresa..." class="form-control form-control-sm" style="min-width:180px">
+      <div class="histo-field">
+        <span class="histo-label">Solicitante</span>
+        <input v-model="filtros.solicitante" type="text" placeholder="Nombre empresa..." class="filter-text" style="min-width:180px">
       </div>
-      <div class="d-flex flex-column">
-        <small class="text-muted">Desde</small>
-        <input v-model="filtros.desde" type="date" class="form-control form-control-sm w-auto">
+      <div class="histo-field">
+        <span class="histo-label">Período</span>
+        <div class="filter-date-range">
+          <span class="fdr-label">Desde</span>
+          <input type="date" v-model="filtros.desde" class="fdr-input">
+          <span class="fdr-sep"></span>
+          <span class="fdr-label">Hasta</span>
+          <input type="date" v-model="filtros.hasta" class="fdr-input">
+        </div>
       </div>
-      <div class="d-flex flex-column">
-        <small class="text-muted">Hasta</small>
-        <input v-model="filtros.hasta" type="date" class="form-control form-control-sm w-auto">
-      </div>
-      <div class="d-flex flex-column">
-        <small class="text-muted">Área</small>
-        <select v-model="filtros.area" class="form-select form-select-sm w-auto">
+      <div class="histo-field">
+        <span class="histo-label">Área</span>
+        <select v-model="filtros.area" class="filter-ctrl">
           <option value="">Todas</option>
           <option v-for="area in AREAS_TEMATICAS" :key="area.value" :value="area.value">{{ area.label }}</option>
         </select>
       </div>
-      <div class="d-flex flex-column">
-        <small class="text-muted">Estado</small>
-        <select v-model="filtros.estado" class="form-select form-select-sm w-auto">
+      <div class="histo-field">
+        <span class="histo-label">Estado</span>
+        <select v-model="filtros.estado" class="filter-ctrl">
           <option value="">Todos</option>
           <option value="en_espera">Nuevo</option>
           <option value="aceptado">Aceptado</option>
           <option value="descartado">Descartado</option>
         </select>
       </div>
-      <div class="d-flex gap-2 align-self-end">
-        <button @click="buscar" class="btn btn-primary btn-sm" :disabled="cargando">
+      <div class="histo-field histo-actions">
+        <button @click="buscar" class="btn btn-primary" style="height:34px; font-size:0.84rem; padding:0 16px;" :disabled="cargando">
           <span v-if="cargando" class="spinner-border spinner-border-sm me-1"></span>
           Buscar
         </button>
-        <button v-if="buscado" @click="limpiar" class="btn btn-outline-secondary btn-sm">✕ Limpiar</button>
+        <button v-if="buscado" @click="limpiar" class="filter-clear">✕ Limpiar</button>
       </div>
     </div>
 
@@ -370,4 +372,20 @@ export default {
   font-weight: 700;
   background-color: #f0f0f0;
 }
+.filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; flex-wrap: wrap; }
+.filter-ctrl { height: 34px; padding: 0 28px 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; appearance: auto; cursor: pointer; outline: none; }
+.filter-ctrl:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-text { height: 34px; padding: 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; outline: none; box-sizing: border-box; }
+.filter-text:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-date-range { display: flex; align-items: center; height: 34px; border: 1px solid #ced4da; border-radius: 6px; background: #fff; padding: 0 10px; gap: 7px; }
+.filter-date-range:focus-within { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.fdr-label { font-size: 0.78rem; color: #6c757d; white-space: nowrap; user-select: none; }
+.fdr-sep { width: 1px; height: 55%; background: #ced4da; flex-shrink: 0; }
+.fdr-input { border: none; outline: none; font-size: 0.83rem; color: #495057; background: transparent; height: 100%; padding: 0; min-width: 110px; }
+.filter-clear { height: 34px; padding: 0 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.83rem; background: #fff; color: #6c757d; cursor: pointer; white-space: nowrap; }
+.filter-clear:hover { background: #f8f9fa; color: #343a40; border-color: #adb5bd; }
+.histo-bar { align-items: flex-end; }
+.histo-field { display: flex; flex-direction: column; gap: 4px; }
+.histo-label { font-size: 0.75rem; color: #6c757d; white-space: nowrap; }
+.histo-actions { flex-direction: row; align-items: center; gap: 6px; }
 </style>

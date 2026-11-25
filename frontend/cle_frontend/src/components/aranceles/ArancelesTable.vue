@@ -1,14 +1,14 @@
 <template>
   <div class="aranceles-container">
     <div class="table-container">
-      <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
-        <select v-model="filterArea" class="form-select form-select-sm w-auto">
+      <div class="filter-bar">
+        <select v-model="filterArea" class="filter-ctrl">
           <option value="">Todas las áreas</option>
           <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
         </select>
-        <input v-model="filterServicio" type="text" placeholder="Buscar servicio..." class="form-control form-control-sm w-auto" style="min-width:180px">
-        <input v-model="filterNorma" type="text" placeholder="Buscar norma..." class="form-control form-control-sm w-auto" style="min-width:140px">
-        <button v-if="filterArea || filterServicio || filterNorma" @click="clearFilter" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+        <input v-model="filterServicio" type="text" placeholder="Buscar servicio..." class="filter-text" style="min-width:180px">
+        <input v-model="filterNorma" type="text" placeholder="Buscar norma..." class="filter-text" style="min-width:140px">
+        <button v-if="filterArea || filterServicio || filterNorma" @click="clearFilter" class="filter-clear">✕ Limpiar</button>
       </div>
       <table class="table aranceles-table">
         <colgroup>
@@ -267,4 +267,11 @@ export default {
   align-items: center;
   justify-content: center;
 }
+.filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; flex-wrap: wrap; }
+.filter-ctrl { height: 34px; padding: 0 28px 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; appearance: auto; cursor: pointer; outline: none; }
+.filter-ctrl:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-text { height: 34px; padding: 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; outline: none; box-sizing: border-box; }
+.filter-text:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-clear { height: 34px; padding: 0 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.83rem; background: #fff; color: #6c757d; cursor: pointer; white-space: nowrap; }
+.filter-clear:hover { background: #f8f9fa; color: #343a40; border-color: #adb5bd; }
 </style>

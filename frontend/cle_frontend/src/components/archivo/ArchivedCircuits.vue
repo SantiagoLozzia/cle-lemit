@@ -4,27 +4,14 @@
     <PageHeader title="Circuitos archivados" :subtitle="sortedArchivados.length + ' registros'" icon="bi bi-archive-fill" />
 
     <!-- Filtros -->
-    <div class="filter-bar mb-3 d-flex flex-wrap align-items-center gap-2">
-      <input
-        v-model="filterEmpresa"
-        type="text"
-        placeholder="Buscar empresa..."
-        class="form-control form-control-sm w-auto"
-        style="min-width:180px"
-      >
-      <input
-        v-model="filterNroDoc"
-        type="text"
-        placeholder="N° (servicio / presupuesto / legajo)..."
-        class="form-control form-control-sm w-auto"
-        style="min-width:200px"
-        title="Buscar por N° de Servicio, Presupuesto, Legajo o Circuito"
-      >
-      <select v-model="filterArea" class="form-select form-select-sm w-auto">
+    <div class="filter-bar">
+      <input v-model="filterEmpresa" type="text" placeholder="Buscar empresa..." class="filter-text" style="min-width:180px">
+      <input v-model="filterNroDoc" type="text" placeholder="N° (servicio / presupuesto / legajo)..." class="filter-text" style="min-width:220px" title="Buscar por N° de Servicio, Presupuesto, Legajo o Circuito">
+      <select v-model="filterArea" class="filter-ctrl">
         <option value="">Todas las áreas</option>
         <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
       </select>
-      <select v-model="filterMotivo" class="form-select form-select-sm w-auto">
+      <select v-model="filterMotivo" class="filter-ctrl">
         <option value="">Todos los motivos</option>
         <option value="exito">Finalizado con éxito</option>
         <option value="falta_pago">Falta de pago</option>
@@ -32,26 +19,21 @@
         <option value="desistimiento">Desistimiento</option>
         <option value="otro">Otro</option>
       </select>
-      <select v-model="filterPago" class="form-select form-select-sm w-auto">
+      <select v-model="filterPago" class="filter-ctrl">
         <option value="">Estado de pago</option>
         <option value="100">100% pagado</option>
         <option value="no_arancelado">No arancelado</option>
         <option value="pago_diferido">Pago diferido</option>
         <option value="sin_pago">Sin pago</option>
       </select>
-      <div class="d-flex align-items-center gap-1">
-        <small class="text-muted">Archivo desde</small>
-        <input type="date" v-model="filterDesde" class="form-control form-control-sm w-auto">
+      <div class="filter-date-range">
+        <span class="fdr-label">Archivo desde</span>
+        <input type="date" v-model="filterDesde" class="fdr-input">
+        <span class="fdr-sep"></span>
+        <span class="fdr-label">hasta</span>
+        <input type="date" v-model="filterHasta" class="fdr-input">
       </div>
-      <div class="d-flex align-items-center gap-1">
-        <small class="text-muted">hasta</small>
-        <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
-      </div>
-      <button
-        v-if="hayFiltros"
-        @click="clearFilters"
-        class="btn btn-sm btn-outline-secondary"
-      >✕ Limpiar</button>
+      <button v-if="hayFiltros" @click="clearFilters" class="filter-clear">✕ Limpiar</button>
       <div class="col-selector-wrap ms-auto" ref="colSelectorRef">
         <button class="btn btn-sm btn-outline-secondary" @click="toggleColSelector">
           <i class="bi bi-layout-three-columns me-1"></i>Columnas
@@ -799,4 +781,16 @@ export default {
   .lg-divider { background: #026290 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .lg-label { color: #026290 !important; }
 }
+.filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; flex-wrap: wrap; }
+.filter-ctrl { height: 34px; padding: 0 28px 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; appearance: auto; cursor: pointer; outline: none; }
+.filter-ctrl:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-text { height: 34px; padding: 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; outline: none; box-sizing: border-box; }
+.filter-text:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.filter-date-range { display: flex; align-items: center; height: 34px; border: 1px solid #ced4da; border-radius: 6px; background: #fff; padding: 0 10px; gap: 7px; }
+.filter-date-range:focus-within { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+.fdr-label { font-size: 0.78rem; color: #6c757d; white-space: nowrap; user-select: none; }
+.fdr-sep { width: 1px; height: 55%; background: #ced4da; flex-shrink: 0; }
+.fdr-input { border: none; outline: none; font-size: 0.83rem; color: #495057; background: transparent; height: 100%; padding: 0; min-width: 110px; }
+.filter-clear { height: 34px; padding: 0 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.83rem; background: #fff; color: #6c757d; cursor: pointer; white-space: nowrap; }
+.filter-clear:hover { background: #f8f9fa; color: #343a40; border-color: #adb5bd; }
 </style>

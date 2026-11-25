@@ -2,20 +2,19 @@
     <div class="aceptados-container">
       <PageHeader title="Presupuestos aceptados" :subtitle="sortedPresupuestos.length + ' presupuestos'" icon="bi bi-check-circle-fill" />
       <div class="table-container">
-        <div class="filter-bar mb-2 d-flex flex-wrap align-items-center gap-2">
-          <select v-model="filterArea" class="form-select form-select-sm w-auto">
+        <div class="filter-bar">
+          <select v-model="filterArea" class="filter-ctrl">
             <option value="">Todas las áreas</option>
             <option v-for="area in uniqueAreas" :key="area" :value="area">{{ area }}</option>
           </select>
-          <div class="d-flex align-items-center gap-1">
-            <small class="text-muted">Desde</small>
-            <input type="date" v-model="filterDesde" class="form-control form-control-sm w-auto">
+          <div class="filter-date-range">
+            <span class="fdr-label">Desde</span>
+            <input type="date" v-model="filterDesde" class="fdr-input">
+            <span class="fdr-sep"></span>
+            <span class="fdr-label">Hasta</span>
+            <input type="date" v-model="filterHasta" class="fdr-input">
           </div>
-          <div class="d-flex align-items-center gap-1">
-            <small class="text-muted">Hasta</small>
-            <input type="date" v-model="filterHasta" class="form-control form-control-sm w-auto">
-          </div>
-          <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="btn btn-sm btn-outline-secondary">✕ Limpiar</button>
+          <button v-if="filterArea || filterDesde || filterHasta" @click="clearFilters" class="filter-clear">✕ Limpiar</button>
         </div>
         <table class="table presupuestos-table">
           <thead>
@@ -446,5 +445,17 @@
     padding: 4px !important;
     font-size: 0.75rem;
   }
+  .filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 8px; flex-wrap: wrap; }
+  .filter-ctrl { height: 34px; padding: 0 28px 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; appearance: auto; cursor: pointer; outline: none; }
+  .filter-ctrl:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+  .filter-text { height: 34px; padding: 0 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.84rem; color: #495057; background: #fff; outline: none; box-sizing: border-box; }
+  .filter-text:focus { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+  .filter-date-range { display: flex; align-items: center; height: 34px; border: 1px solid #ced4da; border-radius: 6px; background: #fff; padding: 0 10px; gap: 7px; }
+  .filter-date-range:focus-within { border-color: #026290; box-shadow: 0 0 0 2px rgba(2,98,144,.15); }
+  .fdr-label { font-size: 0.78rem; color: #6c757d; white-space: nowrap; user-select: none; }
+  .fdr-sep { width: 1px; height: 55%; background: #ced4da; flex-shrink: 0; }
+  .fdr-input { border: none; outline: none; font-size: 0.83rem; color: #495057; background: transparent; height: 100%; padding: 0; min-width: 110px; }
+  .filter-clear { height: 34px; padding: 0 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 0.83rem; background: #fff; color: #6c757d; cursor: pointer; white-space: nowrap; }
+  .filter-clear:hover { background: #f8f9fa; color: #343a40; border-color: #adb5bd; }
   </style>
   
