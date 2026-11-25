@@ -290,6 +290,7 @@ def obtener_dataServicio(request, nro_dataServicio):
         nombre_solicitante = solicitante_serializer.data['nombre_solicitante']
 
         # Construir el diccionario de respuesta
+        conceptos = data_servicio.conceptos_facturacion.all()
         response_data = {
             'nro_dataServicio': nro_dataServicio,
             'fecha_dataServicio': data_servicio_serializer.data['fecha_dataServicio'],
@@ -301,7 +302,10 @@ def obtener_dataServicio(request, nro_dataServicio):
             'area_tematica' : area_tematica,
             'nombre_solicitante' : nombre_solicitante,
             'arancel_presupuesto' : arancel_presupuesto,
-            'observaciones' : data_servicio_serializer.data['observaciones']
+            'observaciones' : data_servicio_serializer.data['observaciones'],
+            'email_factura': data_servicio_serializer.data.get('email_factura'),
+            'email_informe_tecnico': data_servicio_serializer.data.get('email_informe_tecnico'),
+            'conceptos_facturacion': [{'id': c.id, 'nombre': c.nombre} for c in conceptos],
         }
 
         return JsonResponse(response_data, status=200)

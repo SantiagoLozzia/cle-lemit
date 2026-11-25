@@ -1409,33 +1409,23 @@
                 <span class="ds-label">Observaciones</span>
                 <span class="ds-val">{{ observacionesDataServicio || '—' }}</span>
               </div>
-            </div>
-          </div>
-          <!-- Conceptos de Facturación (no-print, interactivo para todos los roles) -->
-          <div class="no-print px-3 pb-3">
-            <hr>
-            <h6 class="fw-bold mb-2" style="color:#026290;">Concepto de Facturación</h6>
-            <div class="d-flex gap-2 align-items-center flex-wrap mb-2">
-              <select v-model="conceptoSeleccionadoDS" @change="agregarConceptoDS" class="form-select form-select-sm" style="max-width:280px;">
-                <option value="">Seleccionar concepto para agregar...</option>
-                <option v-for="c in conceptosCatalogoDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
-              </select>
-              <button class="btn btn-sm btn-primary" @click="guardarConceptosDS" :disabled="guardandoConceptosDS">
-                <span v-if="guardandoConceptosDS" class="spinner-border spinner-border-sm me-1"></span>
-                Guardar
-              </button>
-              <span v-if="mensajeConceptoDS" :style="mensajeConceptoDS === 'ok' ? 'color:#198754;font-size:13px;' : 'color:#dc3545;font-size:13px;'">
-                {{ mensajeConceptoDS === 'ok' ? '✓ Guardado' : '✗ Error al guardar' }}
-              </span>
-            </div>
-            <div class="concepto-box">
-              <span v-if="conceptosDS.length === 0" class="text-muted" style="font-size:13px;">Sin conceptos asignados.</span>
-              <span v-for="c in conceptosDS" :key="c.id"
-                    class="badge d-flex align-items-center gap-1"
-                    style="background:#026290; font-size:12px; padding:5px 10px; cursor:pointer;"
-                    @click="quitarConceptoDS(c)">
-                {{ c.nombre }} <i class="bi bi-x" style="font-size:11px;"></i>
-              </span>
+              <div class="ds-field">
+                <span class="ds-label">Email factura</span>
+                <span class="ds-val">{{ emailFacturaDataServicio || '—' }}</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-label">Email informe técnico</span>
+                <span class="ds-val">{{ emailInformeTecnicoDataServicio || '—' }}</span>
+              </div>
+              <div v-if="conceptosDS.length > 0" class="ds-field ds-field--full">
+                <span class="ds-label">Conceptos de Facturación</span>
+                <span class="ds-val d-flex flex-wrap gap-1">
+                  <span v-for="c in conceptosDS" :key="c.id"
+                        class="badge" style="background:#026290; font-size:12px; padding:4px 9px;">
+                    {{ c.nombre }}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
           <!-- Modal Footer -->
@@ -3232,6 +3222,8 @@
       const solicitanteDataServicio = ref();
       const arancelDataServicio = ref();
       const observacionesDataServicio = ref();
+      const emailFacturaDataServicio = ref();
+      const emailInformeTecnicoDataServicio = ref();
       // Conceptos de Facturación
       const catalogoConceptos = ref([]);
       const conceptosDS = ref([]);
@@ -4023,7 +4015,7 @@
           conceptoSeleccionadoDS.value = '';
           api.get(`/encurso/obtener_dataservicio/${nroDS}/`)
               .then(response => {
-                  const { nro_dataServicio, fecha_dataServicio, obra, cant_numLabs, plazo_estimado, muestras, nro_presupuesto, area_tematica, nombre_solicitante, arancel_presupuesto, observaciones } = response.data;
+                  const { nro_dataServicio, fecha_dataServicio, obra, cant_numLabs, plazo_estimado, muestras, nro_presupuesto, area_tematica, nombre_solicitante, arancel_presupuesto, observaciones, email_factura, email_informe_tecnico, conceptos_facturacion } = response.data;
                   nroDataServicio.value = nro_dataServicio;
                   fechaDataServicio.value = formatDate(fecha_dataServicio);
                   obraDataServicio.value = obra;
@@ -4035,6 +4027,9 @@
                   solicitanteDataServicio.value = nombre_solicitante;
                   arancelDataServicio.value = formatArancel(arancel_presupuesto);
                   observacionesDataServicio.value = observaciones;
+                  emailFacturaDataServicio.value = email_factura;
+                  emailInformeTecnicoDataServicio.value = email_informe_tecnico;
+                  if (conceptos_facturacion) conceptosDS.value = conceptos_facturacion;
                   mostrarModalDataServicio.value = true;
               })
               .catch(error => {
@@ -6216,6 +6211,8 @@
         solicitanteDataServicio,
         arancelDataServicio,
         observacionesDataServicio,
+        emailFacturaDataServicio,
+        emailInformeTecnicoDataServicio,
         mostrarModalDataServicio,
         cargarAdjuntoSolicitud,
         eliminarAdjuntoSolicitud,

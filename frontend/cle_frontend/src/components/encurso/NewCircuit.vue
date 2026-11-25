@@ -13,60 +13,77 @@
                 <button type="button" class="btn-close" @click="cerrarModal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                <form class="was-validated">
+                <form @submit.prevent>
 
                   <div class="mb-3">
                     <label for="fecha_dataServicio" class="form-label text-left">Fecha:</label>
-                    <input v-model="nuevoDataServicio.fecha_dataServicio" type="date" readonly class="form-control" id="fecha_dataServicio" name="fecha_dataServicio" required />
+                    <input v-model="nuevoDataServicio.fecha_dataServicio" type="date" readonly class="form-control" id="fecha_dataServicio" />
                   </div>
 
                   <div class="mb-3">
-                      <label for="nro_presupuesto" class="form-label text-left">N° Presupuesto:</label>
-                      <select v-model="selectedPresupuesto" @click="buscarSugerencias" @change="presupuestoSeleccionado(selectedPresupuesto)" class="form-select mt-1">
-                          <option v-for="sugerencia in sugerencias" :key="sugerencia.nro_presupuesto" :value="sugerencia.nro_presupuesto">
-                              {{ sugerencia.nro_presupuesto }} - {{ sugerencia.nombre_solicitante }}
-                          </option>
-                      </select>
+                    <label for="nro_presupuesto" class="form-label text-left">N° Presupuesto <span class="text-danger">*</span></label>
+                    <select v-model="selectedPresupuesto"
+                            @click="buscarSugerencias"
+                            @change="presupuestoSeleccionado(selectedPresupuesto); erroresDS.presupuesto = null"
+                            :class="['form-select mt-1', erroresDS.presupuesto ? 'is-invalid' : '']">
+                      <option :value="null" disabled>— Seleccionar presupuesto —</option>
+                      <option v-for="sugerencia in sugerencias" :key="sugerencia.nro_presupuesto" :value="sugerencia.nro_presupuesto">
+                        {{ sugerencia.nro_presupuesto }} - {{ sugerencia.nombre_solicitante }}
+                      </option>
+                    </select>
+                    <div v-if="erroresDS.presupuesto" class="nc-error">{{ erroresDS.presupuesto }}</div>
                   </div>
 
                   <div class="mb-3">
-                    <label for="obra" class="form-label text-left">Obra:</label>
-                    <input v-model="nuevoDataServicio.obra" type="text" class="form-control" id="obra" name="obra"/>
+                    <label for="obra" class="form-label text-left">Obra <span class="text-muted" style="font-size:0.8rem">(opcional)</span></label>
+                    <input v-model="nuevoDataServicio.obra" type="text" class="form-control" id="obra" />
                   </div>
 
                   <div class="mb-3">
-                      <label for="muestras" class="form-label text-left">Muestras:</label>
-                      <textarea v-model="nuevoDataServicio.muestras" class="form-control" id="muestras" name="muestras" required style="resize: vertical;"></textarea>
+                    <label for="muestras" class="form-label text-left">Muestras <span class="text-danger">*</span></label>
+                    <textarea v-model="nuevoDataServicio.muestras"
+                              :class="['form-control', erroresDS.muestras ? 'is-invalid' : '']"
+                              id="muestras" style="resize:vertical;"
+                              @input="erroresDS.muestras = null"></textarea>
+                    <div v-if="erroresDS.muestras" class="nc-error">{{ erroresDS.muestras }}</div>
                   </div>
 
                   <div class="mb-3">
-                    <label for="plazo_estimado" class="form-label text-left">Plazo Estimado:</label>
-                    <input v-model="nuevoDataServicio.plazo_estimado" type="number" class="form-control" id="plazo_estimado" name="plazo_estimado" required />
+                    <label for="plazo_estimado" class="form-label text-left">Plazo Estimado <span class="text-danger">*</span></label>
+                    <input v-model="nuevoDataServicio.plazo_estimado" type="number" min="1"
+                           :class="['form-control', erroresDS.plazo ? 'is-invalid' : '']"
+                           id="plazo_estimado"
+                           @input="erroresDS.plazo = null" />
+                    <div v-if="erroresDS.plazo" class="nc-error">{{ erroresDS.plazo }}</div>
                   </div>
 
                   <div class="mb-3">
-                    <label for="cant_numLabs" class="form-label text-left">Cantidad N° Laboratorios:</label>
-                    <input v-model="nuevoDataServicio.cant_numLabs" type="number" class="form-control" id="cant_numLabs" name="cant_numLabs" required />
+                    <label for="cant_numLabs" class="form-label text-left">Cantidad N° Laboratorios <span class="text-danger">*</span></label>
+                    <input v-model="nuevoDataServicio.cant_numLabs" type="number" min="1"
+                           :class="['form-control', erroresDS.cant_numLabs ? 'is-invalid' : '']"
+                           id="cant_numLabs"
+                           @input="erroresDS.cant_numLabs = null" />
+                    <div v-if="erroresDS.cant_numLabs" class="nc-error">{{ erroresDS.cant_numLabs }}</div>
                   </div>
 
                   <div class="mb-3">
-                    <label for="observaciones" class="form-label text-left">Observaciones:</label>
-                    <input v-model="nuevoDataServicio.observaciones" type="text" class="form-control" id="observaciones" name="observaciones" />
+                    <label for="observaciones" class="form-label text-left">Observaciones <span class="text-muted" style="font-size:0.8rem">(opcional)</span></label>
+                    <input v-model="nuevoDataServicio.observaciones" type="text" class="form-control" id="observaciones" />
                   </div>
 
                   <div class="mb-3">
-                    <label for="email_factura" class="form-label text-left">Email factura:</label>
-                    <input v-model="nuevoDataServicio.email_factura" type="email" class="form-control" id="email_factura" name="email_factura" placeholder="email@ejemplo.com" />
+                    <label for="email_factura" class="form-label text-left">Email factura <span class="text-muted" style="font-size:0.8rem">(opcional)</span></label>
+                    <input v-model="nuevoDataServicio.email_factura" type="email" class="form-control" id="email_factura" placeholder="email@ejemplo.com" />
                   </div>
 
                   <div class="mb-3">
-                    <label for="email_informe_tecnico" class="form-label text-left">Email informe técnico:</label>
-                    <input v-model="nuevoDataServicio.email_informe_tecnico" type="email" class="form-control" id="email_informe_tecnico" name="email_informe_tecnico" placeholder="email@ejemplo.com" />
+                    <label for="email_informe_tecnico" class="form-label text-left">Email informe técnico <span class="text-muted" style="font-size:0.8rem">(opcional)</span></label>
+                    <input v-model="nuevoDataServicio.email_informe_tecnico" type="email" class="form-control" id="email_informe_tecnico" placeholder="email@ejemplo.com" />
                   </div>
 
                   <!-- Concepto de Facturación -->
                   <div class="mb-3">
-                    <label class="form-label text-left">Concepto de Facturación:</label>
+                    <label class="form-label text-left">Concepto de Facturación <span class="text-muted" style="font-size:0.8rem">(opcional)</span></label>
                     <select v-model="conceptoAgregar" @change="agregarConcepto" class="form-select form-select-sm">
                       <option value="">Seleccionar concepto para agregar...</option>
                       <option v-for="c in conceptosDisponibles" :key="c.id" :value="c">{{ c.nombre }}</option>
@@ -123,6 +140,7 @@
         const mostrarModal = ref(false);
         const showSuccessAlert = ref(false);
         const showErrorAlert = ref(false);
+        const erroresDS = ref({});
 
         // Conceptos de Facturación
         const catalogoConceptos = ref([]);
@@ -166,6 +184,8 @@
           };
           conceptosSeleccionados.value = [];
           conceptoAgregar.value = '';
+          erroresDS.value = {};
+          selectedPresupuesto.value = null;
           mostrarModal.value = true;
         };
 
@@ -175,9 +195,13 @@
         };
 
         const crearDataServicio = () => {
-          if (!nuevoDataServicio.value.plazo_estimado || !nuevoDataServicio.value.cant_numLabs) {
-            return;
-          }
+          const errs = {};
+          if (!selectedPresupuesto.value) errs.presupuesto = 'Seleccioná un presupuesto.';
+          if (!nuevoDataServicio.value.muestras || !nuevoDataServicio.value.muestras.trim()) errs.muestras = 'Ingresá las muestras.';
+          if (!nuevoDataServicio.value.plazo_estimado) errs.plazo = 'Ingresá el plazo estimado.';
+          if (!nuevoDataServicio.value.cant_numLabs) errs.cant_numLabs = 'Ingresá la cantidad de laboratorios.';
+          erroresDS.value = errs;
+          if (Object.keys(errs).length > 0) return;
           api.post('/encurso/crear_dataServicio/', nuevoDataServicio.value)
             .then(async response => {
               const nroDS = response.data.nro_dataServicio;
@@ -245,6 +269,7 @@
           mostrarModal,
           showSuccessAlert,
           showErrorAlert,
+          erroresDS,
           buscarSugerencias,
           selectedPresupuesto,
           presupuestoSeleccionado,
@@ -271,5 +296,10 @@
     flex-wrap: wrap;
     gap: 6px;
     min-height: 42px;
+  }
+  .nc-error {
+    color: #dc3545;
+    font-size: 0.82rem;
+    margin-top: 4px;
   }
   </style>
