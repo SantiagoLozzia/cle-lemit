@@ -53,7 +53,7 @@ export default {
   padding: 0;
   /* Ocupa exactamente lo que queda del viewport tras el navbar fijo,
      sin generar scroll de página que haría que el navbar tape el botón */
-  height: calc(100vh - 150px); /* 130px margin-top + 20px padding del content-wrapper */
+  height: calc(100vh - 170px); /* 130px header/menu fijo + 40px padding content-wrapper (20 top + 20 bottom) */
   overflow: hidden;
 }
 

@@ -140,6 +140,8 @@ body {
   padding: 20px;
   width: 100%;
   box-sizing: border-box;
+  height: calc(100vh - 130px);
+  overflow-y: auto;
 }
 
 

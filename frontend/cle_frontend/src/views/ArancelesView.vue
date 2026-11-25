@@ -208,6 +208,9 @@ export default {
   background-color: #fff;
   border-bottom: 1px solid #ccc;
   display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .submenu-item {
