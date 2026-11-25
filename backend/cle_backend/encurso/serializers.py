@@ -114,7 +114,7 @@ class SolicitudInterAreaEnCursoSerializer(serializers.ModelSerializer):
 
         def get_servicio_solicitado(self, obj):
                 result = []
-                for d in obj.detalleinterarea_set.all():
+                for d in DetalleInterarea.objects.filter(nro_solicitudInterarea=obj):
                         try:
                                 nombre = Servicio.objects.get(pk=d.nro_servicio_id).servicio
                         except Exception:
