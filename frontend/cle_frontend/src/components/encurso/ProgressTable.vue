@@ -781,9 +781,9 @@
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia)">
                   <template v-if="!ultimoCicloIA(ia).adjunto_informeServicio && !ultimoCicloIA(ia).corregir">
                     <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
-                      <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormatoIA(ultimoCicloIA(ia).id)" title="Formato institucional IA pendiente" style="border-color:#2b579a; color:#2b579a;">
+                      <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormatoIA(ultimoCicloIA(ia).id)" title="Formato institucional IA pendiente" style="border-color:#e67e22; color:#e67e22;">
                         <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
-                        <span class="st-sd-badge" style="background:#2b579a;"></span>
+                        <span class="st-sd-badge" style="background:#e67e22;"></span>
                       </button>
                       <div v-if="popupFormatoIAId === ultimoCicloIA(ia).id" class="st-sd-dial" @click.stop>
                         <div class="st-sd-opcion" style="--rotation: -120deg"
@@ -841,9 +841,9 @@
                 </template>
                 <template v-else-if="!ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).adjunto_informeArea && !ultimoCicloIA(ia).adjunto_informeServicio">
                   <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
-                    <button class="st-sd-trigger ia-blink" @click.stop="togglePopupPDFAdminIA(ia.id)" title="Informe Inter-Área — aplicar formato institucional" style="border-color:#2b579a; color:#2b579a;">
-                      <i class="bi bi-file-earmark-word" style="font-size:13px; color:#2b579a;"></i>
-                      <span class="st-sd-badge" style="background:#2b579a;"></span>
+                    <button class="st-sd-trigger ia-blink" @click.stop="togglePopupPDFAdminIA(ia.id)" title="Informe Inter-Área — aplicar formato institucional" style="border-color:#e67e22; color:#e67e22;">
+                      <i class="bi bi-file-earmark-word" style="font-size:13px; color:#e67e22;"></i>
+                      <span class="st-sd-badge" style="background:#e67e22;"></span>
                     </button>
                     <div v-if="popupPDFAdminIAId === ia.id" class="st-sd-dial" @click.stop>
                       <div class="st-sd-opcion" style="--rotation: -120deg"
@@ -871,9 +871,9 @@
                     <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
                       <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormato(ciclo.id)"
                               :title="ciclo.tipo_cambiado_admin ? '⚠ El tipo de informe fue modificado · Formato institucional pendiente' : 'Formato institucional pendiente'"
-                              style="border-color:#2b579a; color:#2b579a; position:relative;">
+                              style="border-color:#e67e22; color:#e67e22; position:relative;">
                         <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
-                        <span class="st-sd-badge" style="background:#2b579a;"></span>
+                        <span class="st-sd-badge" style="background:#e67e22;"></span>
                         <span v-if="ciclo.tipo_cambiado_admin"
                               style="position:absolute; top:-5px; right:-5px; background:#e67e22; color:#fff; border-radius:50%; width:12px; height:12px; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:bold; line-height:1;">!</span>
                       </button>
@@ -1168,7 +1168,7 @@
                 <template v-if="ia.genera_informe_parcial && ia.confirmado_ap && ultimoCicloIA(ia) && ultimoCicloIA(ia).revision_confirmada && !ultimoCicloIA(ia).pdf_confirmado_admin && !ultimoCicloIA(ia).corregir">
                   <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger" @click.stop="togglePopupPDFAdminIA(ia.id)" title="Generar PDF IA"
-                            style="border-color:#2b579a; color:#2b579a;">
+                            style="border-color:#e67e22; color:#e67e22;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
                       <span class="st-sd-badge"></span>
                     </button>
@@ -1201,7 +1201,7 @@
                 <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
                     <button class="st-sd-trigger ia-blink" @click.stop="togglePopupPDFAdmin(ciclo.id)" title="Formato institucional pendiente — Ver / Convertir a PDF"
-                            style="border-color:#2b579a; color:#2b579a;">
+                            style="border-color:#e67e22; color:#e67e22;">
                       <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
                       <span class="st-sd-badge"></span>
                     </button>
