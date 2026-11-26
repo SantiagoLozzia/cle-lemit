@@ -199,9 +199,7 @@ tr.row-selected td {
   left: 0;
   width: 100%;
   height: 100%;
-  align-items: inherit !important;
-  margin-bottom: 2rem !important;
-  text-align: left !important;
+  text-align: left;
   background-color: rgba(0, 0, 0, 0.5);
   overflow: auto;
 }

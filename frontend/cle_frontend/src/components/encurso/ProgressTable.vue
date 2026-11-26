@@ -2099,26 +2099,39 @@
               <strong>Final:</strong> es el único informe del circuito.
             </small>
           </div>
-          <div class="modal-footer flex-wrap gap-1">
+          <div class="modal-footer flex-column gap-2 align-items-stretch">
             <template v-if="esCambioTipo">
-              <button type="button" class="btn btn-primary" @click="confirmarCambioTipo('parcial')">Parcial</button>
-              <button type="button" class="btn btn-primary"
+              <button type="button" class="btn btn-outline-primary w-100 text-start px-3" @click="confirmarCambioTipo('parcial')">
+                <i class="bi bi-file-earmark-text me-2"></i>Parcial
+              </button>
+              <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
                       :disabled="!hayParcialesPrevios"
                       :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
-                      @click="hayParcialesPrevios && confirmarCambioTipo('complementario')">Complementario</button>
-              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-primary"
-                      @click="confirmarCambioTipo('final')">Final</button>
+                      @click="hayParcialesPrevios && confirmarCambioTipo('complementario')">
+                <i class="bi bi-layers me-2"></i>Complementario
+              </button>
+              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-outline-dark w-100 text-start px-3"
+                      @click="confirmarCambioTipo('final')">
+                <i class="bi bi-check2-all me-2"></i>Final
+              </button>
             </template>
             <template v-else>
-              <button type="button" class="btn btn-primary" @click="subirInformeAreaCiclo('parcial')">Parcial</button>
-              <button type="button" class="btn btn-primary"
+              <button type="button" class="btn btn-outline-primary w-100 text-start px-3" @click="subirInformeAreaCiclo('parcial')">
+                <i class="bi bi-file-earmark-text me-2"></i>Parcial
+              </button>
+              <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
                       :disabled="!hayParcialesPrevios"
                       :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
-                      @click="hayParcialesPrevios && subirInformeAreaCiclo('complementario')">Complementario</button>
-              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-primary"
-                      @click="subirInformeAreaCiclo('final')">Final</button>
+                      @click="hayParcialesPrevios && subirInformeAreaCiclo('complementario')">
+                <i class="bi bi-layers me-2"></i>Complementario
+              </button>
+              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-outline-dark w-100 text-start px-3"
+                      @click="subirInformeAreaCiclo('final')">
+                <i class="bi bi-check2-all me-2"></i>Final
+              </button>
             </template>
-            <button type="button" class="btn btn-secondary" @click="cerrarModalTipoCiclo">Cancelar</button>
+            <hr class="my-1">
+            <button type="button" class="btn btn-secondary w-100" @click="cerrarModalTipoCiclo">Cancelar</button>
           </div>
         </div>
       </div>
