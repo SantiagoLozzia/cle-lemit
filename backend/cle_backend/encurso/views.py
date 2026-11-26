@@ -958,6 +958,17 @@ class CambiarTipoCiclo(APIView):
         if tipo not in ['parcial', 'complementario', 'final']:
             return Response({'error': 'Tipo inválido.'}, status=status.HTTP_400_BAD_REQUEST)
         ciclo.tipo = tipo
+        ciclo.tipo_cambiado_admin = True
+        ciclo.save()
+        return Response(status=status.HTTP_200_OK)
+
+
+class ConfirmarTipoCambioAdmin(APIView):
+    permission_classes = [IsAuthenticated, IsAdministracion]
+
+    def post(self, request, ciclo_id):
+        ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
+        ciclo.tipo_cambiado_admin = False
         ciclo.save()
         return Response(status=status.HTTP_200_OK)
 

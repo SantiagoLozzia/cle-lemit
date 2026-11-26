@@ -408,6 +408,9 @@ class CicloInforme(models.Model):
     nota_rechazo_st = models.TextField(null=True, blank=True)
     rechazo_st_destino = models.CharField(max_length=20, null=True, blank=True)  # 'administracion' o 'area'
 
+    # Notificación de cambio de tipo para Administración
+    tipo_cambiado_admin = models.BooleanField(default=False)
+
     class Meta:
         ordering = ['numero']
 

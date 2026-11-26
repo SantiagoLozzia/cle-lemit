@@ -869,16 +869,24 @@
                   <!-- Sin informe servicio, sin corrección pendiente -->
                   <template v-if="!ciclo.adjunto_informeServicio && !ciclo.corregir">
                     <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
-                      <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormato(ciclo.id)" title="Formato institucional pendiente" style="border-color:#2b579a; color:#2b579a;">
+                      <button class="st-sd-trigger ia-blink" @click.stop="togglePopupFormato(ciclo.id)"
+                              :title="ciclo.tipo_cambiado_admin ? '⚠ El tipo de informe fue modificado · Formato institucional pendiente' : 'Formato institucional pendiente'"
+                              style="border-color:#2b579a; color:#2b579a; position:relative;">
                         <i class="bi bi-file-earmark-word" style="font-size:13px;"></i>
                         <span class="st-sd-badge" style="background:#2b579a;"></span>
+                        <span v-if="ciclo.tipo_cambiado_admin"
+                              style="position:absolute; top:-5px; right:-5px; background:#e67e22; color:#fff; border-radius:50%; width:12px; height:12px; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:bold; line-height:1;">!</span>
                       </button>
                       <div v-if="popupFormatoId === ciclo.id" class="st-sd-dial" @click.stop>
-                        <div class="st-sd-opcion" style="--rotation: -120deg"
+                        <div v-if="ciclo.tipo_cambiado_admin" class="st-sd-opcion" style="--rotation: -150deg; background:#e67e22; color:#fff;"
+                             @click.stop="confirmarTipoCambioAdmin(ciclo); popupFormatoId = null" title="OK: enterado del cambio de tipo">
+                          <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="st-sd-opcion" :style="ciclo.tipo_cambiado_admin ? '--rotation: -105deg' : '--rotation: -120deg'"
                              @click.stop="abrirArchivo(ciclo.adjunto_informeArea); popupFormatoId = null" title="Ver informe área">
                           <i class="bi bi-eye"></i>
                         </div>
-                        <div class="st-sd-opcion" style="--rotation: -60deg" title="Subir formato institucional">
+                        <div class="st-sd-opcion" :style="ciclo.tipo_cambiado_admin ? '--rotation: -60deg' : '--rotation: -60deg'" title="Subir formato institucional">
                           <label :for="'inf-serv-ciclo-' + ciclo.id" style="cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">
                             <i class="bi bi-upload"></i>
                           </label>
@@ -2105,12 +2113,12 @@
                 <i class="bi bi-file-earmark-text me-2"></i>Parcial
               </button>
               <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
-                      :disabled="!hayParcialesPrevios || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
-                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : !hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
-                      @click="hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && confirmarCambioTipo('complementario')">
+                      :disabled="(!hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')) || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
+                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : (!hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')) ? 'Requiere al menos un informe o inter-área parcial previo' : ''"
+                      @click="(hayParcialesPrevios || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')) && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && confirmarCambioTipo('complementario')">
                 <i class="bi bi-layers me-2"></i>Complementario
               </button>
-              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-outline-dark w-100 text-start px-3"
+              <button v-if="!hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')" type="button" class="btn btn-outline-dark w-100 text-start px-3"
                       :disabled="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
                       :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : ''"
                       @click="!filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && confirmarCambioTipo('final')">
@@ -2122,12 +2130,12 @@
                 <i class="bi bi-file-earmark-text me-2"></i>Parcial
               </button>
               <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
-                      :disabled="!hayParcialesPrevios || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
-                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : !hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
-                      @click="hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && subirInformeAreaCiclo('complementario')">
+                      :disabled="(!hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')) || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
+                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : (!hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')) ? 'Requiere al menos un informe o inter-área parcial previo' : ''"
+                      @click="(hayParcialesPrevios || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')) && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && subirInformeAreaCiclo('complementario')">
                 <i class="bi bi-layers me-2"></i>Complementario
               </button>
-              <button v-if="!hayParcialesPrevios" type="button" class="btn btn-outline-dark w-100 text-start px-3"
+              <button v-if="!hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'parcial')" type="button" class="btn btn-outline-dark w-100 text-start px-3"
                       :disabled="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
                       :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : ''"
                       @click="!filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && subirInformeAreaCiclo('final')">
@@ -5453,6 +5461,15 @@
         }
       };
 
+      const confirmarTipoCambioAdmin = async (ciclo) => {
+        try {
+          await api.post(`/encurso/ciclo/${ciclo.id}/confirmar_tipo_cambio_admin/`);
+          fetchData();
+        } catch (error) {
+          console.error('Error al confirmar cambio de tipo:', error);
+        }
+      };
+
       // Administracion - Informe Servicio por Ciclo
       const subirInformeServicioCiclo = async (event, ciclo) => {
         const archivo = event.target.files[0];
@@ -6543,7 +6560,7 @@
         tipoRechazoVer,
         eliminarAdjuntoInformeInterarea,
         // Administracion - Informe Servicio
-        subirInformeServicioCiclo,
+        subirInformeServicioCiclo, confirmarTipoCambioAdmin,
         generarPDFServicioCiclo,
         generandoPDFId,
         abrirModalCorreccionesCiclo,
