@@ -597,7 +597,7 @@
                       style="font-size:10px;"
                       :style="esPrincipalDeIA(ia) ? 'cursor:pointer; text-decoration:underline dotted;' : ''"
                       :title="esPrincipalDeIA(ia) ? 'Cambiar tipo' : tipoIALabel(ia.tipo)"
-                      @click.stop="esPrincipalDeIA(ia) && abrirModalTipoIA(ia)">
+                      @click.stop="esPrincipalDeIA(ia) && abrirModalTipoIA(ia, fila)">
                   {{ tipoIALabel(ia.tipo) }}
                 </span>
               </div>
@@ -2105,13 +2105,15 @@
                 <i class="bi bi-file-earmark-text me-2"></i>Parcial
               </button>
               <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
-                      :disabled="!hayParcialesPrevios"
-                      :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
-                      @click="hayParcialesPrevios && confirmarCambioTipo('complementario')">
+                      :disabled="!hayParcialesPrevios || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
+                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : !hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
+                      @click="hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && confirmarCambioTipo('complementario')">
                 <i class="bi bi-layers me-2"></i>Complementario
               </button>
               <button v-if="!hayParcialesPrevios" type="button" class="btn btn-outline-dark w-100 text-start px-3"
-                      @click="confirmarCambioTipo('final')">
+                      :disabled="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
+                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : ''"
+                      @click="!filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && confirmarCambioTipo('final')">
                 <i class="bi bi-check2-all me-2"></i>Final
               </button>
             </template>
@@ -2120,13 +2122,15 @@
                 <i class="bi bi-file-earmark-text me-2"></i>Parcial
               </button>
               <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
-                      :disabled="!hayParcialesPrevios"
-                      :title="!hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
-                      @click="hayParcialesPrevios && subirInformeAreaCiclo('complementario')">
+                      :disabled="!hayParcialesPrevios || filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
+                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : !hayParcialesPrevios ? 'Requiere al menos un informe parcial previo' : ''"
+                      @click="hayParcialesPrevios && !filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && subirInformeAreaCiclo('complementario')">
                 <i class="bi bi-layers me-2"></i>Complementario
               </button>
               <button v-if="!hayParcialesPrevios" type="button" class="btn btn-outline-dark w-100 text-start px-3"
-                      @click="subirInformeAreaCiclo('final')">
+                      :disabled="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario')"
+                      :title="filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') ? 'No permitido: hay una inter-área complementaria en este circuito' : ''"
+                      @click="!filaModalTipoCiclo?.solicitudes_interarea?.some(ia => ia.tipo === 'complementario') && subirInformeAreaCiclo('final')">
                 <i class="bi bi-check2-all me-2"></i>Final
               </button>
             </template>
@@ -2153,11 +2157,21 @@
               <strong>Complementario:</strong> complementa al área principal; no habilita nuevas IAs ni ciclos.
             </small>
           </div>
-          <div class="modal-footer flex-wrap gap-1">
-            <button type="button" class="btn btn-primary" @click="confirmarCambioTipoIA('parcial')">Parcial</button>
-            <button type="button" class="btn btn-success" @click="confirmarCambioTipoIA('resultado')">Resultado</button>
-            <button type="button" class="btn btn-secondary" @click="confirmarCambioTipoIA('complementario')">Complementario</button>
-            <button type="button" class="btn btn-outline-secondary" @click="cerrarModalTipoIA">Cancelar</button>
+          <div class="modal-footer flex-column gap-2 align-items-stretch">
+            <button type="button" class="btn btn-outline-primary w-100 text-start px-3" @click="confirmarCambioTipoIA('parcial')">
+              <i class="bi bi-file-earmark-text me-2"></i>Parcial
+            </button>
+            <button type="button" class="btn btn-outline-success w-100 text-start px-3" @click="confirmarCambioTipoIA('resultado')">
+              <i class="bi bi-clipboard-check me-2"></i>Resultado
+            </button>
+            <button type="button" class="btn btn-outline-secondary w-100 text-start px-3"
+                    :disabled="filaModalTipoIA?.ciclos?.some(c => ['final','complementario'].includes(c.tipo))"
+                    :title="filaModalTipoIA?.ciclos?.some(c => ['final','complementario'].includes(c.tipo)) ? 'No permitido: el informe de área ya tiene un cierre (final o complementario)' : ''"
+                    @click="!filaModalTipoIA?.ciclos?.some(c => ['final','complementario'].includes(c.tipo)) && confirmarCambioTipoIA('complementario')">
+              <i class="bi bi-layers me-2"></i>Complementario
+            </button>
+            <hr class="my-1">
+            <button type="button" class="btn btn-secondary w-100" @click="cerrarModalTipoIA">Cancelar</button>
           </div>
         </div>
       </div>
@@ -2197,7 +2211,9 @@
                     class="btn flex-fill py-3 ia-tipo-btn"
                     :class="nuevaSolicitudInterarea.tipo === 'complementario' ? '' : 'btn-outline-secondary'"
                     :style="nuevaSolicitudInterarea.tipo === 'complementario' ? 'background:#8e44ad; color:#fff; border-color:#8e44ad;' : ''"
-                    @click="nuevaSolicitudInterarea.tipo = 'complementario'; nuevaSolicitudInterarea.genera_informe_parcial = false; erroresIA.tipo = null">
+                    :disabled="filaParaCrearIA?.ciclos?.some(c => ['final','complementario'].includes(c.tipo))"
+                    :title="filaParaCrearIA?.ciclos?.some(c => ['final','complementario'].includes(c.tipo)) ? 'No permitido: el informe de área ya tiene un cierre (final o complementario)' : ''"
+                    @click="!filaParaCrearIA?.ciclos?.some(c => ['final','complementario'].includes(c.tipo)) && (nuevaSolicitudInterarea.tipo = 'complementario', nuevaSolicitudInterarea.genera_informe_parcial = false, erroresIA.tipo = null)">
                     <i class="bi bi-layers d-block mb-1" style="font-size:1.5rem"></i>
                     <strong>Complementario</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">Informe complementario; no habilita nuevo parcial ni nueva inter-área</small>
@@ -4875,6 +4891,7 @@
 
       const popupInformeAreaId = ref(null);
       const hayParcialesPrevios = ref(false);
+      const filaModalTipoCiclo = ref(null);
 
       const togglePopupInformeArea = (cicloId) => {
         const opening = popupInformeAreaId.value !== cicloId;
@@ -4906,6 +4923,7 @@
         archivoPendiente.value = event.target.files[0];
         cicloSeleccionado.value = ciclo;
         filaParaNuevoCiclo.value = null;
+        filaModalTipoCiclo.value = fila || null;
         hayParcialesPrevios.value = fila
           ? fila.ciclos.some(c => c.tipo === 'parcial' && c.adjunto_informeArea)
           : false;
@@ -4935,6 +4953,7 @@
         archivoPendiente.value = file;
         cicloSeleccionado.value = null;
         filaParaNuevoCiclo.value = fila;
+        filaModalTipoCiclo.value = fila;
         hayParcialesPrevios.value = fila.ciclos.some(c => c.tipo === 'parcial' && c.adjunto_informeArea);
         mostrarModalTipoCiclo.value = true;
       };
@@ -4982,6 +5001,7 @@
         popupInformeAreaId.value = null;
         cicloParaCambioTipo.value = ciclo;
         esCambioTipo.value = true;
+        filaModalTipoCiclo.value = fila || null;
         hayParcialesPrevios.value = fila
           ? fila.ciclos.some(c => c.id !== ciclo.id && c.tipo === 'parcial' && c.adjunto_informeArea)
           : false;
@@ -5011,6 +5031,7 @@
         archivoPendiente.value = null;
         cicloSeleccionado.value = null;
         filaParaNuevoCiclo.value = null;
+        filaModalTipoCiclo.value = null;
         esCambioTipo.value = false;
         cicloParaCambioTipo.value = null;
       };
@@ -5107,8 +5128,11 @@
         return labs;
       };
 
+      const filaParaCrearIA = ref(null);
+
       const abrirModalCrearSolicitudInterArea = async (fila) => {
         numeroCircuitoGlobal.value = fila.nro_circuito;
+        filaParaCrearIA.value = fila;
         try {
           await obtenerServicios(numeroCircuitoGlobal.value);
           nuevaSolicitudInterarea.value.nro_circuito = fila.nro_circuito;
@@ -5129,6 +5153,7 @@
 
       const cerrarModalCrearSolicitudInterArea = () => {
         mostrarModalCrearSolicitudInterArea.value = false;
+        filaParaCrearIA.value = null;
         serviciosDisponibles.value = [];
         serviciosSeleccionados.value = [];
         busquedaArancel.value = '';
@@ -5751,9 +5776,11 @@
 
       const mostrarModalTipoIA = ref(false);
       const iaParaCambioTipo = ref(null);
+      const filaModalTipoIA = ref(null);
 
-      const abrirModalTipoIA = (ia) => {
+      const abrirModalTipoIA = (ia, fila) => {
         iaParaCambioTipo.value = ia;
+        filaModalTipoIA.value = fila || null;
         mostrarModalTipoIA.value = true;
       };
 
@@ -5777,6 +5804,7 @@
       const cerrarModalTipoIA = () => {
         mostrarModalTipoIA.value = false;
         iaParaCambioTipo.value = null;
+        filaModalTipoIA.value = null;
       };
 
       const subirInformeServicioCicloIA = async (event, cicloIA) => {
@@ -6432,7 +6460,7 @@
         puedeCrearNuevoCiclo,
         crearCiclo,
         popupInformeAreaId,
-        hayParcialesPrevios,
+        hayParcialesPrevios, filaModalTipoCiclo,
         togglePopupInformeArea,
         eliminarInformeAreaCiclo,
         seleccionarArchivoInformeAreaCiclo,
@@ -6461,7 +6489,7 @@
         inter_areaTematicaOptions,
         nuevaSolicitudInterarea,
         obtenerServicios,
-        abrirModalCrearSolicitudInterArea,
+        abrirModalCrearSolicitudInterArea, filaParaCrearIA,
         cerrarModalCrearSolicitudInterArea,
         mostrarModalCrearSolicitudInterArea,
         crearSolicitudInterArea,
@@ -6588,7 +6616,7 @@
         togglePopupSTIA, togglePopupPDFAdminIA, togglePopupAreaIA, togglePopupAPIA, togglePopupDirIA,
         togglePopupConfirmIA, togglePopupFormatoIA,
         tipoIALabel,
-        mostrarModalTipoIA, abrirModalTipoIA, confirmarCambioTipoIA, cerrarModalTipoIA,
+        mostrarModalTipoIA, abrirModalTipoIA, confirmarCambioTipoIA, cerrarModalTipoIA, filaModalTipoIA,
         cerrarModalFirmaResponsableArea,
         mostrarModalFirmaResponsableArea,
         confirmarFirmaResponsableAreaCiclo,
