@@ -2185,7 +2185,7 @@
                     :class="nuevaSolicitudInterarea.tipo === 'complementario' ? '' : 'btn-outline-secondary'"
                     :style="nuevaSolicitudInterarea.tipo === 'complementario' ? 'background:#8e44ad; color:#fff; border-color:#8e44ad;' : ''"
                     @click="nuevaSolicitudInterarea.tipo = 'complementario'; nuevaSolicitudInterarea.genera_informe_parcial = false; erroresIA.tipo = null">
-                    <i class="bi bi-plus-circle d-block mb-1" style="font-size:1.5rem"></i>
+                    <i class="bi bi-layers d-block mb-1" style="font-size:1.5rem"></i>
                     <strong>Complementario</strong>
                     <small class="d-block text-muted" style="font-size:0.72rem">Informe complementario; no habilita nuevo parcial ni nueva inter-área</small>
                   </button>
@@ -2238,10 +2238,12 @@
                 <div v-if="erroresIA.servicios" class="ia-error-msg">{{ erroresIA.servicios }}</div>
               </div>
 
+              <hr class="my-3">
+
               <!-- Servicio adicional del catálogo -->
               <div class="mb-3">
                 <label class="form-label fw-semibold" style="font-size:0.85rem">
-                  Servicio adicional <small class="text-muted fw-normal">(no incluido en la OS)</small>
+                  Servicio adicional <small class="text-muted fw-normal">(no incluido en la OS) · <em>opcional</em></small>
                 </label>
                 <input v-model="busquedaArancel" type="text" class="form-control form-control-sm mb-1" placeholder="Buscar en catálogo de servicios...">
                 <div v-if="busquedaArancel.trim()" class="ia-arancel-resultados">
@@ -2314,6 +2316,11 @@
                       </div>
                       <div v-if="labsSeleccionadosIA.length" class="lab-cal-footer">
                         {{ labsSeleccionadosIA.map(l => l.numero).join(', ') }} / {{ labsSeleccionadosIA[0]?.anio }}
+                      </div>
+                      <div class="lab-cal-confirm">
+                        <button type="button" class="btn btn-sm btn-primary w-100" @click.stop="labsPickerAbierto = false">
+                          <i class="bi bi-check2 me-1"></i>Aceptar
+                        </button>
                       </div>
                     </div>
                   </Teleport>
@@ -7765,6 +7772,11 @@
   border-top: 1px solid #dee2e6;
   font-size: 0.8rem;
   color: #495057;
+}
+.lab-cal-confirm {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #dee2e6;
 }
 .lab-cal-trigger--error {
   border-color: #dc3545 !important;
