@@ -390,7 +390,7 @@
                 class="ciclo-row ia-row"
                 :class="{ 'ia-row-pendiente': iaDebeParpadear(ia) }">
                 <span class="no-wrap-column" style="font-size:0.78rem">{{ ia.fecha }}</span>
-                <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ esSoloInterAreaEnFila(fila) ? ia.areaTematica_origen : ia.inter_areaTematica }}</span>
+                <span class="no-wrap-column ia-area-label" style="font-size:0.78rem">{{ esInterAreaDeIA(ia) ? ia.areaTematica_origen : ia.inter_areaTematica }}</span>
                 <i v-if="!isAdministracion" class="bi bi-clipboard2 action-icon" style="font-size:0.9rem" @click="abrirSolicitudInterArea(ia)"></i>
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row">
@@ -3978,6 +3978,7 @@
                   .map(s => ({
                     id: s.nro_solicitudInterarea,
                     fecha: s.fecha_solicitudInterarea ? formatDate(s.fecha_solicitudInterarea) : '',
+                    fecha_raw: s.fecha_solicitudInterarea || '',
                     inter_areaTematica: formatAreaTematica(s.inter_areaTematica),
                     inter_areaTematica_raw: s.inter_areaTematica,
                     areaTematica_origen: s.areaTematica_origen,
@@ -5347,7 +5348,7 @@
       const abrirSolicitudInterArea = (ia) => {
         marcarIAVista(ia.id);
         nroSolicitudInterArea.value = ia.id;
-        fechaSolicitudInterArea.value = ia.fecha;
+        fechaSolicitudInterArea.value = ia.fecha_raw;
         areaTematicaOrigen.value = formatAreaTematica(ia.areaTematica_origen);
         interAreaSolicitudInterArea.value = ia.inter_areaTematica;
         muestrasSolicitudInterArea.value = ia.muestras;
