@@ -79,7 +79,7 @@
             <th v-if="isTecnologicoOrDireccion" colspan="2" class="add-border-right align-middle text-center">Orden de Servicio</th>
             <th v-if="isAreaJefe || isAreaStandard" colspan="1" class="align-middle text-center">Legajo</th>
             <th v-if="isAreaJefe || isAreaStandard" colspan="1" class="add-border-right align-middle text-center">Orden de Servicio</th>
-            <th v-if="isTecnologicoOrDireccionOrArea" colspan="4" class="add-border-right align-middle text-center">Inter Area</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" colspan="5" class="add-border-right align-middle text-center">Inter Area</th>
             <th colspan="6" class="add-border-right align-middle text-center">Informe de Area</th>
             <!-- <th colspan="1" class="add-border-right align-middle text-center">Informe Area</th> -->
             <th colspan="1" class="add-border-right align-middle text-center">Administracion</th>
@@ -119,7 +119,8 @@
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Fecha / Área</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Informe IA</th>
             <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Registros IA</th>
-            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Tipo IA</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="align-middle text-center">Tipo IA</th>
+            <th v-if="isTecnologicoOrDireccionOrArea" class="add-border-right align-middle text-center">Plazo IA</th>
             <!-- Subcolumnas de Informe de Area -->
             <th class="align-middle text-center">Fecha</th>
             <th class="align-middle text-center">Solicitante</th>
@@ -590,7 +591,7 @@
             </td>
 
             <!-- Columna Tipo IA -->
-            <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right">
+            <td v-if="isTecnologicoOrDireccionOrArea">
               <div v-for="ia in fila.solicitudes_interarea" :key="ia.id" class="ciclo-row" style="height:50px">
                 <span class="badge"
                       :class="ia.tipo === 'resultado' ? 'bg-success' : ia.tipo === 'complementario' ? 'bg-secondary' : 'bg-primary'"
@@ -604,6 +605,18 @@
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
                 <div v-for="ciclo in fila.ciclos" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              </template>
+            </td>
+
+            <!-- Columna Plazo IA -->
+            <td v-if="isTecnologicoOrDireccionOrArea" class="add-border-right" style="text-align:center;">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ia-' + ia.id" class="ciclo-row" style="height:50px;">
+                <span v-if="ia.plazo" class="plazo-badge">{{ ia.plazo }}</span>
+              </div>
+              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <template v-if="!esSoloInterAreaEnFila(fila)">
+                <div v-for="ciclo in fila.ciclos" :key="'plazo-ia-csp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
                 <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
@@ -754,12 +767,10 @@
               </template>
             </td>
 
-            <!-- Columna Plazo (por IA y por ciclo) -->
+            <!-- Columna Plazo (por ciclo) -->
             <td class="add-border-right" style="text-align:center;">
-              <!-- Plazo de cada IA -->
-              <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ia-' + ia.id" class="ciclo-row" style="height:50px;">
-                <span v-if="ia.plazo" class="plazo-badge">{{ ia.plazo }}</span>
-              </div>
+              <!-- Spacers IA -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ciclo-ia-sp-' + ia.id" class="ia-sp"></div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <!-- Sin ciclos todavía: plazo general -->
@@ -2413,10 +2424,13 @@
 
               <div class="mb-3">
                 <label for="plazo_interArea" class="form-label text-left">
-                  Plazo (días) <span class="text-muted" style="font-size:0.8rem">· <em>opcional</em></span>
+                  Plazo (días) <span class="text-danger">*</span>
                 </label>
                 <input v-model.number="nuevaSolicitudInterarea.plazo" type="number" min="1"
-                       class="form-control" id="plazo_interArea" style="width:120px;" />
+                       :class="['form-control', erroresIA.plazo ? 'is-invalid' : '']"
+                       id="plazo_interArea" style="width:120px;"
+                       @input="erroresIA.plazo = null" />
+                <div v-if="erroresIA.plazo" class="ia-error-msg">{{ erroresIA.plazo }}</div>
               </div>
 
               </fieldset>
@@ -5289,6 +5303,9 @@
           }
           if (!nuevaSolicitudInterarea.value.muestras_solicitudIa?.trim()) {
             errs.muestras = 'Ingresá las muestras a entregar.';
+          }
+          if (!nuevaSolicitudInterarea.value.plazo || nuevaSolicitudInterarea.value.plazo < 1) {
+            errs.plazo = 'Ingresá el plazo en días.';
           }
 
           if (Object.keys(errs).length) {
