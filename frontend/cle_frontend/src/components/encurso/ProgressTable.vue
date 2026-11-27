@@ -741,14 +741,19 @@
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <span v-if="ciclo.adjunto_informeArea"
-                      class="badge"
-                      :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
-                      :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
-                      :title="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
-                      @click.stop="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
-                  {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
-                </span>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                  <span v-if="ciclo.adjunto_informeArea"
+                        class="badge"
+                        :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
+                        :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
+                        :title="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
+                        @click.stop="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
+                    {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
+                  </span>
+                  <small v-if="plazoCiclo(ciclo, fila)" style="font-size:9px; color:#6c757d; white-space:nowrap;">
+                    {{ plazoCiclo(ciclo, fila) }}d
+                  </small>
+                </div>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
               </template>
@@ -4850,6 +4855,16 @@
         mostrarModalOrdenServicio.value = false;
       };
 
+      const plazoCiclo = (ciclo, fila) => {
+        if (ciclo.tipo !== 'parcial') return null;
+        const plazos = fila.os_plazos_parciales;
+        if (!plazos || !plazos.length) return null;
+        const parciales = fila.ciclos.filter(c => c.tipo === 'parcial');
+        const idx = parciales.findIndex(c => c.id === ciclo.id);
+        if (idx < 0 || idx >= plazos.length) return null;
+        return plazos[idx] || null;
+      };
+
       const guardarConfigParciales = async () => {
         const nro_circuito = osCircuitoActual.value;
         if (!nro_circuito) return;
@@ -6541,6 +6556,7 @@
         osPlazosArr,
         sincronizarPlazosOS,
         guardarConfigParciales,
+        plazoCiclo,
         // Ciclos de Informe
         mostrarModalTipoCiclo,
         mostrarClipParaNuevoParcial,
