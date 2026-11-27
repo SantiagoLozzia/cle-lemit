@@ -396,8 +396,10 @@
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row">
                 <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)" title="Nueva solicitud inter-área"></i>
               </div>
-              <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'ia-fecha-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
-              <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <template v-if="!esSoloInterAreaEnFila(fila)">
+                <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'ia-fecha-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              </template>
             </td>
 
             <!-- Columna Inter Area — Estado Informe IA -->
@@ -623,7 +625,6 @@
 
             <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
-              <div v-for="ia in iaVisiblesEnFila(fila)" :key="'fecha-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                   <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
@@ -634,7 +635,6 @@
 
             <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
-              <div v-for="ia in iaVisiblesEnFila(fila)" :key="'sol-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <div v-if="fila.ciclos.length > 0" class="ciclo-row">{{ fila.nombre_solicitante }}</div>
                 <div v-for="ciclo in fila.ciclos.slice(1)" :key="'sol-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"></div>
@@ -644,7 +644,6 @@
 
             <!-- Columna Informe Area (por ciclo) -->
             <td>
-              <div v-for="ia in iaVisiblesEnFila(fila)" :key="'infarea-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
@@ -724,7 +723,6 @@
 
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
-              <div v-for="ia in iaVisiblesEnFila(fila)" :key="'reg-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
@@ -747,7 +745,6 @@
 
             <!-- Columna Estado/Tipo (por ciclo) -->
             <td>
-              <div v-for="ia in iaVisiblesEnFila(fila)" :key="'tipo-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
@@ -765,8 +762,6 @@
 
             <!-- Columna Plazo (por ciclo) -->
             <td class="add-border-right" style="text-align:center;">
-              <!-- Spacers IA -->
-              <div v-for="ia in iaVisiblesEnFila(fila)" :key="'plazo-ciclo-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <!-- Sin ciclos todavía: plazo general -->
                 <div v-if="fila.ciclos.length === 0" class="ciclo-row">
