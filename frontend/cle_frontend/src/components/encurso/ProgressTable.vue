@@ -636,7 +636,9 @@
             <td style="white-space: nowrap;">
               <div v-for="ia in fila.solicitudes_interarea" :key="'sol-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
-                <div class="ciclo-row">{{ fila.nombre_solicitante }}</div>
+                <div v-if="fila.ciclos.length > 0" class="ciclo-row">{{ fila.nombre_solicitante }}</div>
+                <div v-for="ciclo in fila.ciclos.slice(1)" :key="'sol-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"></div>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"></div>
               </template>
             </td>
 
@@ -706,10 +708,7 @@
                   <span v-else><i class="bi bi-stopwatch"></i></span>
                 </div>
                 <!-- Clip para agregar otro parcial: fila separada debajo del último -->
-                <div v-if="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila)
-                           && fila.ciclos.length > 0
-                           && fila.ciclos[fila.ciclos.length-1].adjunto_informeArea
-                           && fila.ciclos[fila.ciclos.length-1].tipo === 'parcial'"
+                <div v-if="mostrarClipParaNuevoParcial(fila)"
                      class="ciclo-row" @click.stop>
                   <label :for="'inf-area-nuevo-' + fila.ciclos[fila.ciclos.length-1].id"
                          style="cursor:pointer;" title="Agregar otro informe parcial">
