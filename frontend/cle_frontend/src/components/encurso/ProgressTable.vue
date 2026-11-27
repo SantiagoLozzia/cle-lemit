@@ -1946,6 +1946,35 @@
                 <label class="form-label">Muestras:</label>
                 <input v-model="muestrasOS" type="text" readonly class="form-control" required />
               </div>
+
+              <!-- Configuración de parciales — solo ST -->
+              <div v-if="isServiciosTecnologicos" class="mb-3 mt-2">
+                <hr class="my-3">
+                <label class="form-label fw-semibold mb-2">
+                  Parciales <span class="text-muted" style="font-size:0.8rem">· <em>opcional</em></span>
+                </label>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <label class="form-label mb-0" style="white-space:nowrap; min-width:130px; font-size:0.9rem;">Máx. parciales:</label>
+                  <input v-model.number="osMaxParciales" type="number" min="1" max="20"
+                         class="form-control form-control-sm" style="width:75px;"
+                         @input="sincronizarPlazosOS" />
+                </div>
+                <div v-if="osMaxParciales > 0">
+                  <div v-for="n in osMaxParciales" :key="n" class="d-flex align-items-center gap-2 mb-1">
+                    <label class="form-label mb-0" style="font-size:0.85rem; white-space:nowrap; min-width:130px;">
+                      Plazo parcial {{ n }} (días):
+                    </label>
+                    <input v-model.number="osPlazosArr[n-1]" type="number" min="1"
+                           class="form-control form-control-sm" style="width:75px;" />
+                  </div>
+                </div>
+                <!-- Guardar config (solo modo lectura / OS ya creada) -->
+                <div v-if="osReadOnly" class="mt-2">
+                  <button type="button" class="btn btn-sm btn-outline-primary no-print" @click="guardarConfigParciales">
+                    <i class="bi bi-save me-1"></i>Guardar
+                  </button>
+                </div>
+              </div>
             </form>
           </div>
           <!-- Historial de revisiones (solo en modo lectura) -->
@@ -4037,6 +4066,8 @@
                   plazo_estimado: solicitud.plazo_estimado,
                   ordenServicio_completo: ordenCorrespondiente ? ordenCorrespondiente.completo : '',
                   os_modificada: ordenCorrespondiente ? !!ordenCorrespondiente.modificada : false,
+                  os_max_parciales: ordenCorrespondiente ? (ordenCorrespondiente.max_parciales ?? null) : null,
+                  os_plazos_parciales: ordenCorrespondiente ? (ordenCorrespondiente.plazos_parciales || []) : [],
                   // Ciclos de Informe
                   ciclos,
                   firma_direccion: ultimoCiclo ? ultimoCiclo.firma_direccion : false,
@@ -4700,6 +4731,16 @@
 
       // ORDEN DE SERVICIO
 
+      const osMaxParciales = ref(null);
+      const osPlazosArr = ref([]);
+
+      const sincronizarPlazosOS = () => {
+        const n = parseInt(osMaxParciales.value) || 0;
+        const actual = osPlazosArr.value.slice(0, n);
+        while (actual.length < n) actual.push(null);
+        osPlazosArr.value = actual;
+      };
+
       // OS - Archivo
 
       const abrirModalCrearOrdenServicio = async (fila) => {
@@ -4716,6 +4757,8 @@
           servicioOS.value = d.servicio_solicitado.map(s => ({ servicio: s.servicio, cant: s.cant }));
           muestrasOS.value = d.muestras;
           observacionesOS.value = '';
+          osMaxParciales.value = null;
+          osPlazosArr.value = [];
         } catch (e) {
           console.error('Error al cargar preview OS:', e);
         }
@@ -4729,6 +4772,8 @@
         osFilaActual.value = null;
         osCircuitoActual.value = null;
         nuevoRangoOS.value = '';
+        osMaxParciales.value = null;
+        osPlazosArr.value = [];
       };
 
       const aceptarOrdenServicio = () => {
@@ -4742,23 +4787,25 @@
       
       const crearOrdenServicio = async () => {
           const nro_circuito = numeroCircuitoGlobal.value;
-          console.log('numero circuito en crear orden circuito:', nro_circuito)
           try {
-              const response = await api.post(`/encurso/crear_ordenservicio/${nro_circuito}/`);
-              console.log('Orden de servicio creada exitosamente:', response.data);
+              await api.post(`/encurso/crear_ordenservicio/${nro_circuito}/`);
+              if (osMaxParciales.value > 0) {
+                try {
+                  await api.patch(`/encurso/orden/${nro_circuito}/config_parciales/`, {
+                    max_parciales: osMaxParciales.value,
+                    plazos_parciales: osPlazosArr.value.map(v => v || 0),
+                  });
+                } catch (e) { console.error('Error guardando config parciales:', e); }
+              }
               mostrarModalCrearOrdenServicio.value = false;
               fetchData();
               showSuccessAlert.value = true;
-              setTimeout(() => {
-                  showSuccessAlert.value = false;
-              }, 3000);
+              setTimeout(() => { showSuccessAlert.value = false; }, 3000);
           } catch (error) {
               console.error('Error al crear la orden de servicio:', error);
               mostrarModalCrearOrdenServicio.value = false;
               showErrorAlert.value = true;
-              setTimeout(() => {
-                  showErrorAlert.value = false;
-              }, 5000);
+              setTimeout(() => { showErrorAlert.value = false; }, 5000);
           }
       };
 
@@ -4770,7 +4817,7 @@
                 api.get(`/encurso/obtener_orden_servicio/${nro_circuito}/`),
                 api.get('/encurso/config_formulario/orden_servicio/'),
               ]);
-              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, nuevo_rango_lab, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones, version_formulario } = response.data;
+              const { nro_ordenServicio, fecha_ordenServicio, area_tematica, nro_legajo, rangos_laboratorios, nuevo_rango_lab, plazo_estimado, nombre_solicitante, servicio_solicitado, muestras, observaciones, version_formulario, max_parciales, plazos_parciales } = response.data;
               nroOS.value = nro_ordenServicio;
               fechaOS.value = fecha_ordenServicio;
               areaOS.value = formatAreaTematica(area_tematica);
@@ -4784,6 +4831,8 @@
               observacionesOS.value = observaciones;
               versionOS.value = version_formulario || '01';
               configFormularioOS.value = resConfig.data;
+              osMaxParciales.value = max_parciales || null;
+              osPlazosArr.value = [...(plazos_parciales || [])];
               osReadOnly.value = true;
               // Guardar si la OS está modificada: el área DEBE aceptar explícitamente
               osModificadaActual.value = !!(fila.os_modificada && (isAreaJefe.value || isAreaStandard.value));
@@ -4799,6 +4848,24 @@
 
       const cerrarModalOrdenServicio = () => {
         mostrarModalOrdenServicio.value = false;
+      };
+
+      const guardarConfigParciales = async () => {
+        const nro_circuito = osCircuitoActual.value;
+        if (!nro_circuito) return;
+        try {
+          await api.patch(`/encurso/orden/${nro_circuito}/config_parciales/`, {
+            max_parciales: osMaxParciales.value || null,
+            plazos_parciales: (osPlazosArr.value || []).map(v => v || 0),
+          });
+          fetchData();
+          showSuccessAlert.value = true;
+          setTimeout(() => { showSuccessAlert.value = false; }, 2000);
+        } catch (e) {
+          console.error('Error guardando config parciales:', e);
+          showErrorAlert.value = true;
+          setTimeout(() => { showErrorAlert.value = false; }, 4000);
+        }
       };
 
        // OS - Plazo
@@ -6470,6 +6537,10 @@
         abrirModalPlazoOrdenServicio,
         cerrarModalPlazoOrdenServicio,
         mostrarModalPlazoOrdenServicio,
+        osMaxParciales,
+        osPlazosArr,
+        sincronizarPlazosOS,
+        guardarConfigParciales,
         // Ciclos de Informe
         mostrarModalTipoCiclo,
         mostrarClipParaNuevoParcial,

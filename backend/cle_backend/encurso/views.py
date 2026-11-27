@@ -809,6 +809,8 @@ def obtener_ordenServicio(request, nro_circuito):
             'muestras': muestras,
             'observaciones': observaciones,
             'version_formulario': orden_servicio.version_formulario or '01',
+            'max_parciales': orden_servicio.max_parciales,
+            'plazos_parciales': orden_servicio.plazos_parciales or [],
         }
 
         return JsonResponse(response_data, status=200)
@@ -970,6 +972,23 @@ class ConfirmarTipoCambioAdmin(APIView):
         ciclo = get_object_or_404(CicloInforme, id=ciclo_id)
         ciclo.tipo_cambiado_admin = False
         ciclo.save()
+        return Response(status=status.HTTP_200_OK)
+
+
+class ActualizarConfigParciales(APIView):
+    permission_classes = [IsAuthenticated, IsServiciosTecnologicos]
+
+    def patch(self, request, nro_circuito):
+        orden = get_object_or_404(OrdenServicio, nro_circuito=nro_circuito)
+        max_parciales = request.data.get('max_parciales')
+        plazos_parciales = request.data.get('plazos_parciales', [])
+        if max_parciales is not None:
+            try:
+                orden.max_parciales = int(max_parciales)
+            except (ValueError, TypeError):
+                return Response({'error': 'max_parciales inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        orden.plazos_parciales = [int(d) for d in plazos_parciales if d is not None]
+        orden.save()
         return Response(status=status.HTTP_200_OK)
 
 # Inter Area

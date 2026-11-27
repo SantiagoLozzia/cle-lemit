@@ -36,6 +36,7 @@ urlpatterns = [
     path('informe_area_ciclo/<int:ciclo_id>/', EliminarInformeAreaCiclo.as_view(), name='eliminar-informe-area-ciclo'),
     path('cambiar_tipo_ciclo/<int:ciclo_id>/', CambiarTipoCiclo.as_view(), name='cambiar-tipo-ciclo'),
     path('ciclo/<int:ciclo_id>/confirmar_tipo_cambio_admin/', ConfirmarTipoCambioAdmin.as_view(), name='confirmar-tipo-cambio-admin'),
+    path('orden/<int:nro_circuito>/config_parciales/', ActualizarConfigParciales.as_view(), name='actualizar-config-parciales'),
     path('subir_informe_servicio_ciclo/<int:ciclo_id>/', SubirInformeServicioCiclo.as_view(), name='subir-informe-servicio-ciclo'),
     path('obtener_correcciones_ciclo/<int:ciclo_id>/', obtener_correcciones_ciclo, name='obtener-correcciones-ciclo'),
     path('advertir_correcciones_ciclo/<int:ciclo_id>/', AdvertirCorreccionesCiclo.as_view(), name='advertir-correcciones-ciclo'),

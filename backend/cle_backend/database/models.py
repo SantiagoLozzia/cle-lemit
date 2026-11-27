@@ -222,6 +222,8 @@ class OrdenServicio(models.Model):
     nuevo_rango_lab = models.CharField(max_length=255, blank=True, default='')
     nro_circuito = models.OneToOneField('Circuito', on_delete=models.SET_NULL, null=True, related_name='orden_servicio')
     version_formulario = models.CharField(max_length=10, blank=True, default='')
+    max_parciales = models.PositiveIntegerField(null=True, blank=True)
+    plazos_parciales = models.JSONField(default=list, blank=True)
 
     def __str__(self):
         return f"OrdenServicio #{self.nro_ordenServicio} - Circuito #{self.nro_circuito_id}"
