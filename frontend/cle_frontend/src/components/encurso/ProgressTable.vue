@@ -396,7 +396,7 @@
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row">
                 <i class="bi bi-plus-circle action-icon" @click="abrirModalCrearSolicitudInterArea(fila)" title="Nueva solicitud inter-área"></i>
               </div>
-              <div v-for="ciclo in fila.ciclos" :key="'ia-fecha-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'ia-fecha-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
             </td>
 
@@ -511,7 +511,7 @@
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
-                <div v-for="ciclo in fila.ciclos" :key="'ia-inf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'ia-inf-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
                 <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
@@ -585,7 +585,7 @@
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
-                <div v-for="ciclo in fila.ciclos" :key="'ia-reg-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'ia-reg-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
                 <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
@@ -604,7 +604,7 @@
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
-                <div v-for="ciclo in fila.ciclos" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'ia-tipo-sp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
                 <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
@@ -616,7 +616,7 @@
               </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
-                <div v-for="ciclo in fila.ciclos" :key="'plazo-ia-csp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+                <div v-for="ciclo in (mostrarBotonAgregarIA(fila) ? fila.ciclos.slice(1) : fila.ciclos)" :key="'plazo-ia-csp-' + ciclo.id" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
                 <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               </template>
             </td>
@@ -624,7 +624,6 @@
             <!-- Columna Fecha Informe de Area (por ciclo) -->
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'fecha-ia-sp-' + ia.id" class="ia-sp"></div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="!esSoloInterAreaEnFila(fila)">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                   <span class="no-wrap-column" v-if="ciclo.fecha_informeArea">{{ ciclo.fecha_informeArea }}</span>
@@ -643,7 +642,6 @@
             <!-- Columna Informe Area (por ciclo) -->
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'infarea-ia-sp-' + ia.id" class="ia-sp"></div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                      class="ciclo-row"
@@ -727,7 +725,6 @@
             <!-- Columna Registros de Ensayo (por ciclo) -->
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'reg-ia-sp-' + ia.id" class="ia-sp"></div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id"
                    class="ciclo-row"
@@ -751,7 +748,6 @@
             <!-- Columna Estado/Tipo (por ciclo) -->
             <td>
               <div v-for="ia in fila.solicitudes_interarea" :key="'tipo-ia-sp-' + ia.id" class="ia-sp"></div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <span v-if="ciclo.adjunto_informeArea"
@@ -771,7 +767,6 @@
             <td class="add-border-right" style="text-align:center;">
               <!-- Spacers IA -->
               <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ciclo-ia-sp-' + ia.id" class="ia-sp"></div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <!-- Sin ciclos todavía: plazo general -->
                 <div v-if="fila.ciclos.length === 0" class="ciclo-row">
@@ -877,7 +872,6 @@
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
               </div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeArea && ciclo.registros_ensayo && ciclo.registros_ensayo.length > 0">
                   <!-- Sin informe servicio, sin corrección pendiente -->
@@ -1104,7 +1098,6 @@
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
               </div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.adjunto_informeServicio && !ciclo.revision_confirmada && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir && (!ciclo.rechazo_area_destino || ciclo.rechazo_area_destino === 'st') && !ciclo.rechazo_st_destino">
                   <div v-if="isServiciosTecnologicos" class="st-sd-cell" @click.stop>
@@ -1210,7 +1203,6 @@
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
               </div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.revision_confirmada && !ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAdministracion" class="st-sd-cell" @click.stop>
@@ -1304,7 +1296,6 @@
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
               </div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.pdf_confirmado_admin && !ciclo.firma_responsable_area && !ciclo.firma_direccion && !ciclo.corregir">
                   <div v-if="isAreaJefe" class="st-sd-cell" @click.stop>
@@ -1380,7 +1371,6 @@
                 </template>
                 <span v-else style="visibility:hidden;"><i class="bi bi-stopwatch"></i></span>
               </div>
-              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
                 <template v-if="ciclo.firma_responsable_area && !ciclo.firma_direccion">
                   <div v-if="isDireccion" class="st-sd-cell" @click.stop>
@@ -3627,7 +3617,8 @@
         ).slice(0, 8);
       });
 
-      const inter_areaTematicaOptions = ref([
+      const inter_areaTematicaOptions = computed(() => {
+        const todasOpciones = [
           { value: 'durabilidad', label: 'Durabilidad' },
           { value: 'ensayos_mecanicos', label: 'Ensayos Mecánicos' },
           { value: 'geologia', label: 'Geología' },
@@ -3639,7 +3630,9 @@
           { value: 'estudios_especiales', label: 'Estudios Especiales' },
           { value: 'servicios_tecnologicos', label: 'Servicios Tecnológicos' },
           { value: 'direccion', label: 'Dirección' },
-      ]);
+        ];
+        return todasOpciones.filter(o => o.value !== userAreaTematica);
+      });
       const nuevaSolicitudInterarea = ref({
         fecha_solicitudInterarea: new Date().toISOString().substring(0, 10),
         areaTematica_origen: '',
