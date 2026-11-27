@@ -144,7 +144,7 @@
           </tr>
         </thead>
         <tbody >
-          <tr v-for="(fila, index) in sortedFilas" :key="index" :class="getRowClass(fila)">
+          <tr v-for="(fila, index) in sortedFilas" :key="index" :class="getRowClass(fila)" style="vertical-align: top;">
 
             <!-- Columna Solicitud de Servicio -->
 
