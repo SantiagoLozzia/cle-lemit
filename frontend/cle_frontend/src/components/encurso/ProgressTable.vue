@@ -634,8 +634,9 @@
 
             <!-- Columna Solicitante -->
             <td style="white-space: nowrap;">
+              <div v-for="ia in fila.solicitudes_interarea" :key="'sol-ia-sp-' + ia.id" class="ia-sp"></div>
               <template v-if="fila.ordenServicio_completo === true && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
-                {{ fila.nombre_solicitante }}
+                <div class="ciclo-row">{{ fila.nombre_solicitante }}</div>
               </template>
             </td>
 
