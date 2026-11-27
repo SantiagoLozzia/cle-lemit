@@ -741,40 +741,36 @@
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="mostrarInformeAreaEnFila(fila) && !esSoloInterAreaEnFila(fila)">
               <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
-                <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
-                  <span v-if="ciclo.adjunto_informeArea"
-                        class="badge"
-                        :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
-                        :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
-                        :title="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
-                        @click.stop="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
-                    {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
-                  </span>
-                  <small v-if="plazoCiclo(ciclo, fila)" style="font-size:9px; color:#6c757d; white-space:nowrap;">
-                    {{ plazoCiclo(ciclo, fila) }}d
-                  </small>
-                </div>
+                <span v-if="ciclo.adjunto_informeArea"
+                      class="badge"
+                      :class="ciclo.tipo === 'complementario' ? 'bg-success' : ciclo.tipo === 'final' ? 'bg-dark' : 'bg-primary'"
+                      :style="'font-size:10px;' + ((isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? ' cursor:pointer; text-decoration:underline dotted;' : '')"
+                      :title="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio ? 'Cambiar tipo' : ''"
+                      @click.stop="(isAreaJefe || isAreaStandard) && esMiAreaEsteFila(fila) && !ciclo.firma_direccion && !ciclo.adjunto_informeServicio && cambiarTipoCiclo(ciclo, fila)">
+                  {{ ciclo.tipo === 'complementario' ? 'Compl.' : ciclo.tipo === 'final' ? 'Final' : 'Parcial' }}
+                </span>
               </div>
               <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
               </template>
             </td>
 
-            <!-- Columna Plazo (días restantes OS) -->
-            <td class="add-border-right" style="text-align:center; vertical-align:middle;">
-              <template v-if="!esSoloInterAreaEnFila(fila)">
-              <template v-if="fila.ciclos && fila.ciclos.some(c => c.firma_direccion)">—</template>
-              <template v-else-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total')">
-                <div v-if="isServiciosTecnologicos">
-                  <span @click="abrirModalPlazoOrdenServicio(fila)" style="cursor:pointer;" :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
-                    <span class="plazo-badge" :class="plazoCriticidad(diasRestantesOS(fila))">{{ diasRestantesOS(fila) }}</span>
+            <!-- Columna Plazo (por ciclo) -->
+            <td class="add-border-right" style="text-align:center;">
+              <!-- Spacers IA -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ia-sp-' + ia.id" class="ia-sp"></div>
+              <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
+              <template v-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
+                <!-- Sin ciclos todavía: plazo general -->
+                <div v-if="fila.ciclos.length === 0" class="ciclo-row">
+                  <span class="plazo-badge">{{ fila.plazo_estimado }}</span>
+                </div>
+                <!-- Un badge por ciclo -->
+                <div v-for="ciclo in fila.ciclos" :key="ciclo.id" class="ciclo-row">
+                  <span class="plazo-badge">
+                    {{ plazoCiclo(ciclo, fila) !== null ? plazoCiclo(ciclo, fila) : fila.plazo_estimado }}
                   </span>
                 </div>
-                <div v-else>
-                  <span :title="'Plazo original: ' + fila.plazo_estimado + ' días'">
-                    <span class="plazo-badge" :class="plazoCriticidad(diasRestantesOS(fila))">{{ diasRestantesOS(fila) }}</span>
-                  </span>
-                </div>
-              </template>
+                <div v-if="mostrarClipParaNuevoParcial(fila)" class="ciclo-row" aria-hidden="true" style="visibility:hidden;"><i class="bi bi-paperclip action-icon"></i></div>
               </template>
             </td>
 
