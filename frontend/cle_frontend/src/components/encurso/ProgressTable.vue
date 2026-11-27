@@ -754,10 +754,12 @@
               </template>
             </td>
 
-            <!-- Columna Plazo (por ciclo) -->
+            <!-- Columna Plazo (por IA y por ciclo) -->
             <td class="add-border-right" style="text-align:center;">
-              <!-- Spacers IA -->
-              <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ia-sp-' + ia.id" class="ia-sp"></div>
+              <!-- Plazo de cada IA -->
+              <div v-for="ia in fila.solicitudes_interarea" :key="'plazo-ia-' + ia.id" class="ciclo-row" style="height:50px;">
+                <span v-if="ia.plazo" class="plazo-badge">{{ ia.plazo }}</span>
+              </div>
               <div v-if="mostrarBotonAgregarIA(fila)" class="ciclo-row" style="visibility:hidden;"><i class="bi bi-stopwatch"></i></div>
               <template v-if="(fila.ordenServicio_completo === true) && (fila.estado_recepcion === 'parcial' || fila.estado_recepcion === 'total') && !esSoloInterAreaEnFila(fila)">
                 <!-- Sin ciclos todavía: plazo general -->
@@ -2407,6 +2409,14 @@
               <div class="mb-3">
                 <label for="observaciones_interArea" class="form-label text-left">Observaciones:</label>
                 <input v-model="nuevaSolicitudInterarea.observaciones_interArea" type="text" class="form-control" id="observaciones_interArea" name="observaciones_interArea" />
+              </div>
+
+              <div class="mb-3">
+                <label for="plazo_interArea" class="form-label text-left">
+                  Plazo (días) <span class="text-muted" style="font-size:0.8rem">· <em>opcional</em></span>
+                </label>
+                <input v-model.number="nuevaSolicitudInterarea.plazo" type="number" min="1"
+                       class="form-control" id="plazo_interArea" style="width:120px;" />
               </div>
 
               </fieldset>
@@ -5257,6 +5267,7 @@
           tipo: null,
           servicios_solicitudInterarea: [{ nro_servicio: '', servicio: '', cant: 0 }],
           nro_circuito: null,
+          plazo: null,
         };
       };
 

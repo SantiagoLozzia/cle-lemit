@@ -263,6 +263,7 @@ class SolicitudInterarea(models.Model):
         default='parcial',
         blank=True
     )
+    plazo = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         return f"SolicitudInterarea #{self.nro_solicitudInterarea} - Circuito #{self.nro_circuito_id}"
