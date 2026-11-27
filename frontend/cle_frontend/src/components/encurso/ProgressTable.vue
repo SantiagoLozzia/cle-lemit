@@ -3991,6 +3991,7 @@
                     estado_correc_informe: s.estado_correc_informe,
                     estado_correc_registros: s.estado_correc_registros,
                     tipo: s.tipo || 'parcial',
+                    plazo: s.plazo || null,
                     ciclos: (s.ciclos || []).map(c => ({
                       id: c.id,
                       numero: c.numero,
